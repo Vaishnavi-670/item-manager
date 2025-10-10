@@ -1,0 +1,52 @@
+:root {
+  --primary-active-color: #667eea;
+
+  --primary-bg: #f3f5f7;
+  --primary-color: black;
+
+  --secondary-bg: #1976d2;
+  --secondary-bg-hover: #1565c0;
+  --secondary-bg-active: #0d47a1;
+  --secondary-bg-disabled: #b0bec5;
+  --secondary-color-disabled: #eceff1;
+  --secondary-color: #ffffff;
+
+  --thirdary-bg: #e3f2fd;
+  --thirdary-color: #333;
+  --thirdary-border: 1px solid #ccc;
+  --thirdary-border-bottom: 1px solid #e2e8f0;
+
+  --fourthary-bg: #f9f9f9;
+  --fifthary-color: #4a5568;
+
+  --sixth-bg: #f7fafc;
+  --sixth-color: #667eea;
+  --sixth-active-bg: #edf2f7;
+
+  --seventh-bg: #007bff;
+  --seventh-color: white;
+
+  --error-color: red;
+  --cancel-btn-bg: #ff4d4f;
+  --cancel-btn-color: white;
+
+  --pure-white: #ffffff;
+  --pure-black: #000000;
+
+  --left-border-1: 3px solid transparent;
+  --left-border-2: 4px solid #007bff;
+
+  --primary-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  --secondary-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  --primary-inputbox-shadow: 0 0 0 2px rgba(102, 126, 234, 0.3);
+
+  --base-transition-1: background-color 0.25s ease, transform 0.1s ease;
+  --base-transition-2: all 0.3s ease;
+}
+
+body {
+  font-family: 'Segoe UI', sans-serif;
+  background-color: var(--primary-bg);
+  margin: 0;
+  padding: 0;
+}
