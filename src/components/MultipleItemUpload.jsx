@@ -156,9 +156,9 @@ export default function MultipleItemsForm() {
             <table border="1" style={{ borderCollapse: "collapse" }}>
               <thead>
                 <tr>
-                  <th>SR No.</th>
+                  <th>Row No.</th>
                   <th>Item Name</th>
-                  <th>Item Type</th>
+                  <th>Item Type</th> 
                   <th>Brand</th>
                   <th>Description</th>
                   <th>MRP</th>
@@ -168,7 +168,7 @@ export default function MultipleItemsForm() {
               <tbody>
                 {items.map((item, index) => (
                   <tr key={index}>
-                    <td>{index + 1}</td>
+                    <td>{index + 2}</td>
                     {["Item Name", "Item Type", "Brand", "Description", "MRP"].map(
                       (field) => (
                         <td
