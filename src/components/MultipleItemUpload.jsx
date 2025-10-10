@@ -42,19 +42,23 @@ export default function MultipleItemsForm() {
 
       const validatedItems = worksheet.map((item) => {
         const newItem = { ...item };
+        newItem.hasError = false;
 
         if (!item["Item Name"] || item["Item Name"].toString().trim() === "") {
-          newItem["Item Name"] = "Item Name missing";
+          newItem["Item Name"] = "";
+          newItem.hasError = true;
         }
         if (!item["Brand"] || item["Brand"].toString().trim() === "") {
-          newItem["Brand"] = "Brand missing";
+          newItem["Brand"] = "";
+          newItem.hasError = true;
         }
         if (
           item["MRP"] === "" ||
           isNaN(item["MRP"]) ||
           Number(item["MRP"]) <= 0
         ) {
-          newItem["MRP"] = "MRP missing or invalid";
+          newItem["MRP"] = "";
+          newItem.hasError = true;
         }
 
         return newItem;
@@ -72,16 +76,21 @@ export default function MultipleItemsForm() {
     newItems[index][field] = value;
 
     if (field === "Item Name" && (!value || value.trim() === "")) {
-      newItems[index][field] = "Item Name missing";
+      newItems[index]["Item Name"] = "";
+      newItems[index].hasError = true;
     }
     if (field === "Brand" && (!value || value.trim() === "")) {
-      newItems[index][field] = "Brand missing";
+      newItems[index]["Brand"] = "";
+      newItems[index].hasError = true;
     }
     if (
       field === "MRP" &&
       (value === "" || isNaN(value) || Number(value) <= 0)
     ) {
-      newItems[index][field] = "MRP missing or invalid";
+      newItems[index]["MRP"] = "";
+      newItems[index].hasError = true;
+    } else {
+      newItems[index].hasError = false;
     }
 
     setItems(newItems);
@@ -91,22 +100,15 @@ export default function MultipleItemsForm() {
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    const hasErrors = items.some(
-      (item) =>
-        item["Item Name"] === "Item Name missing" ||
-        item["Brand"] === "Brand missing" ||
-        item["MRP"] === "MRP missing or invalid"
-    );
+    const hasErrors = items.some((item) => item.hasError);
 
     if (hasErrors) {
-      setSubmitMessage("⚠️ Please fix errors before submitting.");
-      setTimeout(() => setSubmitMessage(""), 3000);
+      alert("⚠️ Please fix errors before submitting.");
       return;
     }
 
     if (items.length === 0) {
-      setSubmitMessage("⚠️ Please upload a valid Excel file first.");
-      setTimeout(() => setSubmitMessage(""), 3000);
+      alert("⚠️ Please upload a valid Excel file first.");
       return;
     }
 
@@ -116,9 +118,9 @@ export default function MultipleItemsForm() {
 
     setTimeout(() => {
       setSubmitMessage("");
-      setItems([]); // clear table
-      document.querySelector('input[type="file"]').value = ""; // reset file input
-    }, 10000); // reset after 10 seconds
+      setItems([]);
+      document.querySelector('input[type="file"]').value = "";
+    }, 7000); // Show message for longer
   };
 
   return (
@@ -154,25 +156,37 @@ export default function MultipleItemsForm() {
             <table border="1" style={{ borderCollapse: "collapse" }}>
               <thead>
                 <tr>
+                  <th>SR No.</th>
                   <th>Item Name</th>
                   <th>Item Type</th>
                   <th>Brand</th>
                   <th>Description</th>
                   <th>MRP</th>
+                  <th>Action</th>
                 </tr>
               </thead>
               <tbody>
                 {items.map((item, index) => (
                   <tr key={index}>
+                    <td>{index + 1}</td>
                     {["Item Name", "Item Type", "Brand", "Description", "MRP"].map(
                       (field) => (
                         <td
                           key={field}
                           style={{
+                            background:
+                              (field === "Item Name" && !item["Item Name"]) ||
+                              (field === "Brand" && !item["Brand"]) ||
+                              (field === "MRP" &&
+                                (!item["MRP"] || isNaN(item["MRP"])))
+                                ? "#f8d7da"
+                                : "white",
                             color:
-                              item[field] &&
-                              item[field].toString().includes("missing")
-                                ? "red"
+                              (field === "Item Name" && !item["Item Name"]) ||
+                              (field === "Brand" && !item["Brand"]) ||
+                              (field === "MRP" &&
+                                (!item["MRP"] || isNaN(item["MRP"])))
+                                ? "#721c24"
                                 : "black",
                           }}
                           contentEditable
@@ -181,10 +195,27 @@ export default function MultipleItemsForm() {
                             handleCellChange(index, field, e.target.innerText)
                           }
                         >
-                          {item[field] || "-"}
+                          {item[field] || ""}
                         </td>
                       )
                     )}
+                    <td>
+                      <button
+                        type="button"
+                        className="button-delete"
+                        onClick={() => {
+                          if (
+                            window.confirm("Are you sure you want to delete this row?")
+                          ) {
+                            const newItems = [...items];
+                            newItems.splice(index, 1);
+                            setItems(newItems);
+                          }
+                        }}
+                      >
+                        ❌
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -198,17 +229,7 @@ export default function MultipleItemsForm() {
 
         {/* Submit Message */}
         {submitMessage && (
-          <div
-            style={{
-              marginTop: "20px",
-              padding: "10px",
-              background: "#d4edda",
-              color: "#155724",
-              fontWeight: "bold",
-              borderRadius: "5px",
-              animation: "fadeInOut 3s ease-in-out",
-            }}
-          >
+          <div className="submit-message">
             {submitMessage}
           </div>
         )}

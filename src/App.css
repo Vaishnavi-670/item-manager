@@ -197,3 +197,21 @@ label .required,
   color: var(--error-color);
 }
 
+.button-delete {
+  background: rgba(255, 255, 255, 0.688);
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+  color: var(--error-color);
+}
+.button-delete:hover {
+  background: rgba(235, 230, 230, 0.777);
+}
+.submit-message {
+  margin-top: 20px;
+  padding: 10px;
+  background: #d4edda;
+  color: #155724;
+  font-weight: bold;
+  border-radius: 5px;
+}
