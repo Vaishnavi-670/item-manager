@@ -186,7 +186,7 @@ export default function MultipleItemsForm() {
                               (field === "Brand" && !item["Brand"]) ||
                               (field === "MRP" &&
                                 (!item["MRP"] || isNaN(item["MRP"])))
-                                ? "#721c24"
+                                ? "#f8d7da"
                                 : "black",
                           }}
                           contentEditable
