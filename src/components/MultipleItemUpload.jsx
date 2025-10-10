@@ -3,6 +3,7 @@ import * as XLSX from "xlsx";
 
 export default function MultipleItemsForm() {
   const [items, setItems] = useState([]);
+  const [submitMessage, setSubmitMessage] = useState("");
 
   // Download Excel template
   const handleDownloadTemplate = () => {
@@ -39,22 +40,21 @@ export default function MultipleItemsForm() {
         defval: "",
       });
 
-      const validatedItems = worksheet.map((item, index) => {
-        const rowNum = index + 2; // Excel header is row 1
-        const newItem = { ...item, _errors: [] };
+      const validatedItems = worksheet.map((item) => {
+        const newItem = { ...item };
 
         if (!item["Item Name"] || item["Item Name"].toString().trim() === "") {
-          newItem._errors.push("Item Name missing");
+          newItem["Item Name"] = "Item Name missing";
         }
         if (!item["Brand"] || item["Brand"].toString().trim() === "") {
-          newItem._errors.push("Brand missing");
+          newItem["Brand"] = "Brand missing";
         }
         if (
           item["MRP"] === "" ||
           isNaN(item["MRP"]) ||
           Number(item["MRP"]) <= 0
         ) {
-          newItem._errors.push("MRP must be a positive number");
+          newItem["MRP"] = "MRP missing or invalid";
         }
 
         return newItem;
@@ -66,23 +66,59 @@ export default function MultipleItemsForm() {
     reader.readAsArrayBuffer(file);
   };
 
+  // Handle table cell edits
+  const handleCellChange = (index, field, value) => {
+    const newItems = [...items];
+    newItems[index][field] = value;
+
+    if (field === "Item Name" && (!value || value.trim() === "")) {
+      newItems[index][field] = "Item Name missing";
+    }
+    if (field === "Brand" && (!value || value.trim() === "")) {
+      newItems[index][field] = "Brand missing";
+    }
+    if (
+      field === "MRP" &&
+      (value === "" || isNaN(value) || Number(value) <= 0)
+    ) {
+      newItems[index][field] = "MRP missing or invalid";
+    }
+
+    setItems(newItems);
+  };
+
+  // Submit handler
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    const hasErrors = items.some((item) => item._errors && item._errors.length > 0);
+    const hasErrors = items.some(
+      (item) =>
+        item["Item Name"] === "Item Name missing" ||
+        item["Brand"] === "Brand missing" ||
+        item["MRP"] === "MRP missing or invalid"
+    );
+
     if (hasErrors) {
-      alert("Please fix errors before submitting.");
+      setSubmitMessage("⚠️ Please fix errors before submitting.");
+      setTimeout(() => setSubmitMessage(""), 3000);
       return;
     }
 
     if (items.length === 0) {
-      alert("Please upload a valid Excel file first.");
+      setSubmitMessage("⚠️ Please upload a valid Excel file first.");
+      setTimeout(() => setSubmitMessage(""), 3000);
       return;
     }
 
     console.log("Multiple Items Added:", items);
-    alert("Multiple items added successfully!");
-    setItems([]);
+
+    setSubmitMessage("✅ Multiple items added successfully!");
+
+    setTimeout(() => {
+      setSubmitMessage("");
+      setItems([]); // clear table
+      document.querySelector('input[type="file"]').value = ""; // reset file input
+    }, 10000); // reset after 10 seconds
   };
 
   return (
@@ -111,10 +147,10 @@ export default function MultipleItemsForm() {
           />
         </div>
 
-        {/* Preview Table */}
+        {/* Editable Preview Table */}
         {items.length > 0 && (
           <>
-            <h4>Preview:</h4>
+            <h4>Preview (Click to Edit):</h4>
             <table border="1" style={{ borderCollapse: "collapse" }}>
               <thead>
                 <tr>
@@ -123,22 +159,32 @@ export default function MultipleItemsForm() {
                   <th>Brand</th>
                   <th>Description</th>
                   <th>MRP</th>
-                  <th>Errors</th>
                 </tr>
               </thead>
               <tbody>
                 {items.map((item, index) => (
                   <tr key={index}>
-                    <td>{item["Item Name"] || "-"}</td>
-                    <td>{item["Item Type"] || "-"}</td>
-                    <td>{item["Brand"] || "-"}</td>
-                    <td>{item["Description"] || "-"}</td>
-                    <td>{item["MRP"] || "-"}</td>
-                    <td style={{ color: "red" }}>
-                      {item._errors && item._errors.length > 0
-                        ? item._errors.join(", ")
-                        : "-"}
-                    </td>
+                    {["Item Name", "Item Type", "Brand", "Description", "MRP"].map(
+                      (field) => (
+                        <td
+                          key={field}
+                          style={{
+                            color:
+                              item[field] &&
+                              item[field].toString().includes("missing")
+                                ? "red"
+                                : "black",
+                          }}
+                          contentEditable
+                          suppressContentEditableWarning
+                          onBlur={(e) =>
+                            handleCellChange(index, field, e.target.innerText)
+                          }
+                        >
+                          {item[field] || "-"}
+                        </td>
+                      )
+                    )}
                   </tr>
                 ))}
               </tbody>
@@ -149,6 +195,33 @@ export default function MultipleItemsForm() {
             </button>
           </>
         )}
+
+        {/* Submit Message */}
+        {submitMessage && (
+          <div
+            style={{
+              marginTop: "20px",
+              padding: "10px",
+              background: "#d4edda",
+              color: "#155724",
+              fontWeight: "bold",
+              borderRadius: "5px",
+              animation: "fadeInOut 3s ease-in-out",
+            }}
+          >
+            {submitMessage}
+          </div>
+        )}
+
+        {/* Animation Styles */}
+        <style>{`
+          @keyframes fadeInOut {
+            0% { opacity: 0; transform: translateY(-10px); }
+            20% { opacity: 1; transform: translateY(0); }
+            80% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-10px); }
+          }
+        `}</style>
       </form>
     </div>
   );
