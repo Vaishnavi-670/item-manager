@@ -42,6 +42,7 @@ export default function SingleItemForm() {
               onChange={handleChange}
               required
               placeholder="Enter Item Name"
+              autoComplete="off"
             />
           </div>
         </div>
@@ -55,6 +56,7 @@ export default function SingleItemForm() {
               value={item.type}
               onChange={handleChange}
               placeholder="Enter Item Type"
+              autoComplete="off"
             />
           </div>
         </div>
@@ -71,6 +73,7 @@ export default function SingleItemForm() {
               onChange={handleChange}
               required
               placeholder="Enter Brand"
+              autoComplete="off"
             />
           </div>
         </div>
@@ -83,6 +86,7 @@ export default function SingleItemForm() {
               value={item.description}
               onChange={handleChange}
               placeholder="Enter Description"
+              autoComplete="off"
             />
           </div>
         </div>
@@ -96,6 +100,7 @@ export default function SingleItemForm() {
               value={item.mrp}
               onChange={handleChange}
               placeholder="Enter MRP"
+              autoComplete="off"
             />
           </div>
         </div>

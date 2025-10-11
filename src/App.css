@@ -15,6 +15,7 @@
 /* === Page Container === */
 .container {
   display: flex;
+  width: 100%;
   flex-direction: column;
   align-items: center;
   padding: 20px;
@@ -55,8 +56,9 @@
 /* === Form Box === */
 .form-container {
   display: flex;
+  flex-direction: column;
   justify-content: center;
-  align-items: flex-start;
+  align-items: center;
   width: 100%;
 }
 
@@ -67,7 +69,6 @@
   background-color: #fff;
   padding: 30px;
   width: 500px;
-  border-radius: 15px;
   box-shadow: var(--secondary-shadow);
 }
 
@@ -147,6 +148,7 @@ table {
   margin-top: 15px;
   border-radius: 8px;
   overflow: hidden;
+
 }
 
 table th {
@@ -154,6 +156,8 @@ table th {
   color: var(--secondary-color);
   padding: 10px;
   font-weight: 600;
+  /* border: 1px solid #333; */
+
   font-size: 14px;
 }
 
@@ -161,6 +165,9 @@ table td {
   padding: 10px;
   border-bottom: 1px solid #ddd;
   font-size: 14px;
+  border: 1px solid #e5d5d5;
+
+
 }
 
 table tr:nth-child(even) {
@@ -179,4 +186,78 @@ table tr:nth-child(even) {
 
 .button-delete:hover {
   color: #b71c1c;
+}
+
+/* 🌟 Add this for multi-column layout */
+.form-columns {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+/* Make some fields (like Address) span full width */
+.input-group.full-width {
+  grid-column: span 2;
+}
+
+/* Responsive for small screens */
+@media (max-width: 600px) {
+  .form-columns {
+    grid-template-columns: 1fr;
+  }
+
+  .input-group.full-width {
+    grid-column: span 1;
+  }
+}
+
+
+.form-container {
+  align-items: center;
+
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+
+.preview-container {
+  width: 90vw;
+  display: flex;
+  overflow: hidden;
+  align-items: center;
+  margin-top: 20px;
+  flex-direction: column;
+  position: relative;
+  left: 50%;
+  right: 50%;
+  margin-left: -49vw;
+  margin-right: -50vw;
+  padding: 20px 40px;
+  background: #fff;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  overflow-x: auto;
+}
+
+/* Table style */
+.preview-table {
+  align-items: center;
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 1000px;
+}
+
+.preview-table th,
+.preview-table td {
+  border: 1px solid #ccc;
+  padding: 8px 10px;
+  text-align: left;
+}
+
+.preview-table th {
+  background: #004aad;
+  color: white;
+}
+
+.preview-table td {
+  font-size: 14px;
 }

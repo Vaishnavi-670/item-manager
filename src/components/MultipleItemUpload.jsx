@@ -48,6 +48,7 @@ export default function MultipleItemsForm() {
           newItem["Item Name"] = "";
           newItem.hasError = true;
         }
+
         if (!item["Brand"] || item["Brand"].toString().trim() === "") {
           newItem["Brand"] = "";
           newItem.hasError = true;
