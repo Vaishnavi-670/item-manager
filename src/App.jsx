@@ -2,31 +2,51 @@ import React, { useState } from "react";
 import "./App.css";
 import SingleItemForm from "./components/SingleItemForm";
 import MultipleItemUpload from "./components/MultipleItemUpload";
+import MultipleCustomerUpload from "./components/MultipleCustomerUpload";
+import SingleCustomerForm from "./components/SingleCustomerform";
 
 function App() {
-  const [formType, setFormType] = useState("single");
+  const [formType, setFormType] = useState("singleItem");
 
   return (
     <div className="container">
-      <h2>Product Management</h2>
+      <h2>Product & Customer Management</h2>
 
       <div className="form-toggle-buttons">
         <button
-          className={formType === "single" ? "active" : ""}
-          onClick={() => setFormType("single")}
+          className={formType === "singleItem" ? "active" : ""}
+          onClick={() => setFormType("singleItem")}
         >
           Add Single Item
         </button>
+
         <button
-          className={formType === "multiple" ? "active" : ""}
-          onClick={() => setFormType("multiple")}
+          className={formType === "multipleItem" ? "active" : ""}
+          onClick={() => setFormType("multipleItem")}
         >
           Add Multiple Items
+        </button>
+
+        <button
+          className={formType === "singleCustomer" ? "active" : ""}
+          onClick={() => setFormType("singleCustomer")}
+        >
+          Add Single Customer
+        </button>
+
+        <button
+          className={formType === "multipleCustomer" ? "active" : ""}
+          onClick={() => setFormType("multipleCustomer")}
+        >
+          Add Multiple Customers
         </button>
       </div>
 
       <div className="form-container">
-        {formType === "single" ? <SingleItemForm /> : <MultipleItemUpload />}
+        {formType === "singleItem" && <SingleItemForm />}
+        {formType === "multipleItem" && <MultipleItemUpload />}
+        {formType === "singleCustomer" && <SingleCustomerForm />}
+        {formType === "multipleCustomer" && <MultipleCustomerUpload />}
       </div>
     </div>
   );

@@ -215,3 +215,43 @@ label .required,
   font-weight: bold;
   border-radius: 5px;
 }
+
+h2 {
+  text-align: center;
+  color: #004aad;
+  margin-bottom: 25px;
+}
+
+.form-toggle-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-bottom: 25px;
+  flex-wrap: wrap;
+}
+
+.form-toggle-buttons button {
+  border: none;
+  padding: 10px 18px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.form-toggle-buttons button.active {
+  background-color: #004aad;
+  color: white;
+}
+
+.form-toggle-buttons button:hover {
+  background-color: #004aad;
+  color: white;
+}
+
+.input-box select {
+  width: 100%;
+  padding: 10px;
+  border-radius: 6px;
+  font-size: 15px;
+}
