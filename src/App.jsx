@@ -31,14 +31,14 @@ function App() {
           className={formType === "singleCustomer" ? "active" : ""}
           onClick={() => setFormType("singleCustomer")}
         >
-          Add Single Customer
+         Single Customer
         </button>
 
         <button
           className={formType === "multipleCustomer" ? "active" : ""}
           onClick={() => setFormType("multipleCustomer")}
         >
-          Add Multiple Customers
+          Multiple Customers
         </button>
       </div>
 

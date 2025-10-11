@@ -137,6 +137,7 @@ export default function SingleCustomerForm() {
           </div>
         </div>
 
+
         <div className="input-group">
           <label>Sales Person<span className="required">*</span></label>
           <div className="input-box">
@@ -150,6 +151,7 @@ export default function SingleCustomerForm() {
             />
           </div>
         </div>
+        
 
         <div className="input-group">
           <label>Type<span className="required">*</span></label>

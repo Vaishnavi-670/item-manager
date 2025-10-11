@@ -1,17 +1,70 @@
+:root {
+  --primary-active-color: #004aad;
+  --primary-bg: #f5f6fa;
+  --primary-color: #333;
+  --secondary-bg: #004aad;
+  --secondary-bg-hover: #0b4096;
+  --secondary-bg-active: #002b6f;
+  --secondary-color: #fff;
+  --error-color: #e63946;
+  --base-transition-1: all 0.3s ease;
+  --sixth-bg: #f9f9f9;
+  --secondary-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* === Page Container === */
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+}
+
+.container h2 {
+  color: var(--primary-active-color);
+  font-size: 26px;
+  font-weight: 600;
+  margin-bottom: 20px;
+}
+
+/* === Form Toggle Buttons === */
+.form-toggle-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-bottom: 25px;
+  flex-wrap: wrap;
+}
+
+.form-toggle-buttons button {
+  border: none;
+  padding: 10px 18px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--base-transition-1);
+  background-color: var(--secondary-bg);
+  color: var(--secondary-color);
+}
+
+.form-toggle-buttons button.active,
+.form-toggle-buttons button:hover {
+  background-color: var(--secondary-bg-hover);
+}
+
+/* === Form Box === */
 .form-container {
   display: flex;
   justify-content: center;
-  align-items: center;
-  min-height: 100vh;
-  background-color: var(--primary-bg);
-  padding: 20px;
+  align-items: flex-start;
+  width: 100%;
 }
 
 .form-box {
   display: flex;
   flex-direction: column;
   gap: 20px;
-  background-color: var(--pure-white);
+  background-color: #fff;
   padding: 30px;
   width: 500px;
   border-radius: 15px;
@@ -22,9 +75,9 @@
   text-align: center;
   color: var(--primary-active-color);
   font-size: 24px;
-  margin-bottom: 10px;
 }
 
+/* === Input Groups === */
 .input-group {
   display: flex;
   flex-direction: column;
@@ -36,23 +89,28 @@
   color: var(--primary-color);
 }
 
+.required {
+  color: var(--error-color);
+}
+
 .input-box {
   display: flex;
   align-items: center;
   padding: 10px;
   border: 1.5px solid #ecedec;
   border-radius: 10px;
-  transition: var(--base-transition-1);
   background-color: var(--sixth-bg);
+  transition: var(--base-transition-1);
 }
 
 .input-box input,
-.input-box textarea {
-  margin-left: 10px;
+.input-box textarea,
+.input-box select {
   border: none;
   width: 100%;
   font-size: 14px;
   background: transparent;
+  outline: none;
 }
 
 .input-box textarea {
@@ -60,16 +118,12 @@
   height: 100px;
 }
 
-.input-box input:focus,
-.input-box textarea:focus {
-  outline: none;
-}
-
 .input-box:focus-within {
-  border: 1.5px solid var(--primary-active-color);
-  box-shadow: var(--primary-inputbox-shadow);
+  border-color: var(--primary-active-color);
+  box-shadow: 0 0 4px rgba(0, 74, 173, 0.3);
 }
 
+/* === Buttons === */
 button {
   background-color: var(--secondary-bg);
   color: var(--secondary-color);
@@ -78,7 +132,6 @@ button {
   border-radius: 10px;
   font-weight: 500;
   cursor: pointer;
-  margin-top: 10px;
   font-size: 16px;
   transition: var(--base-transition-1);
 }
@@ -87,31 +140,7 @@ button:hover {
   background-color: var(--secondary-bg-hover);
 }
 
-.upload-section {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.upload-section p {
-  font-weight: 500;
-  font-size: 15px;
-}
-
-.upload-section input[type="file"] {
-  padding: 12px;
-  border-radius: 8px;
-  border: 1.5px solid #ecedec;
-  cursor: pointer;
-  font-size: 14px;
-  background-color: var(--sixth-bg);
-  transition: var(--base-transition-1);
-}
-
-.upload-section input[type="file"]:hover {
-  border-color: var(--primary-active-color);
-}
-
+/* === Table (for multiple upload display) === */
 table {
   border-collapse: collapse;
   width: 100%;
@@ -130,7 +159,7 @@ table th {
 
 table td {
   padding: 10px;
-  border-bottom: var(--thirdary-border-bottom);
+  border-bottom: 1px solid #ddd;
   font-size: 14px;
 }
 
@@ -138,120 +167,16 @@ table tr:nth-child(even) {
   background-color: var(--sixth-bg);
 }
 
-h4 {
-  margin-top: 15px;
-  font-size: 18px;
-  color: var(--primary-color);
-}
-/* App Container */
-.container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 20px;
-}
-
-/* Page Title */
-.container h2 {
-  color: var(--primary-active-color);
-  font-size: 26px;
-  font-weight: 600;
-  margin-bottom: 20px;
-}
-
-/* Buttons for switching forms */
-.form-toggle-buttons {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
-}
-
-.form-toggle-buttons button {
-  padding: 10px 20px;
-  border: none;
-  border-radius: 8px;
-  background-color: var(--secondary-bg);
-  color: var(--secondary-color);
-  font-weight: 500;
-  cursor: pointer;
-  transition: var(--base-transition-1);
-}
-
-.form-toggle-buttons button:hover {
-  background-color: var(--secondary-bg-hover);
-}
-
-.form-toggle-buttons button.active {
-  background-color: var(--secondary-bg-active);
-}
-
-/* Form Alignment */
-.form-container {
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  width: 100%;
-}
-label .required,
-.required {
-  color: var(--error-color);
-}
-
+/* === Delete Button === */
 .button-delete {
-  background: rgba(255, 255, 255, 0.688);
+  background: transparent;
   border: none;
   cursor: pointer;
   font-size: 18px;
   color: var(--error-color);
-}
-.button-delete:hover {
-  background: rgba(235, 230, 230, 0.777);
-}
-.submit-message {
-  margin-top: 20px;
-  padding: 10px;
-  background: #d4edda;
-  color: #155724;
-  font-weight: bold;
-  border-radius: 5px;
-}
-
-h2 {
-  text-align: center;
-  color: #004aad;
-  margin-bottom: 25px;
-}
-
-.form-toggle-buttons {
-  display: flex;
-  justify-content: center;
-  gap: 15px;
-  margin-bottom: 25px;
-  flex-wrap: wrap;
-}
-
-.form-toggle-buttons button {
-  border: none;
-  padding: 10px 18px;
-  border-radius: 6px;
-  font-weight: 600;
-  cursor: pointer;
   transition: 0.3s;
 }
 
-.form-toggle-buttons button.active {
-  background-color: #004aad;
-  color: white;
-}
-
-.form-toggle-buttons button:hover {
-  background-color: #004aad;
-  color: white;
-}
-
-.input-box select {
-  width: 100%;
-  padding: 10px;
-  border-radius: 6px;
-  font-size: 15px;
+.button-delete:hover {
+  color: #b71c1c;
 }
