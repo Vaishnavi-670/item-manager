@@ -1,4 +1,3 @@
-import { RelationshipType } from "exceljs";
 import React, { useEffect, useMemo, useState } from "react";
 
 const initialCustomers = [
@@ -89,7 +88,6 @@ export default function ManageCustomer() {
     if (filters.name) temp = temp.filter(c =>
       (c["Customer Name"] || "").toLowerCase().includes(filters.name.toLowerCase())
     );
-
     return {
       types: Array.from(new Set(temp.map(c => c.Type).filter(Boolean))),
       sales: Array.from(new Set(temp.map(c => c["Sales Person"]).filter(Boolean))),
@@ -110,6 +108,7 @@ export default function ManageCustomer() {
         (!filters.sales || c["Sales Person"] === filters.sales) &&
         (!filters.category || c.Category === filters.category);
 
+
       return matchesSearch && matchesFilters;
     });
   }, [customers, filters, search]);
@@ -118,6 +117,7 @@ export default function ManageCustomer() {
     <div className="manage-customer" style={{ display: "flex", gap: 16 }}>
       <aside style={{ minWidth: 260, borderRight: "1px solid #eee", paddingRight: 16 }}>
         <h3>Filters</h3>
+
         <div className="input-group">
           <label>Name</label>
           <div className="input-box">
@@ -129,6 +129,7 @@ export default function ManageCustomer() {
               autoComplete="off"
             />
           </div>
+
         </div>
         <div className="input-group">
           <label>Type</label>
@@ -146,17 +147,16 @@ export default function ManageCustomer() {
         <div className="input-group">
           <label>Sales Person</label>
           <div className="input-box">
-           
             <select
               value={filters.sales}
               onChange={e => setFilters(f => ({ ...f, sales: e.target.value }))}>
               <option value="">All</option>
               {dependentFiltered.sales.map(s => (
                 <option key={s} value={s}>{s}</option>
+
               ))}
             </select>
-
-
+            
           </div>
         </div>
         <div className="input-group">
@@ -172,13 +172,13 @@ export default function ManageCustomer() {
             </select>
           </div>
         </div>
+
         <div className="clear">
           <button type="button" onClick={() => setFilters({ name: "", type: "", sales: "", category: "" })}>
             Clear Filters
           </button>
         </div>
       </aside>
-
       <div style={{ flex: 1 }}>
         <h2>Manage Customers</h2>
         <div style={{ marginTop: 24 }}>
@@ -216,7 +216,6 @@ export default function ManageCustomer() {
             </button>
           </form>
         )}
-
         <div className="actions">
           <table className="data-table" >
             <thead>
@@ -242,8 +241,6 @@ export default function ManageCustomer() {
                     </tr>
                   );
                 }
-
-
                 return (
                   <tr key={idx} style={{ background: c.hasError ? "#fff1f0" : undefined }}>
                     <td>{idx + 2}</td>
