@@ -1,6 +1,6 @@
+import { RelationshipType } from "exceljs";
 import React, { useEffect, useMemo, useState } from "react";
 
-// Seed data (can be replaced by API later)
 const initialCustomers = [
   {
     "Customer Name": "Example Customer",
@@ -56,8 +56,6 @@ export default function ManageCustomer() {
     setForm({});
   };
 
-
-
   useEffect(() => {
     try {
       const saved = JSON.parse(localStorage.getItem("customers") || "null");
@@ -81,15 +79,20 @@ export default function ManageCustomer() {
 
   // Filter logic
   const filtered = useMemo(() => {
-    return customers.filter((c) => {
-      if (filters.name && !String(c["Customer Name"] || "").toLowerCase().includes(filters.name.toLowerCase())) return false;
-      if (filters.type && c.Type !== filters.type) return false;
-      if (filters.sales && c["Sales Person"] !== filters.sales) return false;
-      if (filters.category && c.Category !== filters.category) return false;
-      if (search && !String(c["Customer Name"] || "").toLowerCase().includes(search.toLowerCase())) return false;
-      return true;
-    });
-  }, [customers, filters, search]);
+  const query = search.trim().toLowerCase();
+  return customers.filter((c) => {
+    const name = (c["Customer Name"] || "").toLowerCase();
+    const matchesSearch = !query || name.includes(query); // instantly matches even 1 character
+
+    const matchesFilters =
+      (!filters.name || name.includes(filters.name.toLowerCase())) &&
+      (!filters.type || c.Type === filters.type) &&
+      (!filters.sales || c["Sales Person"] === filters.sales) &&
+      (!filters.category || c.Category === filters.category);
+
+    return matchesSearch && matchesFilters;
+  });
+}, [customers, filters, search]);
 
   return (
     <div className="manage-customer" style={{ display: "flex", gap: 16 }}>
@@ -219,9 +222,11 @@ export default function ManageCustomer() {
                     </tr>
                   );
                 }
+                
+
                 return (
                   <tr key={idx} style={{ background: c.hasError ? "#fff1f0" : undefined }}>
-                    <td>{idx + 1}</td>
+                    <td>{idx + 2}</td>
                     {fields.map((f) => (
                       <td key={f} className="keys" >
                         {c[f] || ""}
