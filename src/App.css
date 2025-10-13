@@ -10,7 +10,6 @@
   --base-transition-1: all 0.3s ease;
   --sixth-bg: #f9f9f9;
   --secondary-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  width: 90%;
 }
 
 /* === Page Container === */
@@ -220,18 +219,13 @@ table tr:nth-child(even) {
 
 
 .preview-container {
-  width: 93vw;
+  width: 100%;
+  max-width: 1200px;
   display: flex;
-  overflow: hidden;
   align-items: center;
-  margin-top: 20px;
+  margin: 20px auto 0;
   flex-direction: column;
-  position: relative;
-  left: 50%;
-  right: 50%;
-  margin-left: -46vw;
-  margin-right: -48vw;
-  padding: 20px 40px;
+  padding: 20px;
   background: #fff;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
   overflow-x: auto;
@@ -268,7 +262,7 @@ vertical-align: middle;
 font-size: 14px;
 }
 
-
+}
 .mc-table thead th {
 position: sticky;
 top: 0;
@@ -345,6 +339,36 @@ color: #556170;
 .data-table{
   width: 100%;
   border-collapse: collapse;
+  table-layout: auto;
+}
+
+.data-table th,
+.data-table td {
+  padding: 8px 6px;
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 120px;
+}
+
+/* Ensure the Actions column doesn't clip its buttons */
+.data-table th:last-child,
+.data-table td:last-child {
+  overflow: visible;
+  text-overflow: initial;
+  max-width: none;
+  white-space: nowrap;
+  min-width: 120px; /* room for Edit + Delete */
+}
+
+/* Show full details in data cells: allow wrapping and remove truncation */
+.data-table td {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: initial;
+  max-width: none;
+  word-break: break-word; /* wrap very long strings like long emails/addresses */
 }
 
 .no-data{
@@ -355,6 +379,67 @@ color: #556170;
   padding: 6px;
   border-top: 1px solid #eee;
 
+}
+
+.data-table th:nth-child(6),
+.data-table td:nth-child(6) {
+  font-size: 14px;
+  font-weight: 400;
+  min-width: 100px; 
+  white-space: nowrap; 
+  word-break: normal; }
+
+
+.data-table th:nth-child(8),
+.data-table td:nth-child(8) {
+  min-width: 120px; 
+  white-space: nowrap; 
+  word-break: keep-all; 
+}
+
+/* Modal popup styles for edit form */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-form {
+  background: white;
+  padding: 30px;
+  border-radius: 10px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  width: 50%;
+  max-width: 600px;
+  min-width: 400px;
+  height: auto;
+  overflow: visible;
+}
+
+.modal-form h2 {
+  text-align: center;
+  color: var(--primary-active-color);
+  font-size: 24px;
+  margin-bottom: 20px;
+}
+
+/* Two-column layout for modal form fields */
+.modal-form-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+
+/* Make address field span full width */
+.modal-form-columns .input-group.full-width {
+  grid-column: span 2;
 }
 
 
@@ -393,4 +478,44 @@ color: #556170;
   background: #ddd;
 }
 
+/* Manage Customer specific styles */
+.manage-customer {
+  width: 100vw;
+  margin: 0;
+  padding: 0 20px;
+  box-sizing: border-box;
+}
+
+.manage-customer aside {
+  flex-shrink: 0;
+  width: 240px;
+  min-width: 240px;
+}
+
+.manage-customer > div:last-child {
+  flex: 1;
+  min-width: 0;
+  overflow-x: hidden; /* prevent horizontal scroll when editing; table handles its own scroll */
+}
+
+/* Keep the inline edit form within the available width */
+.manage-customer form {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+/* Prevent edit inputs from overflowing the container */
+.manage-customer form input[type="text"],
+.manage-customer form input[type="email"],
+.manage-customer form input[type="tel"],
+.manage-customer form select,
+.manage-customer form textarea {
+  max-width: 100%;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Make edit form span the full right panel width (not the default 500px) */
+.manage-customer .form-box {
+  max-width: 100%;
 }

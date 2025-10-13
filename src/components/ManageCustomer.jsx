@@ -196,25 +196,37 @@ export default function ManageCustomer() {
           </div>
         </div>
         {editIndex !== null && (
-          <form onSubmit={handleUpdate} style={{ marginBottom: 20 }}>
-            <h3>Edit Customer</h3>
-            {fields.map((f) => (
-              <div key={f} style={{ marginBottom: 10 }}>
-                <label style={{ display: "block", fontWeight: "bold", }}>{f}</label>
-                <input
-                  type="text"
-                  value={form[f] || ""}
-                  onChange={(e) => setForm({ ...form, [f]: e.target.value })}
-                  style={{ width: "100%", padding: "6px", border: "1px solid #aaaab2ff", marginTop: 8, borderRadius: 4, transition: "border-color 0.3s ease", }}
-                  autoComplete="off"
-                />
+          <div className="modal-overlay" onClick={() => setEditIndex(null)}>
+            <form onSubmit={handleUpdate} className="modal-form" onClick={(e) => e.stopPropagation()}>
+              <h2>Edit Customer</h2>
+              <div className="modal-form-columns">
+                {fields.map((f) => (
+                  <div 
+                    key={f} 
+                    className={`input-group ${
+                      f === "Office Address" ? "full-width" : ""
+                    }`}
+                  >
+                    <label>{f}</label>
+                    <div className="input-box">
+                      <input
+                        type="text"
+                        value={form[f] || ""}
+                        onChange={(e) => setForm({ ...form, [f]: e.target.value })}
+                        autoComplete="off"
+                      />
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))}
-            <button type="submit">Update</button>{" "}
-            <button type="button" onClick={() => setEditIndex(null)}>
-              Cancel
-            </button>
-          </form>
+              <div className="button-group">
+                <button type="submit" className="update-btn">Update</button>
+                <button type="button" className="cancel-btn" onClick={() => setEditIndex(null)}>
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
         )}
         <div className="actions">
           <table className="data-table" >
