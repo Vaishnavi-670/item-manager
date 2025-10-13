@@ -10,6 +10,7 @@
   --base-transition-1: all 0.3s ease;
   --sixth-bg: #f9f9f9;
   --secondary-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  width: 90%;
 }
 
 /* === Page Container === */
@@ -211,17 +212,15 @@ table tr:nth-child(even) {
   }
 }
 
-
 .form-container {
   align-items: center;
-
   max-width: 900px;
-  margin: 0 auto;
+  /* margin: 0 auto; */
 }
 
 
 .preview-container {
-  width: 90vw;
+  width: 93vw;
   display: flex;
   overflow: hidden;
   align-items: center;
@@ -230,8 +229,8 @@ table tr:nth-child(even) {
   position: relative;
   left: 50%;
   right: 50%;
-  margin-left: -49vw;
-  margin-right: -50vw;
+  margin-left: -46vw;
+  margin-right: -48vw;
   padding: 20px 40px;
   background: #fff;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
@@ -260,4 +259,142 @@ table tr:nth-child(even) {
 
 .preview-table td {
   font-size: 14px;
+}
+.mc-container {
+.mc-table td {
+padding: 10px 12px;
+border-bottom: 1px solid #f1f5f9;
+text-align: left;
+vertical-align: middle;
+font-size: 14px;
+}
+
+
+.mc-table thead th {
+position: sticky;
+top: 0;
+background: linear-gradient(0deg, #004aad, #004aad);
+color: #fff;
+font-weight: 600;
+}
+
+
+.mc-table tbody tr:nth-child(even) {
+background: #fbfdff;
+}
+
+
+.mc-cell[contenteditable="true"] {
+min-width: 100px;
+}
+
+
+.mc-actions-cell {
+display: flex;
+gap: 6px;
+}
+
+
+.mc-action-btn {
+padding: 6px 8px;
+border-radius: 6px;
+border: 1px solid transparent;
+cursor: pointer;
+font-size: 13px;
+}
+
+
+.mc-edit {
+background: #fff8ea;
+border-color: #ffd59a;
+}
+
+
+.mc-delete {
+background: #fff0f2;
+border-color: #f8c1cb;
+}
+
+
+.mc-row-error {
+background: #fff6f7 !important;
+}
+
+
+.mc-empty-row td {
+text-align: center;
+padding: 18px;
+color: #6b7280;
+}
+
+
+.mc-footer {
+margin-top: 12px;
+text-align: right;
+color: #556170;
+}
+
+.clear{
+  display: flex;
+  gap: 8px;
+}
+
+.actions{
+  overflow-x: auto;
+  margin-top: 12px;
+}
+.data-table{
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.no-data{
+  text-align: center;
+  padding: 12px;
+}
+.keys{
+  padding: 6px;
+  border-top: 1px solid #eee;
+
+}
+
+
+/* Buttons */
+.button-group {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.update-btn {
+  background: #1976d2;
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.update-btn:hover {
+  background: #1565c0;
+}
+
+.cancel-btn {
+  background: #eee;
+  color: #333;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+
+.cancel-btn:hover {
+  background: #ddd;
+}
+
+
+
 }

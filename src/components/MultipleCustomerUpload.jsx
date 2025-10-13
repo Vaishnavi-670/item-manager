@@ -99,7 +99,15 @@ export default function MultipleCustomersForm() {
       alert("⚠️ Fix errors before submitting!");
       return;
     }
-    console.log("Multiple Customers:", customers);
+    try {
+      const existing = JSON.parse(localStorage.getItem("customers") || "[]");
+      const next = [...customers, ...existing];
+      localStorage.setItem("customers", JSON.stringify(next));
+    } catch (err) {
+      console.error("Failed to save customers to localStorage", err);
+      alert("Could not save to localStorage. Check console for details.");
+      return;
+    }
     setSubmitMessage("✅ Multiple customers added successfully!");
     setTimeout(() => {
       setCustomers([]);

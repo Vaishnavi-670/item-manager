@@ -24,9 +24,31 @@ export default function SingleCustomerForm() {
       alert("⚠️ Please fill all mandatory fields: Name, Category, Sales Person, and Type.");
       return;
     }
+    // Map to storage shape used by ManageCustomer
+    const record = {
+      "Customer Name": customer.name,
+      GST: customer.gst,
+      Category: customer.category,
+      "Sales Person": customer.salesperson,
+      Type: customer.type,
+      "Contact Person Position": customer.position,
+      Number: customer.number,
+      Email: customer.email,
+      "Office Address": customer.address,
+      hasError: false,
+    };
 
-    console.log("✅ Customer Added:", customer);
-    alert("Customer added successfully!");
+    try {
+      const existing = JSON.parse(localStorage.getItem("customers") || "[]");
+      const next = [record, ...existing];
+      localStorage.setItem("customers", JSON.stringify(next));
+      console.log("Updated customers:", customer);
+
+      alert("Customer added successfully and saved to localStorage!");
+    } catch (err) {
+      console.error("Failed to save customer to localStorage", err);
+      alert("Could not save to localStorage. Check console for details.");
+    }
 
     setCustomer({
       name: "",
@@ -88,156 +110,156 @@ export default function SingleCustomerForm() {
 
   return (
     <div className="form-container">
-  <form className="form-box" onSubmit={handleSubmit} >
-    <h2>Add Single Customer</h2>
+      <form className="form-box" onSubmit={handleSubmit} >
+        <h2>Add Single Customer</h2>
 
-    <div className="form-columns">
-      <div className="input-group">
-        <label>
-          Customer Name<span className="required">*</span>
-        </label>
-        <div className="input-box">
-          <input
-            type="text"
-            name="name"
-            value={customer.name}
-            onChange={handleChange}
-            placeholder="Enter Customer Name"
-            required
-            autoComplete="off"
-          />
-        </div>
-      </div>
+        <div className="form-columns">
+          <div className="input-group">
+            <label>
+              Customer Name<span className="required">*</span>
+            </label>
+            <div className="input-box">
+              <input
+                type="text"
+                name="name"
+                value={customer.name}
+                onChange={handleChange}
+                placeholder="Enter Customer Name"
+                required
+                autoComplete="off"
+              />
+            </div>
+          </div>
 
-      <div className="input-group">
-        <label>GST</label>
-        <div className="input-box">
-          <input
-            type="text"
-            name="gst"
-            value={customer.gst}
-            onChange={handleChange}
-            placeholder="Enter GST Number"
-            autoComplete="off"
-          />
-        </div>
-      </div>
+          <div className="input-group">
+            <label>GST</label>
+            <div className="input-box">
+              <input
+                type="text"
+                name="gst"
+                value={customer.gst}
+                onChange={handleChange}
+                placeholder="Enter GST Number"
+                autoComplete="off"
+              />
+            </div>
+          </div>
 
-      <div className="input-group">
-        <label>
-          Category<span className="required">*</span>
-        </label>
-        <div className="input-box">
-          <select
-            name="category"
-            value={customer.category}
-            onChange={handleChange}
-            required
-          >
-            <option value="">-- Select Category --</option>
-            {categories.map((cat, index) => (
-              <option key={index} value={cat}>
-                {index + 1}. {cat}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
+          <div className="input-group">
+            <label>
+              Category<span className="required">*</span>
+            </label>
+            <div className="input-box">
+              <select
+                name="category"
+                value={customer.category}
+                onChange={handleChange}
+                required
+              >
+                <option value="">-- Select Category --</option>
+                {categories.map((cat, index) => (
+                  <option key={index} value={cat}>
+                    {index + 1}. {cat}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
 
-      <div className="input-group">
-        <label>
-          Sales Person<span className="required">*</span>
-        </label>
-        <div className="input-box">
-          <input
-            type="text"
-            name="salesperson"
-            value={customer.salesperson}
-            onChange={handleChange}
-            placeholder="Enter Sales Person Name"
-            required
-            autoComplete="off"
-          />
-        </div>
-      </div>
+          <div className="input-group">
+            <label>
+              Sales Person<span className="required">*</span>
+            </label>
+            <div className="input-box">
+              <input
+                type="text"
+                name="salesperson"
+                value={customer.salesperson}
+                onChange={handleChange}
+                placeholder="Enter Sales Person Name"
+                required
+                autoComplete="off"
+              />
+            </div>
+          </div>
 
-      <div className="input-group">
-        <label>
-          Type<span className="required">*</span>
-        </label>
-        <div className="input-box">
-          <select
-            name="type"
-            value={customer.type}
-            onChange={handleChange}
-            required
-          >
-            <option value="">-- Select Type --</option>
-            <option value="Trade">Trade</option>
-            <option value="Consumer">Consumer</option>
-          </select>
-        </div>
-      </div>
+          <div className="input-group">
+            <label>
+              Type<span className="required">*</span>
+            </label>
+            <div className="input-box">
+              <select
+                name="type"
+                value={customer.type}
+                onChange={handleChange}
+                required
+              >
+                <option value="">-- Select Type --</option>
+                <option value="Trade">Trade</option>
+                <option value="Consumer">Consumer</option>
+              </select>
+            </div>
+          </div>
 
-      <div className="input-group">
-        <label>Contact Person Position</label>
-        <div className="input-box">
-          <input
-            type="text"
-            name="position"
-            value={customer.position}
-            onChange={handleChange}
-            placeholder="Enter Position"
-            autoComplete="off"
-          />
-        </div>
-      </div>
+          <div className="input-group">
+            <label>Contact Person Position</label>
+            <div className="input-box">
+              <input
+                type="text"
+                name="position"
+                value={customer.position}
+                onChange={handleChange}
+                placeholder="Enter Position"
+                autoComplete="off"
+              />
+            </div>
+          </div>
 
-      <div className="input-group">
-        <label>Contact Number</label>
-        <div className="input-box">
-          <input
-            type="tel"
-            name="number"
-            value={customer.number}
-            onChange={handleChange}
-            placeholder="Enter Contact Number"
-            autoComplete="off"
-          />
-        </div>
-      </div>
+          <div className="input-group">
+            <label>Contact Number</label>
+            <div className="input-box">
+              <input
+                type="tel"
+                name="number"
+                value={customer.number}
+                onChange={handleChange}
+                placeholder="Enter Contact Number"
+                autoComplete="off"
+              />
+            </div>
+          </div>
 
-      <div className="input-group">
-        <label>Email</label>
-        <div className="input-box">
-          <input
-            type="email"
-            name="email"
-            value={customer.email}
-            onChange={handleChange}
-            placeholder="Enter Email Address"
-            autoComplete="off"
-          />
-        </div>
-      </div>
+          <div className="input-group">
+            <label>Email</label>
+            <div className="input-box">
+              <input
+                type="email"
+                name="email"
+                value={customer.email}
+                onChange={handleChange}
+                placeholder="Enter Email Address"
+                autoComplete="off"
+              />
+            </div>
+          </div>
 
-      <div className="input-group full-width">
-        <label>Office Address</label>
-        <div className="input-box">
-          <textarea
-            name="address"
-            value={customer.address}
-            onChange={handleChange}
-            placeholder="Enter Office Address"
-            autoComplete="off"
-          />
+          <div className="input-group full-width">
+            <label>Office Address</label>
+            <div className="input-box">
+              <textarea
+                name="address"
+                value={customer.address}
+                onChange={handleChange}
+                placeholder="Enter Office Address"
+                autoComplete="off"
+              />
+            </div>
+          </div>
         </div>
-      </div>
+
+        <button type="submit">Add Customer</button>
+      </form>
     </div>
-
-    <button type="submit">Add Customer</button>
-  </form>
-</div>
 
   );
 }
