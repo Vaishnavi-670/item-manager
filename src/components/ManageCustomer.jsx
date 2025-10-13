@@ -72,27 +72,47 @@ export default function ManageCustomer() {
     }
   }, []);
 
-  // Unique values for filter dropdowns
-  const uniqueTypes = useMemo(() => Array.from(new Set(customers.map(c => c.Type).filter(Boolean))), [customers]);
-  const uniqueSales = useMemo(() => Array.from(new Set(customers.map(c => c["Sales Person"]).filter(Boolean))), [customers]);
-  const uniqueCategories = useMemo(() => Array.from(new Set(customers.map(c => c.Category).filter(Boolean))), [customers]);
+
+  // const uniqueTypes = useMemo(() => Array.from(new Set(customers.map(c => c.Type).filter(Boolean))), [customers]);
+  // const uniqueSales = useMemo(() => Array.from(new Set(customers.map(c => c["Sales Person"]).filter(Boolean))), [customers]);
+  // const uniqueCategories = useMemo(() => Array.from(new Set(customers.map(c => c.Category).filter(Boolean))), [customers]);
+
+
+  const dependentFiltered = useMemo(() => {
+    // start with all customers
+    let temp = [...customers];
+
+    // apply current filters dynamically
+    if (filters.type) temp = temp.filter(c => c.Type === filters.type);
+    if (filters.sales) temp = temp.filter(c => c["Sales Person"] === filters.sales);
+    if (filters.category) temp = temp.filter(c => c.Category === filters.category);
+    if (filters.name) temp = temp.filter(c =>
+      (c["Customer Name"] || "").toLowerCase().includes(filters.name.toLowerCase())
+    );
+
+    return {
+      types: Array.from(new Set(temp.map(c => c.Type).filter(Boolean))),
+      sales: Array.from(new Set(temp.map(c => c["Sales Person"]).filter(Boolean))),
+      categories: Array.from(new Set(temp.map(c => c.Category).filter(Boolean))),
+    };
+  }, [customers, filters]);
 
   // Filter logic
   const filtered = useMemo(() => {
-  const query = search.trim().toLowerCase();
-  return customers.filter((c) => {
-    const name = (c["Customer Name"] || "").toLowerCase();
-    const matchesSearch = !query || name.includes(query); // instantly matches even 1 character
+    const query = search.trim().toLowerCase();
+    return customers.filter((c) => {
+      const name = (c["Customer Name"] || "").toLowerCase();
+      const matchesSearch = !query || name.includes(query); // instantly matches even 1 character
 
-    const matchesFilters =
-      (!filters.name || name.includes(filters.name.toLowerCase())) &&
-      (!filters.type || c.Type === filters.type) &&
-      (!filters.sales || c["Sales Person"] === filters.sales) &&
-      (!filters.category || c.Category === filters.category);
+      const matchesFilters =
+        (!filters.name || name.includes(filters.name.toLowerCase())) &&
+        (!filters.type || c.Type === filters.type) &&
+        (!filters.sales || c["Sales Person"] === filters.sales) &&
+        (!filters.category || c.Category === filters.category);
 
-    return matchesSearch && matchesFilters;
-  });
-}, [customers, filters, search]);
+      return matchesSearch && matchesFilters;
+    });
+  }, [customers, filters, search]);
 
   return (
     <div className="manage-customer" style={{ display: "flex", gap: 16 }}>
@@ -115,10 +135,9 @@ export default function ManageCustomer() {
           <div className="input-box">
             <select
               value={filters.type}
-              onChange={e => setFilters(f => ({ ...f, type: e.target.value }))}
-            >
+              onChange={e => setFilters(f => ({ ...f, type: e.target.value }))}>
               <option value="">All</option>
-              {uniqueTypes.map(t => (
+              {dependentFiltered.types.map(t => (
                 <option key={t} value={t}>{t}</option>
               ))}
             </select>
@@ -127,15 +146,17 @@ export default function ManageCustomer() {
         <div className="input-group">
           <label>Sales Person</label>
           <div className="input-box">
+           
             <select
               value={filters.sales}
-              onChange={e => setFilters(f => ({ ...f, sales: e.target.value }))}
-            >
+              onChange={e => setFilters(f => ({ ...f, sales: e.target.value }))}>
               <option value="">All</option>
-              {uniqueSales.map(s => (
+              {dependentFiltered.sales.map(s => (
                 <option key={s} value={s}>{s}</option>
               ))}
             </select>
+
+
           </div>
         </div>
         <div className="input-group">
@@ -143,11 +164,10 @@ export default function ManageCustomer() {
           <div className="input-box">
             <select
               value={filters.category}
-              onChange={e => setFilters(f => ({ ...f, category: e.target.value }))}
-            >
+              onChange={e => setFilters(f => ({ ...f, category: e.target.value }))}>
               <option value="">All</option>
-              {uniqueCategories.map(category => (
-                <option key={category} value={category}>{category}</option>
+              {dependentFiltered.categories.map(c => (
+                <option key={c} value={c}>{c}</option>
               ))}
             </select>
           </div>
@@ -180,12 +200,12 @@ export default function ManageCustomer() {
             <h3>Edit Customer</h3>
             {fields.map((f) => (
               <div key={f} style={{ marginBottom: 10 }}>
-                <label style={{ display: "block", fontWeight: "bold" ,}}>{f}</label>
+                <label style={{ display: "block", fontWeight: "bold", }}>{f}</label>
                 <input
                   type="text"
                   value={form[f] || ""}
                   onChange={(e) => setForm({ ...form, [f]: e.target.value })}
-                  style={{ width: "100%", padding: "6px" ,border: "1px solid #aaaab2ff",marginTop: 8, borderRadius: 4,  transition : "border-color 0.3s ease", }}
+                  style={{ width: "100%", padding: "6px", border: "1px solid #aaaab2ff", marginTop: 8, borderRadius: 4, transition: "border-color 0.3s ease", }}
                   autoComplete="off"
                 />
               </div>
@@ -222,7 +242,7 @@ export default function ManageCustomer() {
                     </tr>
                   );
                 }
-                
+
 
                 return (
                   <tr key={idx} style={{ background: c.hasError ? "#fff1f0" : undefined }}>
