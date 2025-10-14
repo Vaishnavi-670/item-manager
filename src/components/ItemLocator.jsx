@@ -8,7 +8,8 @@ const ItemLocatorPage = () => {
   const [selectedTab, setSelectedTab] = useState('viewOnly'); // Default tab
   const [selectedItem, setSelectedItem] = useState(null); // For selected item in table
   const [items, setItems] = useState([]); // Mock data source
-    const [highlightedDuplicateId, setHighlightedDuplicateId] = useState(null);
+  const [highlightedDuplicateId, setHighlightedDuplicateId] = useState(null);
+  const [shiftErrorMsg, setShiftErrorMsg] = useState("");
 
   // Fetch data from localStorage (from SingleItemForm and MultipleItemUpload)
   useEffect(() => {
@@ -139,6 +140,17 @@ const ItemLocatorPage = () => {
     if (selectedItem) {
       const newLocation = e.target.newLocation.value;
       const newQuantity = parseInt(e.target.editQuantity.value);
+      // If selected entry has no location, update it
+      if (!selectedItem.location || selectedItem.location === '' || selectedItem.location === 'Not Set') {
+        const updatedItems = items.map(item =>
+          item.id === selectedItem.id ? { ...item, location: newLocation, quantity: newQuantity } : item
+        );
+        localStorage.setItem('items', JSON.stringify(updatedItems));
+        setItems(updatedItems);
+        setSelectedItem(null);
+        e.target.reset();
+        return;
+      }
       // Check for duplicate (same name+brand+location)
       const duplicate = items.find(
         (item) =>
@@ -151,7 +163,7 @@ const ItemLocatorPage = () => {
         setHighlightedDuplicateId(duplicate.id);
         return;
       }
-      // Add a new entry with the new location and quantity
+      // If selected entry has a location and new location is different, add a new entry
       const storedItems = JSON.parse(localStorage.getItem('items') || '[]');
       const newItem = {
         id: Date.now(),
@@ -170,11 +182,18 @@ const ItemLocatorPage = () => {
 
   const handleItemShiftSubmit = (e) => {
     e.preventDefault();
+    setShiftErrorMsg("");
     if (selectedItem) {
       const shiftQty = parseInt(e.target.newQuantity.value);
       const newLocation = e.target.newLocationShift.value;
-      if (isNaN(shiftQty) || shiftQty <= 0) return;
-      if (shiftQty > selectedItem.quantity) return;
+      if (isNaN(shiftQty) || shiftQty <= 0) {
+        setShiftErrorMsg("Enter a valid quantity to shift.");
+        return;
+      }
+      if (shiftQty > selectedItem.quantity) {
+        setShiftErrorMsg("Cannot shift more than available quantity.");
+        return;
+      }
 
       // Subtract quantity from old location
       let updatedItems = items.map(item =>
@@ -421,7 +440,7 @@ const ItemLocatorPage = () => {
                   </div>
                   <div>
                     <label>Old Quantity</label>
-                    <input type="text" value={selectedItem?.quantity || ''} readOnly />
+                    <input type="text"  value={selectedItem?.quantity || ''} readOnly />
                   </div>
                   <div>
                     <label>Old Location</label>
@@ -436,6 +455,7 @@ const ItemLocatorPage = () => {
                     <input type="text" name="newLocationShift" key={selectedItem?.id ? `${selectedItem.id}-location` : 'empty-location'} required />
                   </div>
                   <button type="submit">Shift Item</button>
+                  {shiftErrorMsg && <div style={{ color: 'red', marginTop: 8, fontWeight: 'bold' }}>{shiftErrorMsg}</div>}
                 </form>
               </div>
             )}

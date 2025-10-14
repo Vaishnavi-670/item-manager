@@ -18,6 +18,7 @@
 }
 .form-section form .form-row-inline {
   flex-direction: row !important;
+  gap: 12px;
 }
 .form-section form label {
   margin-bottom: 5px;
