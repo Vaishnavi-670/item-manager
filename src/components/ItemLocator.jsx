@@ -135,34 +135,34 @@ const ItemLocatorPage = () => {
   const [addLocationMsg, setAddLocationMsg] = useState("");
   const handleAddNewLocationSubmit = (e) => {
     e.preventDefault();
-  setAddLocationMsg("");
+    setAddLocationMsg("");
     if (selectedItem) {
       const newLocation = e.target.newLocation.value;
       const newQuantity = parseInt(e.target.editQuantity.value);
-      // Check for duplicate (same name+brand, different id)
+      // Check for duplicate (same name+brand+location)
       const duplicate = items.find(
         (item) =>
           item.itemName.trim().toLowerCase() === selectedItem.itemName.trim().toLowerCase() &&
           item.brand.trim().toLowerCase() === selectedItem.brand.trim().toLowerCase() &&
-          item.id !== selectedItem.id
+          (item.location?.trim().toLowerCase() || '') === newLocation.trim().toLowerCase()
       );
       if (duplicate) {
-        setAddLocationMsg("Entry with this item name and brand already exists.");
+        setAddLocationMsg("Entry with this item name, brand, and location already exists.");
         setHighlightedDuplicateId(duplicate.id);
         return;
       }
-      const key = `${selectedItem.itemName}_${selectedItem.brand}`;
-      // Update itemMeta in localStorage
-      const storedItemMeta = JSON.parse(localStorage.getItem('itemMeta') || '{}');
-      if (!storedItemMeta[key]) storedItemMeta[key] = {};
-      storedItemMeta[key].location = newLocation;
-      storedItemMeta[key].quantity = newQuantity;
-      localStorage.setItem('itemMeta', JSON.stringify(storedItemMeta));
-      // Update local state
-      const updatedItems = items.map(item => 
-        item.id === selectedItem.id ? { ...item, location: newLocation, quantity: newQuantity } : item
-      );
-      setItems(updatedItems);
+      // Add a new entry with the new location and quantity
+      const storedItems = JSON.parse(localStorage.getItem('items') || '[]');
+      const newItem = {
+        id: Date.now(),
+        itemName: selectedItem.itemName,
+        brand: selectedItem.brand,
+        location: newLocation,
+        quantity: newQuantity
+      };
+      storedItems.push(newItem);
+      localStorage.setItem('items', JSON.stringify(storedItems));
+      setItems([...items, newItem]);
       setSelectedItem(null); // Clear the form
       e.target.reset(); // Clear form fields
     }
@@ -171,20 +171,43 @@ const ItemLocatorPage = () => {
   const handleItemShiftSubmit = (e) => {
     e.preventDefault();
     if (selectedItem) {
-      const newQuantity = parseInt(e.target.newQuantity.value);
+      const shiftQty = parseInt(e.target.newQuantity.value);
       const newLocation = e.target.newLocationShift.value;
-      const key = `${selectedItem.itemName}_${selectedItem.brand}`;
-      // Update itemMeta in localStorage
-      const storedItemMeta = JSON.parse(localStorage.getItem('itemMeta') || '{}');
-      if (!storedItemMeta[key]) storedItemMeta[key] = {};
-      storedItemMeta[key].quantity = newQuantity;
-      storedItemMeta[key].location = newLocation;
-      localStorage.setItem('itemMeta', JSON.stringify(storedItemMeta));
-      // Update local state
-      const updatedItems = items.map(item => 
-        item.id === selectedItem.id ? { ...item, quantity: newQuantity, location: newLocation } : item
+      if (isNaN(shiftQty) || shiftQty <= 0) return;
+      if (shiftQty > selectedItem.quantity) return;
+
+      // Subtract quantity from old location
+      let updatedItems = items.map(item =>
+        item.id === selectedItem.id ? { ...item, quantity: item.quantity - shiftQty } : item
       );
+
+      // Check if entry for new location exists (same name+brand+location)
+      const existing = updatedItems.find(
+        (item) =>
+          item.itemName.trim().toLowerCase() === selectedItem.itemName.trim().toLowerCase() &&
+          item.brand.trim().toLowerCase() === selectedItem.brand.trim().toLowerCase() &&
+          (item.location?.trim().toLowerCase() || '') === newLocation.trim().toLowerCase()
+      );
+      if (existing) {
+        // Add quantity to existing entry
+        updatedItems = updatedItems.map(item =>
+          item.id === existing.id ? { ...item, quantity: item.quantity + shiftQty } : item
+        );
+      } else {
+        // Create new entry for new location
+        const newItem = {
+          id: Date.now(),
+          itemName: selectedItem.itemName,
+          brand: selectedItem.brand,
+          location: newLocation,
+          quantity: shiftQty
+        };
+        updatedItems = [...updatedItems, newItem];
+      }
+      // Remove any items with 0 quantity
+      updatedItems = updatedItems.filter(item => item.quantity > 0);
       setItems(updatedItems);
+      localStorage.setItem('items', JSON.stringify(updatedItems));
       setSelectedItem(null); // Clear the form
       e.target.reset(); // Clear form fields
     }
@@ -284,7 +307,10 @@ const ItemLocatorPage = () => {
                 const isHighlighted = highlightedDuplicateId === item.id;
                 const isSelected = selectedItem && selectedItem.id === item.id && !isHighlighted;
                 const handleRowClick = () => {
-                  if (isHighlighted) setHighlightedDuplicateId(null);
+                  if (isHighlighted) {
+                    setHighlightedDuplicateId(null);
+                  }
+                  setAddLocationMsg("");
                   handleSelectItem(item);
                 };
                 let rowStyle = {};
