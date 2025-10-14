@@ -20,6 +20,20 @@ export default function SingleItemForm() {
       alert("Please fill all mandatory fields (Item Name and Brand).");
       return;
     }
+    
+    // Save to localStorage
+    const existingItems = JSON.parse(localStorage.getItem('items') || '[]');
+    const newItem = {
+      id: Date.now(), // Simple ID generation
+      itemName: item.name,
+      brand: item.brand,
+      type: item.type,
+      description: item.description,
+      mrp: item.mrp
+    };
+    existingItems.push(newItem);
+    localStorage.setItem('items', JSON.stringify(existingItems));
+    
     console.log("Single Item Added:", item);
     alert("Item added successfully!");
     setItem({ name: "", type: "", brand: "", description: "", mrp: "" });

@@ -113,6 +113,19 @@ export default function MultipleItemsForm() {
       return;
     }
 
+    // Save to localStorage
+    const existingItems = JSON.parse(localStorage.getItem('items') || '[]');
+    const newItems = items.map((item, index) => ({
+      id: Date.now() + index, // Simple ID generation
+      itemName: item["Item Name"],
+      brand: item["Brand"],
+      type: item["Item Type"],
+      description: item["Description"],
+      mrp: item["MRP"]
+    }));
+    existingItems.push(...newItems);
+    localStorage.setItem('items', JSON.stringify(existingItems));
+
     console.log("Multiple Items Added:", items);
 
     setSubmitMessage("✅ Multiple items added successfully!");

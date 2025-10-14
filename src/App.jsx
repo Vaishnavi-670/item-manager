@@ -5,6 +5,7 @@ import MultipleItemUpload from "./components/MultipleItemUpload";
 import MultipleCustomerUpload from "./components/MultipleCustomerUpload";
 import SingleCustomerForm from "./components/SingleCustomerform";
 import ManageCustomer from "./components/ManageCustomer";
+import ItemLocator from "./components/ItemLocator";
 
 function App() {
   const [formType, setFormType] = useState("singleItem");
@@ -47,6 +48,12 @@ function App() {
         >
           Manage Customers
         </button>
+        <button
+          className={formType === "itemLocator" ? "active" : ""}
+          onClick={() => setFormType("itemLocator")}
+        >
+          Item Locator
+        </button>
       </div>
 
       <div className="form-container">
@@ -55,6 +62,7 @@ function App() {
         {formType === "singleCustomer" && <SingleCustomerForm />}
         {formType === "multipleCustomer" && <MultipleCustomerUpload />}
         {formType === "manageCustomer" && <ManageCustomer />}
+        {formType === "itemLocator" && <ItemLocator />}
       </div>
       </div>
   );
