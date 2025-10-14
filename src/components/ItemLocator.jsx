@@ -8,29 +8,34 @@ const ItemLocatorPage = () => {
   const [selectedTab, setSelectedTab] = useState('viewOnly'); // Default tab
   const [selectedItem, setSelectedItem] = useState(null); // For selected item in table
   const [items, setItems] = useState([]); // Mock data source
+    const [highlightedDuplicateId, setHighlightedDuplicateId] = useState(null);
 
   // Fetch data from localStorage (from SingleItemForm and MultipleItemUpload)
   useEffect(() => {
-    // Get items from localStorage (saved by SingleItemForm and MultipleItemUpload)
     const storedItems = JSON.parse(localStorage.getItem('items') || '[]');
     
     // Get existing item metadata (location/quantity info)
     const storedItemMeta = JSON.parse(localStorage.getItem('itemMeta') || '{}');
     
-    // Combine base items with their location/quantity data
+    // Combine base items with their location/quantity data, but do NOT auto-update location/qty for duplicate name+brand
+    // Only the first occurrence (by id) gets the meta, others get their own default
+    const seen = new Set();
     const itemsWithMeta = storedItems.map(item => {
       const key = `${item.itemName}_${item.brand}`;
-      const meta = storedItemMeta[key];
-      
+      let meta = undefined;
+      if (!seen.has(key)) {
+        meta = storedItemMeta[key];
+        seen.add(key);
+      }
       return {
         id: item.id,
         itemName: item.itemName,
         brand: item.brand,
-        quantity: meta?.quantity || 0,
-        location: meta?.location || 'Not Set'
+        quantity: meta?.quantity ?? item.quantity ?? 0,
+        location: meta?.location ?? item.location ?? 'Not Set'
       };
     });
-    
+
     // Fallback mock data if no items in localStorage
     if (itemsWithMeta.length === 0) {
       const mockData = [
@@ -44,6 +49,12 @@ const ItemLocatorPage = () => {
     }
   }, []);
 
+  // Clear selection and highlight when switching tabs
+  useEffect(() => {
+    setSelectedItem(null);
+    setHighlightedDuplicateId(null);
+  }, [selectedTab]);
+
   // Compute unique brands and locations
   const uniqueBrands = [...new Set(items.map(item => item.brand))];
   const uniqueLocations = [...new Set(items.map(item => item.location))];
@@ -51,8 +62,8 @@ const ItemLocatorPage = () => {
   // Filter items based on search and filters
   const filteredItems = items.filter(item => {
     const matchesSearch = item.itemName.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesBrand = selectedBrand ? item.brand === selectedBrand : true;
-    const matchesLocation = selectedLocation ? item.location === selectedLocation : true;
+    const matchesBrand = selectedBrand ? item.brand.toLowerCase().includes(selectedBrand.toLowerCase()) : true;
+    const matchesLocation = selectedLocation ? item.location.toLowerCase().includes(selectedLocation.toLowerCase()) : true;
     return matchesSearch && matchesBrand && matchesLocation;
   });
 
@@ -67,6 +78,37 @@ const ItemLocatorPage = () => {
   // Handle item selection from the table
   const handleSelectItem = (item) => {
     setSelectedItem(item); // Set the selected item for forms
+  };
+
+  // Handle item deletion
+  const [deleteModal, setDeleteModal] = useState({ show: false, itemId: null, itemName: '' });
+
+  const handleDeleteItem = (itemId) => {
+    const item = items.find(i => i.id === itemId);
+    setDeleteModal({ show: true, itemId: itemId, itemName: item?.itemName || 'this item' });
+  };
+
+  const confirmDelete = () => {
+    const itemId = deleteModal.itemId;
+    // Remove from localStorage items
+    const storedItems = JSON.parse(localStorage.getItem('items') || '[]');
+    const updatedStoredItems = storedItems.filter(item => item.id !== itemId);
+    localStorage.setItem('items', JSON.stringify(updatedStoredItems));
+    
+    // Remove from local state
+    const updatedItems = items.filter(item => item.id !== itemId);
+    setItems(updatedItems);
+    
+    // Clear selected item if it was the one being deleted
+    if (selectedItem && selectedItem.id === itemId) {
+      setSelectedItem(null);
+    }
+    
+    setDeleteModal({ show: false, itemId: null, itemName: '' });
+  };
+
+  const cancelDelete = () => {
+    setDeleteModal({ show: false, itemId: null, itemName: '' });
   };
 
   // Handle form submissions - save to localStorage
@@ -85,28 +127,44 @@ const ItemLocatorPage = () => {
         item.id === selectedItem.id ? { ...item, quantity: newQuantity } : item
       );
       setItems(updatedItems);
-      alert(`Quantity for ${selectedItem.itemName} updated to ${newQuantity}`);
       setSelectedItem(null); // Clear the form
+      e.target.reset(); // Clear form fields
     }
   };
 
+  const [addLocationMsg, setAddLocationMsg] = useState("");
   const handleAddNewLocationSubmit = (e) => {
     e.preventDefault();
+  setAddLocationMsg("");
     if (selectedItem) {
       const newLocation = e.target.newLocation.value;
+      const newQuantity = parseInt(e.target.editQuantity.value);
+      // Check for duplicate (same name+brand, different id)
+      const duplicate = items.find(
+        (item) =>
+          item.itemName.trim().toLowerCase() === selectedItem.itemName.trim().toLowerCase() &&
+          item.brand.trim().toLowerCase() === selectedItem.brand.trim().toLowerCase() &&
+          item.id !== selectedItem.id
+      );
+      if (duplicate) {
+        setAddLocationMsg("Entry with this item name and brand already exists.");
+        setHighlightedDuplicateId(duplicate.id);
+        return;
+      }
       const key = `${selectedItem.itemName}_${selectedItem.brand}`;
       // Update itemMeta in localStorage
       const storedItemMeta = JSON.parse(localStorage.getItem('itemMeta') || '{}');
       if (!storedItemMeta[key]) storedItemMeta[key] = {};
       storedItemMeta[key].location = newLocation;
+      storedItemMeta[key].quantity = newQuantity;
       localStorage.setItem('itemMeta', JSON.stringify(storedItemMeta));
       // Update local state
       const updatedItems = items.map(item => 
-        item.id === selectedItem.id ? { ...item, location: newLocation } : item
+        item.id === selectedItem.id ? { ...item, location: newLocation, quantity: newQuantity } : item
       );
       setItems(updatedItems);
-      alert(`Location for ${selectedItem.itemName} updated to ${newLocation}`);
       setSelectedItem(null); // Clear the form
+      e.target.reset(); // Clear form fields
     }
   };
 
@@ -127,8 +185,8 @@ const ItemLocatorPage = () => {
         item.id === selectedItem.id ? { ...item, quantity: newQuantity, location: newLocation } : item
       );
       setItems(updatedItems);
-      alert(`Item ${selectedItem.itemName} shifted with quantity ${newQuantity} to ${newLocation}`);
       setSelectedItem(null); // Clear the form
+      e.target.reset(); // Clear form fields
     }
   };
 
@@ -178,29 +236,23 @@ const ItemLocatorPage = () => {
               </div>
               <div className="search-field">
                 <label>Filter by Brand</label>
-                <select
+                <input
+                  type="text"
                   className="search-input"
+                  placeholder="Search brand..."
                   value={selectedBrand}
                   onChange={(e) => setSelectedBrand(e.target.value)}
-                >
-                  <option value="">All Brands</option>
-                  {uniqueBrands.map(brand => (
-                    <option key={brand} value={brand}>{brand}</option>
-                  ))}
-                </select>
+                />
               </div>
               <div className="search-field">
                 <label>Filter by Location</label>
-                <select
+                <input
+                  type="text"
                   className="search-input"
+                  placeholder="Search location..."
                   value={selectedLocation}
                   onChange={(e) => setSelectedLocation(e.target.value)}
-                >
-                  <option value="">All Locations</option>
-                  {uniqueLocations.map(location => (
-                    <option key={location} value={location}>{location}</option>
-                  ))}
-                </select>
+                />
               </div>
               <button
                 className="search-btn clear-btn"
@@ -222,25 +274,51 @@ const ItemLocatorPage = () => {
                 <th>Quantity</th>
                 <th>Location</th>
                 <th>Total Stock</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
               {filteredItems.map((item) => {
                 const key = `${(item.itemName || '').toLowerCase()}|${(item.brand || '').toLowerCase()}`;
                 const totalStock = totalByItemKey[key] ?? (Number(item.quantity) || 0);
+                const isHighlighted = highlightedDuplicateId === item.id;
+                const isSelected = selectedItem && selectedItem.id === item.id && !isHighlighted;
+                const handleRowClick = () => {
+                  if (isHighlighted) setHighlightedDuplicateId(null);
+                  handleSelectItem(item);
+                };
+                let rowStyle = {};
+                let cellStyle = { cursor: 'pointer', fontWeight: isHighlighted || isSelected ? 'bold' : undefined };
+                if (isHighlighted) {
+                  rowStyle = { background: '#ffd6d6', transition: 'background 0.3s' };
+                  cellStyle = { ...cellStyle, color: 'red' };
+                } else if (isSelected) {
+                  rowStyle = { background: '#44bb44ff', transition: 'background 0.3s' };
+                }
                 return (
-                  <tr key={item.id} onClick={() => handleSelectItem(item)} style={{ cursor: 'pointer' }}>
-                    <td>{item.itemName}</td>
-                    <td>{item.brand}</td>
-                    <td>{item.quantity}</td>
-                    <td>{item.location}</td>
-                    <td>{totalStock}</td>
+                  <tr key={item.id} style={rowStyle}>
+                    <td onClick={handleRowClick} style={cellStyle}>{item.itemName}</td>
+                    <td onClick={handleRowClick} style={cellStyle}>{item.brand}</td>
+                    <td onClick={handleRowClick} style={cellStyle}>{item.quantity}</td>
+                    <td onClick={handleRowClick} style={cellStyle}>{item.location}</td>
+                    <td onClick={handleRowClick} style={cellStyle}>{totalStock}</td>
+                    <td>
+                      <button 
+                        className="delete-btn"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteItem(item.id);
+                        }}
+                      >
+                        ❌
+                      </button>
+                    </td>
                   </tr>
                 );
               })}
               {filteredItems.length === 0 && (
                 <tr>
-                  <td colSpan={5} style={{ textAlign: 'center', padding: '16px' }}>
+                  <td colSpan={6} style={{ textAlign: 'center', padding: '16px' }}>
                     No Items Found
                   </td>
                 </tr>
@@ -268,7 +346,7 @@ const ItemLocatorPage = () => {
                   </div>
                   <div>
                     <label>Edit Quantity</label>
-                    <input type="number" name="editQuantity" defaultValue={selectedItem?.quantity || ''} required />
+                    <input type="number" name="editQuantity" key={selectedItem?.id || 'empty'} defaultValue={selectedItem?.quantity || ''} required />
                   </div>
                   <button type="submit">Update Quantity</button>
                 </form>
@@ -287,15 +365,18 @@ const ItemLocatorPage = () => {
                     <input type="text" value={selectedItem?.brand || ''} readOnly />
                   </div>
                   <div>
-                    <label>Quantity</label>
-                    <input type="text" value={selectedItem?.quantity || ''} readOnly />
+                    <label>Edit Quantity</label>
+                    <input type="number" name="editQuantity" key={selectedItem?.id || 'empty'} defaultValue={selectedItem?.quantity || ''} required />
                   </div>
                   <div>
                     <label>New Location</label>
-                    <input type="text" name="newLocation" required />
+                    <input type="text" name="newLocation" key={selectedItem?.id || 'empty'} required />
                   </div>
                   <button type="submit">Update Location</button>
                 </form>
+                {addLocationMsg && (
+                  <div style={{ color: 'red', marginTop: 8, fontWeight: 'bold' }}>{addLocationMsg}</div>
+                )}
               </div>
             )}
             {selectedTab === 'itemShift' && (
@@ -322,11 +403,11 @@ const ItemLocatorPage = () => {
                   </div>
                   <div>
                     <label>New Quantity</label>
-                    <input type="number" name="newQuantity" required />
+                    <input type="number" name="newQuantity" key={selectedItem?.id || 'empty'} required />
                   </div>
                   <div>
                     <label>New Location</label>
-                    <input type="text" name="newLocationShift" required />
+                    <input type="text" name="newLocationShift" key={selectedItem?.id ? `${selectedItem.id}-location` : 'empty-location'} required />
                   </div>
                   <button type="submit">Shift Item</button>
                 </form>
@@ -335,6 +416,20 @@ const ItemLocatorPage = () => {
           </div>
         )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {deleteModal.show && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h3>Confirm Delete</h3>
+            <p>Are you sure you want to delete "{deleteModal.itemName}"?</p>
+            <div className="modal-buttons">
+              <button className="cancel-btn" onClick={cancelDelete}>Cancel</button>
+              <button className="confirm-btn" onClick={confirmDelete}>Delete</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
