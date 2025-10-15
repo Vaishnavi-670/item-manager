@@ -37,17 +37,7 @@ const ItemLocatorPage = () => {
             };
         });
 
-        // Fallback mock data if no items in localStorage
-        if (itemsWithMeta.length === 0) {
-            const mockData = [
-                { id: 1, itemName: 'Laptop', brand: 'Dell', quantity: 5, location: 'Warehouse A' },
-                { id: 2, itemName: 'Phone', brand: 'Apple', quantity: 10, location: 'Store B' },
-                { id: 3, itemName: 'Tablet', brand: 'Samsung', quantity: 3, location: 'Warehouse C' },
-            ];
-            setItems(mockData);
-        } else {
-            setItems(itemsWithMeta);
-        }
+        setItems(itemsWithMeta);
     }, []);
 
     // Clear selection and highlight when switching tabs
