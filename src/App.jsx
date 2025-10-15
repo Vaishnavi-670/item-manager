@@ -6,6 +6,7 @@ import MultipleCustomerUpload from "./components/MultipleCustomerUpload";
 import SingleCustomerForm from "./components/SingleCustomerform";
 import ManageCustomer from "./components/ManageCustomer";
 import ItemLocator from "./components/ItemLocator";
+import PurchaseItem from "./components/PurchaseItem";
 
 function App() {
   const [formType, setFormType] = useState("singleItem");
@@ -54,6 +55,12 @@ function App() {
         >
           Item Locator
         </button>
+        <button
+          className={formType === "purchaseItem" ? "active" : ""}
+          onClick={() => setFormType("purchaseItem")}
+        >
+          Purchase Item
+        </button>
       </div>
 
       <div className="form-container">
@@ -63,6 +70,7 @@ function App() {
         {formType === "multipleCustomer" && <MultipleCustomerUpload />}
         {formType === "manageCustomer" && <ManageCustomer />}
         {formType === "itemLocator" && <ItemLocator />}
+        {formType === "purchaseItem" && <PurchaseItem />}
       </div>
       </div>
   );
