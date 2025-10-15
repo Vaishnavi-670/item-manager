@@ -7,6 +7,8 @@ import SingleCustomerForm from "./components/SingleCustomerform";
 import ManageCustomer from "./components/ManageCustomer";
 import ItemLocator from "./components/ItemLocator";
 import PurchaseItem from "./components/PurchaseItem";
+import Quotation from "./components/Quotation";
+// import ProformaInvoice from "./components/ProformaInvoice";
 
 function App() {
   const [formType, setFormType] = useState("singleItem");
@@ -61,6 +63,18 @@ function App() {
         >
           Purchase Item
         </button>
+        {/* <button
+          className={formType === "proformaInvoice" ? "active" : ""}
+          onClick={() => setFormType("proformaInvoice")}
+        >
+          Proforma Invoice
+        </button> */}
+        <button
+          className={formType === "quotation" ? "active" : ""}
+          onClick={() => setFormType("quotation")}
+        >
+          Quotation
+        </button>
       </div>
 
       <div className="form-container">
@@ -71,6 +85,8 @@ function App() {
         {formType === "manageCustomer" && <ManageCustomer />}
         {formType === "itemLocator" && <ItemLocator />}
         {formType === "purchaseItem" && <PurchaseItem />}
+        {/* {formType === "proformaInvoice" && <ProformaInvoice />} */}
+        {formType === "quotation" && <Quotation />}
       </div>
       </div>
   );

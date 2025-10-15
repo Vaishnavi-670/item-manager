@@ -30,6 +30,32 @@ const PurchaseItem = () => {
         const { name, value } = e.target;
         const newItems = [...items];
         newItems[index][name] = value;
+
+        // Price/Discount/Net Price logic
+        let price = parseFloat(newItems[index].price) || 0;
+        let discount = parseFloat(newItems[index].discount) || 0;
+        if (name === 'price') {
+            // When price changes, update netPrice
+            if (!isNaN(price)) {
+                if (!newItems[index].discount || isNaN(discount) || discount === 0) {
+                    newItems[index].netPrice = price;
+                } else {
+                    newItems[index].netPrice = (price - (price * discount / 100)).toFixed(2);
+                }
+            } else {
+                newItems[index].netPrice = '';
+            }
+        } else if (name === 'discount') {
+            // When discount changes, update netPrice
+            if (!isNaN(price) && !isNaN(discount)) {
+                newItems[index].netPrice = (price - (price * discount / 100)).toFixed(2);
+            } else if (!isNaN(price)) {
+                newItems[index].netPrice = price;
+            } else {
+                newItems[index].netPrice = '';
+            }
+        }
+
         setItems(newItems);
         setAddRowError("");
 
@@ -47,6 +73,7 @@ const PurchaseItem = () => {
             setActiveSuggestionIdx(-1);
         }
     };
+
 
     // When a suggestion is clicked, fill itemName and brand
     const handleSuggestionClick = (rowIdx, suggestion) => {
@@ -270,11 +297,20 @@ const PurchaseItem = () => {
                             </div>
                             <div className="form-group">
                                 <label htmlFor={`discount-${idx}`}>Dis(%) :</label>
-                                <input type="number" id="discount" name="discount" value={item.discount} onChange={e => handleItemChange(idx, e)} required />
+                                <input type="number" id="discount" name="discount" value={item.discount} onChange={e => handleItemChange(idx, e)} />
                             </div>
                             <div className="form-group">
                                 <label htmlFor={`netPrice-${idx}`}>Net Price:</label>
-                                <input type="number" id="netPrice" name="netPrice" value={item.netPrice} onChange={e => handleItemChange(idx, e)} required />
+                                <input
+                                    type="number"
+                                    id="netPrice"
+                                    name="netPrice"
+                                    value={item.netPrice}
+                                    readOnly
+                                    tabIndex={-1}
+                                    style={{ background: '#f7f7fa', color: '#333', cursor: 'not-allowed' }}
+                                    required
+                                />
                             </div>
                             {idx > 0 && (
                                 <button type="button" className="delete-row-btn" onClick={() => handleDeleteRow(idx)} title="Delete row">❌</button>

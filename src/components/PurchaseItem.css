@@ -4,19 +4,23 @@
         margin-left: 0;
         width: 100vw;
     }
+
     .purchase-form {
         padding: 16px;
         width: 100%;
     }
+
     .purchase-flex {
         flex-direction: column;
         gap: 10px;
     }
-    .purchase-form .purchase-flex > button {
+
+    .purchase-form .purchase-flex>button {
         width: 100%;
         min-width: 0;
         margin-top: 8px;
     }
+
     #invoiceNo,
     #date,
     #itemName,
@@ -31,37 +35,43 @@
     .purchaseWrap {
         padding: 0;
     }
+
     .purchase-item {
         margin-top: 10px;
         width: 100vw;
     }
+
     .purchase-form {
         padding: 8px;
         gap: 10px;
     }
+
     .form-group label {
         font-size: 1rem;
     }
-    .purchase-form .purchase-flex > button {
+
+    .purchase-form .purchase-flex>button {
         font-size: 0.98rem;
         padding: 10px 0;
     }
 }
 
-.purchaseWrap{
+.purchaseWrap {
     display: flex;
     justify-content: center;
     align-items: center;
     width: 100vw;
     box-sizing: border-box;
 }
-.purchase-item{
+
+.purchase-item {
     width: 100vw;
-    margin-top: 20px ;
+    margin-top: 20px;
     margin-left: 50px;
     /* padding: 20px; */
 }
-.purchase-item h2{
+
+.purchase-item h2 {
     color: var(--primary-active-color);
     font-weight: 700;
     font-size: 26px;
@@ -70,7 +80,7 @@
 }
 
 
-.purchase-form{
+.purchase-form {
     display: flex;
     flex-direction: column;
     gap: 20px;
@@ -79,22 +89,26 @@
     width: 90%;
     box-shadow: var(--secondary-shadow);
 }
-.purchase-flex{
+
+.purchase-flex {
     display: flex;
     gap: 20px;
     /* justify-content: space-between; */
 }
-.form-group{
+
+.form-group {
     display: flex;
     flex-direction: column;
     /* flex: 1; */
 }
-.form-group label{
+
+.form-group label {
     margin-bottom: 8px;
     font-weight: 600;
     /* color: var(--primary-active-color); */
 }
-.form-group input{
+
+.form-group input {
     padding: 10px;
     border: 1px solid #c8c9da;
     border-radius: 8px;
@@ -102,12 +116,15 @@
     width: 100%;
     box-sizing: border-box;
 }
-.form-group input:focus{
+
+.form-group input:focus {
     outline: none;
-    border-color: #1e90ff; /* DodgerBlue */
+    border-color: #1e90ff;
+    /* DodgerBlue */
     box-shadow: 0 0 0 3px rgba(30, 144, 255, 0.25);
 }
-.form-group select{
+
+.form-group select {
     padding: 10px;
     border: 1px solid #c8c9da;
     border-radius: 8px;
@@ -115,11 +132,14 @@
     width: 100%;
     box-sizing: border-box;
 }
-.form-group select:focus{
+
+.form-group select:focus {
     outline: none;
-    border-color: #1e90ff; /* DodgerBlue */
+    border-color: #1e90ff;
+    /* DodgerBlue */
     box-shadow: 0 0 0 3px rgba(30, 144, 255, 0.25);
 }
+
 /* Compact size for specific inputs */
 #brand,
 #location,
@@ -136,27 +156,31 @@
     box-sizing: border-box;
     transition: border-color 0.2s;
 }
-#customerName{
-    width: 250px;           
+
+#customerName {
+    width: 250px;
     max-width: 100%;
-    padding: 12px;  
+    padding: 12px;
     font-size: 1rem;
 }
+
 #invoiceNo,
 #date {
     margin-top: 5px;
 }
 
-#itemName{
-    width: 220px;           
+#itemName {
+    width: 220px;
     max-width: 100%;
-    padding: 12px;  
+    padding: 12px;
     font-size: 1rem;
 }
+
 label[for="customerName"] {
     font-size: 1.1rem;
 }
-.purchase-form .purchase-flex > button,
+
+.purchase-form .purchase-flex>button,
 .purchase-action-btn {
     padding: 12px 0;
     background-color: var(--primary-active-color);
@@ -173,28 +197,30 @@ label[for="customerName"] {
     margin-left: 0;
     box-sizing: border-box;
 }
+
 .purchase-form .purchase-flex {
     gap: 16px;
 }
 
 /* Remove background for delete row button in item rows */
 .delete-row-btn {
-  background: none !important;
-  border: none;
-  color: #d32f2f;
-  font-size: 1.2rem;
-  cursor: pointer;
-  padding: 0 2px;
-  width: 28px;
-  height: 28px;
-  min-width: 0;
-  min-height: 0;
-  border-radius: 50%;
-  transition: background 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+    background: none !important;
+    border: none;
+    color: #d32f2f;
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 0 2px;
+    width: 28px;
+    height: 28px;
+    min-width: 0;
+    min-height: 0;
+    border-radius: 50%;
+    transition: background 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
+
 .delete-row-btn:hover {
-  background: #f8d7da;
+    background: #f8d7da;
 }
