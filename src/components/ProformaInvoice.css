@@ -235,19 +235,16 @@ table th {
 
 .card {
   background: #fff;
-  /* border removed as requested */
   padding: 8px 10px;
   border-radius: 6px;
 }
 
 .card h2 {
-  /* margin: 0 0 8px 0; */
   font-size: 15px;
   color: #000;
   font-weight: 600;
 }
 
-/* Hide visual section headings inside invoice-details per request (keep DOM for accessibility/structure) */
 .invoice-details .card h2,
 .invoice-details h3 {
   display: none;
@@ -261,7 +258,6 @@ table th {
   padding-top: 10px;
 }
 
-/* New layout rows/columns */
 .row {
   display: flex;
   gap: 6px;
@@ -294,13 +290,11 @@ table th {
   width: 33.333%;
 }
 
-/* Slightly reduce width of inputs in the buyer (left) column to leave some whitespace */
 .top-row .left-col .form-input {
   width: 92%;
   max-width: 520px;
 }
 
-/* Match suggestions dropdown width to the reduced input width */
 .top-row .left-col .suggestions-list {
   width: calc(92% - 28px);
 }
@@ -345,7 +339,6 @@ table th {
   box-sizing: border-box;
 }
 
-/* Ensure inputs inside proforma show full typed content (no truncation). Allow scrolling if value exceeds visible width. */
 .proforma-container input,
 .proforma-container textarea,
 .proforma-container select {
@@ -354,9 +347,7 @@ table th {
   text-overflow: clip;
 }
 
-/* Address textarea: allow multi-line wrap, autosize friendly */
 .address-textarea {
-  /* resize: none; */
   white-space: nowrap; 
   overflow: visible;
   min-height: 50px;
@@ -370,7 +361,6 @@ input, textarea {
 .input-label {
   display: block;
   font-size: 11px;
-  /* slightly smaller label to reduce vertical footprint */
   color: #374151;
   margin-bottom: 0;
   margin-right: 6px;
@@ -388,11 +378,9 @@ input, textarea {
   padding: 4px 6px;
 }
 
-/* Compact inputs used for PI No and Date in inline small rows */
 .form-row.small label {
   display: inline-block;
   margin-right: 6px;
-  /* tighter gap between label and small input */
   font-size: 12px;
   white-space: nowrap;
 }
@@ -407,7 +395,6 @@ input, textarea {
   margin: 0;
 }
 
-/* Autocomplete suggestions */
 .suggestions-list {
   position: absolute;
   background: #fff;
@@ -448,16 +435,16 @@ input, textarea {
 
 .table-wrap {
   width: 100%;
-  overflow-x: visible; /* make table fit; avoid horizontal scroll */
+  overflow-x: visible; 
   margin-bottom: 12px;
 }
 
 .invoice-table {
   width: 100%;
-  min-width: 0; /* allow table to shrink to container */
+  min-width: 0; 
   border-collapse: collapse;
   background: #fff;
-  table-layout: fixed; /* distribute columns within width */
+  table-layout: fixed; 
 }
 
 .invoice-table th,
@@ -470,10 +457,8 @@ input, textarea {
 
 .invoice-table {
   table-layout: fixed;
-  /* prevent cells from resizing when inputs change */
 }
 
-/* Inputs inside invoice table should fit the cell and not overflow */
 .invoice-table .form-input {
   box-sizing: border-box;
   width: 100%;
@@ -482,7 +467,6 @@ input, textarea {
   margin: 0;
   line-height: 1.0;
   font-size: 10.5px;
-  /* Allow the full typed value to be visible. Remove truncation; allow scrolling if needed */
   white-space: normal;
   overflow: auto;
   text-overflow: clip;
@@ -493,7 +477,6 @@ input, textarea {
   vertical-align: middle;
 }
 
-/* Make table inputs borderless and visually fit the cell */
 .invoice-table .form-input {
   border: none;
   background: transparent;
@@ -518,17 +501,14 @@ input, textarea {
 .invoice-table th:nth-child(3),
 .invoice-table td:nth-child(3) {
   width: 75px;
-  /* small increase to improve visibility */
 }
 
-/* Totals two-column layout */
 .total {
   display: flex;
   gap: 18px;
   justify-content: space-between;
   margin-top: 12px;
   align-items: stretch;
-  /* ensure children stretch to same height */
 }
 
 .invoice-total-left,
@@ -536,13 +516,11 @@ input, textarea {
   flex: 1 1 50%;
   display: flex;
   flex-direction: column;
-  /* allow the table to expand vertically */
 }
 
 .invoice-total-left>.totals-table,
 .invoice-total-right>.totals-table {
   flex: 1 1 auto;
-  /* let table grow to fill parent column */
   height: 100%;
 }
 
@@ -569,7 +547,6 @@ input, textarea {
   color: #065f46;
 }
 
-/* Make left totals compact: smaller font and tighter rows */
 .totals-table.left td {
   padding: 2px 4px;
   font-size: 11px;
@@ -594,7 +571,6 @@ input, textarea {
   text-align: right;
 }
 
-/* Match right totals appearance to left: compact padding and smaller font */
 .totals-table.right td {
   padding: 2px 4px;
   font-size: 11px;
@@ -613,13 +589,11 @@ input, textarea {
   box-sizing: border-box;
 }
 
-/* Make totals table inputs look like plain text by hiding borders/backgrounds */
 .totals-table input,
 .totals-table textarea {
   border: none;
   background: transparent;
   padding: 0;
-  /* keep cell padding from td */
   margin: 0;
   font-size: 13px;
   color: inherit;
@@ -640,7 +614,6 @@ input, textarea {
 
 }
 
-/* Amount-in-words paragraph (read-only) */
 .amount-in-words {
   margin: 0;
   padding: 6px 8px;
@@ -650,7 +623,6 @@ input, textarea {
   color: #0f172a;
   line-height: 1.25;
   min-height: 40px;
-  /* keep table row from collapsing when empty */
 }
 
 #add-row-input {
@@ -668,10 +640,9 @@ input, textarea {
   font-size: 13px;
 }
 
-/* compact add-row control spacing */
 .add-row-controls {
   display: flex;
-  gap: 6px; /* smaller gap between input and button */
+  gap: 6px; 
   align-items: center;
 }
 .add-row-controls .add-row-input {
@@ -713,10 +684,8 @@ input, textarea {
   font-size: 12px;
   color: #6b7280;
   text-align: start;
-  /* align footer text to start (left) */
 }
 
-/* Responsive adjustments */
 @media (max-width: 900px) {
 
   .top-row,
