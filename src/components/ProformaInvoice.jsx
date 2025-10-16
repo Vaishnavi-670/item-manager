@@ -1,8 +1,11 @@
 import React, { useEffect, useState } from "react";
 import "./ProformaInvoice.css";
 import companyLogo from "../assets/bt logo.jpg";
+import html2pdf from "html2pdf.js";
+  
 
 const ProformaInvoice = () => {
+    const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
     const initialData = {
         company: {
             name: "Bearing Traders India Pvt. Ltd.",
@@ -25,7 +28,7 @@ const ProformaInvoice = () => {
 
         invoice: {
             number: "",
-            date: "15-Oct-2025",
+            date: today,
             refNo: "",
             preparedBy: "",
             freight: 0,
@@ -58,9 +61,12 @@ const ProformaInvoice = () => {
     const [customers, setCustomers] = useState([]);
     const [suggestions, setSuggestions] = useState([]);
     const [showSuggestions, setShowSuggestions] = useState(false);
+    const [contactOptions, setContactOptions] = useState([]);
+    const [selectedCustomerName, setSelectedCustomerName] = useState("");
+    const [buyerLocked, setBuyerLocked] = useState(false);
     const [items, setItems] = useState(() => {
         const base = Array.isArray(initialData.items) ? [...initialData.items] : [];
-        while (base.length < 5) {
+        while (base.length < 10) {
             base.push({
                 srNo: base.length + 1,
                 cpn: "",
@@ -106,18 +112,39 @@ const ProformaInvoice = () => {
         setShowSuggestions(matches.length > 0);
     };
 
-    const selectSuggestion = (c) => {
+    // When the user clicks a customer suggestion, prepare contact options for it
+    const chooseCustomerName = (c) => {
+        const custName = c["Customer Name"] || "";
+        onBuyerChange("name", custName);
+        const opts = customers
+            .filter((cust) => ((cust["Customer Name"] || "") === custName))
+            .map((cust) => ({ contact: (cust["Contact Person Name"] || cust["Contact Person"] || "").trim(), record: cust }))
+            .filter((o) => o.contact);
+        setContactOptions(opts);
+        setSelectedCustomerName(custName);
+        setShowSuggestions(false);
+        setBuyerLocked(false);
+    };
+
+    // On choosing a contact person, fill buyer fields and lock them
+    const chooseContactPerson = (contactName) => {
+        if (!selectedCustomerName) return;
+        const rec = customers.find((cust) => ((cust["Customer Name"] || "") === selectedCustomerName)
+            && ((cust["Contact Person Name"] || cust["Contact Person"] || "") === contactName));
+        if (!rec) return;
         const mapped = {
-            name: c["Customer Name"] || "",
-            address: c["Office Address"] || c["Address"] || "",
-            gst: c["GST"] || "",
-            phone: c["Number"] || c["Phone"] || "",
-            email: c["Email"] || "",
-            contactPerson: c["Contact Person Name"] || c["Contact Person"] || "",
-            salesPerson: c["Sales Person"] || c["salesperson"] || "",
+            name: rec["Customer Name"] || "",
+            address: rec["Office Address"] || rec["Address"] || "",
+            gst: rec["GST"] || "",
+            phone: rec["Number"] || rec["Phone"] || "",
+            email: rec["Email"] || "",
+            contactPerson: rec["Contact Person Name"] || rec["Contact Person"] || "",
+            salesPerson: rec["Sales Person"] || rec["salesperson"] || "",
         };
         setBuyer((p) => ({ ...p, ...mapped }));
-        setShowSuggestions(false);
+        setContactOptions([]);
+        setSelectedCustomerName("");
+        setBuyerLocked(true);
     };
 
     const updateItem = (index, field, rawValue) => {
@@ -225,6 +252,58 @@ const ProformaInvoice = () => {
         setInvoice((p) => ({ ...p, amountInWords: words }));
     }, [grand]);
 
+   
+const handleDownloadPdf = () => {
+    
+  const element = document.querySelector(".proforma-container");
+
+  // Hide only unnecessary buttons (Add Row, Download, etc.)
+  const hiddenElements = document.querySelectorAll(
+    ".add-row-btn, .download-btn"
+  );
+
+  hiddenElements.forEach(el => (el.style.display = "none"));
+
+  // Temporarily remove input borders for PDF export
+  const inputs = document.querySelectorAll("input, select, textarea");
+  inputs.forEach(el => {
+    el.setAttribute("data-old-border", el.style.border || ""); // save old style
+    el.style.border = "none";
+    el.style.outline = "none";
+    el.style.background = "transparent";
+  });
+//   const addressInput = document.querySelector('input[name="address"]');
+// if (addressInput) {
+//   addressInput.style.width = "100%";
+//   addressInput.style.whiteSpace = "normal";
+//   addressInput.style.overflow = "visible";
+// }
+
+  const options = {
+    margin: 0.5,
+    filename: `Proforma_Invoice_${invoice.number || "BTIPL"}.pdf`,
+    image: { type: "jpeg", quality: 0.98 },
+    html2canvas: { scale: 2 },
+    jsPDF: { unit: "in", format: "a4", orientation: "portrait" },
+  };
+
+  html2pdf()
+    .set(options)
+    .from(element)
+    .save()
+    .then(() => {
+      // Restore hidden buttons and input styles
+      hiddenElements.forEach(el => (el.style.display = ""));
+      inputs.forEach(el => {
+        el.style.border = el.getAttribute("data-old-border");
+        el.removeAttribute("data-old-border");
+        el.style.background = "";
+      });
+    });
+};
+
+
+
     return (
         <div className="proforma-root">
             <div className="proforma-container">
@@ -261,6 +340,7 @@ const ProformaInvoice = () => {
                                     id="buyer-name-input"
                                     value={buyer.name}
                                     onChange={(e) => handleNameInput(e.target.value)}
+                                    readOnly={buyerLocked}
                                     onFocus={() => {
                                         if (suggestions.length) setShowSuggestions(true);
                                     }}
@@ -269,7 +349,7 @@ const ProformaInvoice = () => {
                                 {showSuggestions && suggestions.length > 0 && (
                                     <div className="suggestions-list">
                                         {suggestions.map((c, idx) => (
-                                            <div key={idx} className="suggestion-item" onMouseDown={() => selectSuggestion(c)}>
+                                            <div key={idx} className="suggestion-item" onMouseDown={() => chooseCustomerName(c)}>
                                                 <div className="s-name">{c["Customer Name"]}</div>
                                                 <div className="s-meta">{(c["Office Address"] || c["Address"] || "")}
                                                     {c["Contact Person Name"] ? ` • ${c["Contact Person Name"]}` : ""}
@@ -279,17 +359,28 @@ const ProformaInvoice = () => {
                                     </div>
                                 )}
                             </div>
+                            {contactOptions && contactOptions.length > 0 && (
+                                <div className="form-row">
+                                    <label className="input-label">Contact Person</label>
+                                    <select className="form-input" onChange={(e) => chooseContactPerson(e.target.value)}>
+                                        <option value="">-- Select contact --</option>
+                                        {contactOptions.map((o, i) => (
+                                            <option key={i} value={o.contact}>{o.contact}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                            )}
                         </div>
 
                         <div className="col right-col card">
                             <h2>Invoice</h2>
                             <div className="form-row small">
                                 <label>PI No:</label>
-                                <input className="form-input small-input" value={invoice.number} onChange={(e) => onInvoiceChange("number", e.target.value)} />
+                                <input className="form-input small-input" value={invoice.number} onChange={(e) => onInvoiceChange("number", e.target.value)} disabled={!buyerLocked} />
                             </div>
                             <div className="form-row small">
                                 <label>Date:</label>
-                                <input className="form-input small-input" value={invoice.date} onChange={(e) => onInvoiceChange("date", e.target.value)} />
+                                <input type="date" max={new Date().toISOString().slice(0,10)} className="form-input small-input" value={invoice.date} onChange={(e) => onInvoiceChange("date", e.target.value)} disabled={!buyerLocked} />
                             </div>
                         </div>
                     </div>
@@ -299,20 +390,20 @@ const ProformaInvoice = () => {
                             <h3 style={{ marginTop: 0 }}>Contact</h3>
                             <div className="form-row">
                                 <label className="input-label">Address</label>
-                                <input className="form-input" value={buyer.address} onChange={(e) => onBuyerChange("address", e.target.value)} />
+                                <input className="form-input" value={buyer.address} onChange={(e) => onBuyerChange("address", e.target.value)} readOnly={buyerLocked} disabled={!buyerLocked} />
                             </div>
 
                             <div className="form-row">
                                 <label className="input-label">Contact Person Name</label>
-                                <input className="form-input" id="contact-person-input" value={buyer.contactPerson} onChange={(e) => onBuyerChange("contactPerson", e.target.value)} />
+                                <input className="form-input" id="contact-person-input" value={buyer.contactPerson} onChange={(e) => onBuyerChange("contactPerson", e.target.value)} readOnly={buyerLocked} disabled={!buyerLocked} />
                             </div>
                             <div className="form-row">
                                 <label className="input-label">Email</label>
-                                <input className="form-input" value={buyer.email} onChange={(e) => onBuyerChange("email", e.target.value)} />
+                                <input className="form-input" value={buyer.email} onChange={(e) => onBuyerChange("email", e.target.value)} readOnly={buyerLocked} disabled={!buyerLocked} />
                             </div>
                             <div className="form-row">
                                 <label className="input-label">State</label>
-                                <input className="form-input" value={buyer.state || ""} onChange={(e) => onBuyerChange("state", e.target.value)} />
+                                <input className="form-input" value={buyer.state || ""} onChange={(e) => onBuyerChange("state", e.target.value)} readOnly={buyerLocked} disabled={!buyerLocked} />
                             </div>
                         </div>
 
@@ -320,19 +411,19 @@ const ProformaInvoice = () => {
                             <h3 style={{ marginTop: 0 }}>Customer Ref</h3>
                             <div className="form-row">
                                 <label className="input-label">Customer Ref No</label>
-                                <input className="form-input" value={buyer.refNo || invoice.refNo} onChange={(e) => onBuyerChange("refNo", e.target.value)} />
+                                <input className="form-input" value={buyer.refNo || invoice.refNo} onChange={(e) => onBuyerChange("refNo", e.target.value)} disabled={!buyerLocked} />
                             </div>
                             <div className="form-row">
                                 <label className="input-label">Ref Date</label>
-                                <input className="form-input" value={buyer.refDate || ""} onChange={(e) => onBuyerChange("refDate", e.target.value)} />
+                                <input className="form-input" value={buyer.refDate || ""} onChange={(e) => onBuyerChange("refDate", e.target.value)} disabled={!buyerLocked} />
                             </div>
                             <div className="form-row">
                                 <label className="input-label">GST No</label>
-                                <input className="form-input" value={buyer.gst} onChange={(e) => onBuyerChange("gst", e.target.value)} />
+                                <input className="form-input" value={buyer.gst} onChange={(e) => onBuyerChange("gst", e.target.value)} disabled={!buyerLocked} />
                             </div>
                             <div className="form-row">
                                 <label className="input-label">Customer Phone</label>
-                                <input className="form-input" value={buyer.phone} onChange={(e) => onBuyerChange("phone", e.target.value)} />
+                                <input className="form-input" value={buyer.phone} onChange={(e) => onBuyerChange("phone", e.target.value)} disabled={!buyerLocked} />
                             </div>
                         </div>
 
@@ -340,12 +431,12 @@ const ProformaInvoice = () => {
                             <h3 style={{ marginTop: 0 }}>Sales</h3>
                             <div className="form-row">
                                 <label className="input-label">PI Prepared By</label>
-                                <input className="form-input" value={invoice.preparedBy} onChange={(e) => onInvoiceChange("preparedBy", e.target.value)} />
+                                <input className="form-input" value={invoice.preparedBy} onChange={(e) => onInvoiceChange("preparedBy", e.target.value)} disabled={!buyerLocked} />
                             </div>
 
                             <div className="form-row">
                                 <label className="input-label">Sales Person</label>
-                                <input className="form-input" value={buyer.salesPerson || ""} onChange={(e) => onBuyerChange("salesPerson", e.target.value)} />
+                                <input className="form-input" value={buyer.salesPerson || ""} onChange={(e) => onBuyerChange("salesPerson", e.target.value)} disabled={!buyerLocked} />
                             </div>
                         </div>
                     </div>
@@ -373,28 +464,28 @@ const ProformaInvoice = () => {
                                 <tr key={idx}>
                                     <td>{item.srNo}</td>
                                     <td>
-                                        <input className="form-input" value={item.cpn} onChange={(e) => updateItem(idx, "cpn", e.target.value)} />
+                                        <input className="form-input" value={item.cpn} onChange={(e) => updateItem(idx, "cpn", e.target.value)} disabled={!buyerLocked} />
                                     </td>
                                     <td>
-                                        <input className="form-input" value={item.partNo} onChange={(e) => updateItem(idx, "partNo", e.target.value)} />
+                                        <input className="form-input" value={item.partNo} onChange={(e) => updateItem(idx, "partNo", e.target.value)} disabled={!buyerLocked} />
                                     </td>
                                     <td>
-                                        <input className="form-input" value={item.hsn} onChange={(e) => updateItem(idx, "hsn", e.target.value)} />
+                                        <input className="form-input" value={item.hsn} onChange={(e) => updateItem(idx, "hsn", e.target.value)} disabled={!buyerLocked} />
                                     </td>
                                     <td>
-                                        <input className="form-input" value={item.make} onChange={(e) => updateItem(idx, "make", e.target.value)} />
+                                        <input className="form-input" value={item.make} onChange={(e) => updateItem(idx, "make", e.target.value)} disabled={!buyerLocked} />
                                     </td>
                                     <td>
-                                        <input className="form-input" value={item.delivery} onChange={(e) => updateItem(idx, "delivery", e.target.value)} />
+                                        <input className="form-input" value={item.delivery} onChange={(e) => updateItem(idx, "delivery", e.target.value)} disabled={!buyerLocked} />
                                     </td>
                                     <td>
-                                        <input className="form-input" value={item.rate} onChange={(e) => updateItem(idx, "rate", e.target.value)} />
+                                        <input className="form-input" value={item.rate} onChange={(e) => updateItem(idx, "rate", e.target.value)} disabled={!buyerLocked} />
                                     </td>
                                     <td>
-                                        <input className="form-input" value={item.qty} onChange={(e) => updateItem(idx, "qty", e.target.value)} />
+                                        <input className="form-input" value={item.qty} onChange={(e) => updateItem(idx, "qty", e.target.value)} disabled={!buyerLocked} />
                                     </td>
                                     <td>
-                                        <input className="form-input" value={item.discount} onChange={(e) => updateItem(idx, "discount", e.target.value)} />
+                                        <input className="form-input" value={item.discount} onChange={(e) => updateItem(idx, "discount", e.target.value)} disabled={!buyerLocked} />
                                     </td>
                                     <td>₹{(item.netRate || 0).toFixed(2)}</td>
                                     <td>₹{(item.amount || 0).toFixed(2)}</td>
@@ -404,8 +495,8 @@ const ProformaInvoice = () => {
                     </table>
 
                     <div style={{ marginTop: 12, display: "flex", gap: 8, alignItems: "center" }}>
-                        <input id="add-row-input" type="number" min={1} value={rowsToAdd} onChange={(e) => setRowsToAdd(e.target.value)} />
-                        <button id="add-row-btn" type="button" onClick={() => { addRows(rowsToAdd); setRowsToAdd(1); }}>
+                        <input id="add-row-input" type="number" min={1} value={rowsToAdd} onChange={(e) => setRowsToAdd(e.target.value)} disabled={!buyerLocked} />
+                        <button id="add-row-btn" type="button" onClick={() => { addRows(rowsToAdd); setRowsToAdd(1); }} disabled={!buyerLocked}>
                             Add rows
                         </button>
                     </div>
@@ -423,6 +514,7 @@ const ProformaInvoice = () => {
                                             className="form-input small-input"
                                             value={invoice.deliveryStatus || ""}
                                             onChange={(e) => onInvoiceChange("deliveryStatus", e.target.value)}
+                                            disabled={!buyerLocked}
                                         />
                                     </td>
                                 </tr>
@@ -433,6 +525,7 @@ const ProformaInvoice = () => {
                                             className="form-input small-input"
                                             value={invoice.paymentTerms || ""}
                                             onChange={(e) => onInvoiceChange("paymentTerms", e.target.value)}
+                                            disabled={!buyerLocked}
                                         />
                                     </td>
                                 </tr>
@@ -443,6 +536,7 @@ const ProformaInvoice = () => {
                                             className="form-input small-input"
                                             value={invoice.validity || ""}
                                             onChange={(e) => onInvoiceChange("validity", e.target.value)}
+                                            disabled={!buyerLocked}
                                         />
                                     </td>
                                 </tr>
@@ -454,6 +548,7 @@ const ProformaInvoice = () => {
                                             type="text"
                                             value={invoice.freight || ""}
                                             onChange={(e) => onInvoiceChange("freight", e.target.value)}
+                                            disabled={!buyerLocked}
                                         />
                                     </td>
                                 </tr>
@@ -465,6 +560,7 @@ const ProformaInvoice = () => {
                                             type="number"
                                             value={invoice.insurance || 0}
                                             onChange={(e) => onInvoiceChange("insurance", e.target.value)}
+                                            disabled={!buyerLocked}
                                         />
                                     </td>
                                 </tr>
@@ -514,6 +610,8 @@ const ProformaInvoice = () => {
                     </div>
                 </div>
 
+
+
                 <footer className="invoice-footer">
                     <p>Head Office- 5225, Ajmeri Gate, New Delhi- 110006, Phone- 011-23215397</p>
                     <p>Branches : 80/82, Nagdevi Street, 2nd Floor,Mumbai- 400003, Phone: 022-23472817</p>
@@ -523,6 +621,9 @@ const ProformaInvoice = () => {
                     <p id="auth">Authorized Distributors – NTN, JAF, EZO</p>
 
                 </footer>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 12 }}>
+                    <button id="download-pdf-btn" type="button" onClick={handleDownloadPdf}>Download PDF</button>
+                </div>
 
             </div>
         </div>

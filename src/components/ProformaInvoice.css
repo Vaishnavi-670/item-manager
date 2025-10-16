@@ -6,7 +6,11 @@
 body {
   font-family: 'Inter', sans-serif;
   color: #333;
+  font-size: 11px; /* smaller base for A4 */
 }
+
+/* Ensure printed page is A4 by default */
+@page { size: A4 portrait; margin: 8mm }
 
 /* Print-specific optimizations */
 @media print {
@@ -32,8 +36,36 @@ body {
     page-break-after: auto;
   }
 
-  th, td {
+  th,
+  td {
     border: 1px solid #000 !important;
+  }
+
+  /* Hide interactive controls and buttons when printing */
+  #download-pdf-btn,
+  button,
+  input[type="button"],
+  input[type="submit"],
+  .no-print {
+    display: none !important;
+  }
+
+  /* Render inputs/textarea as plain text in print */
+  .totals-table input,
+  .totals-table textarea,
+  .invoice-table input,
+  .invoice-table textarea {
+    border: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+  }
+
+  /* Make invoice container use full printable width */
+  .proforma-container {
+    max-width: 100% !important;
+    margin: 0 !important;
   }
 }
 
@@ -80,17 +112,18 @@ table th {
   font-size: 1.1rem;
 }
 
-/* ---- New styles for ProformaInvoice.jsx (replace Tailwind) ---- */
 .proforma-root {
-  padding: 20px; /* reduced overall page padding to bring content closer to viewport */
+  padding: 8px 10px;
   background: #ffffff;
-  min-height: 100vh;
   color: #1f2937;
   box-sizing: border-box;
+  width: 210mm; /* force A4 width */
+  margin: 6mm auto; /* small page gutter */
+  font-size: 11px;
 }
 
 .proforma-container {
-  max-width: 1100px;
+  max-width: calc(210mm - 20mm);
   margin: 0 auto;
 }
 
@@ -100,6 +133,7 @@ table th {
   padding-bottom: 12px;
   margin-bottom: 20px;
 }
+
 .invoice-title {
   font-size: 22px;
   letter-spacing: 0.6px;
@@ -116,48 +150,94 @@ table th {
   margin: 8px 0 6px 0;
   color: var(--primary-active-color, #0f172a);
 }
+
 .invoice-company {
   margin: 0;
   font-size: 13px;
 }
-.invoice-company.small { font-size: 12px; color: #4b5563 }
-.link { color: #0f62fe }
+
+.invoice-company.small {
+  font-size: 12px;
+  color: #4b5563
+}
+
+.link {
+  color: #0f62fe
+}
 
 /* Header layout with logo on the left and details on the right */
 .invoice-header-inner {
   display: flex;
   align-items: center;
-  gap: 18px;
+  gap: 12px;
   justify-content: center;
 }
-.logo-wrap { flex: 0 0 120px; }
+
+.logo-wrap {
+  flex: 0 0 90px;
+}
+
 .company-logo {
-  width: 120px;
-  height: fit-content;
+  width: 90px;
+  height: auto;
   object-fit: contain;
 }
-.company-logo.placeholder { background: #eef2ff; display: inline-block; border-radius: 6px; }
-.company-info { flex: 1 1 auto; text-align: left; }
-.company-name { font-size: 20px; font-weight: 800; color: #222121; margin-top: 4px; }
-.company-meta { margin-top: 6px; color: #374151; font-size: 13px; line-height: 1.6; }
+
+.company-logo.placeholder {
+  background: #eef2ff;
+  display: inline-block;
+  border-radius: 6px;
+}
+
+.company-info {
+  flex: 1 1 auto;
+  text-align: left;
+}
+
+.company-name {
+  font-size: 20px;
+  font-weight: 800;
+  color: #222121;
+  margin-top: 4px;
+}
+
+.company-meta {
+  margin-top: 6px;
+  color: #374151;
+  font-size: 13px;
+  line-height: 1.6;
+}
 
 @media (max-width: 700px) {
-  .invoice-header-inner { flex-direction: column; align-items: flex-start; }
-  .logo-wrap { flex: 0 0 auto; }
-  .company-info { width: 100%; }
-  .company-name { font-size: 18px; }
+  .invoice-header-inner {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .logo-wrap {
+    flex: 0 0 auto;
+  }
+
+  .company-info {
+    width: 100%;
+  }
+
+  .company-name {
+    font-size: 18px;
+  }
 }
 
 .invoice-details {
-    display: block;
-    /* gap: 3px;  */
-    margin-bottom: 4px; 
+  display: block;
+  /* gap: 3px;  */
+  margin-bottom: 4px;
 }
+
 .card {
   background: #fff;
   /* border removed as requested */
-  padding: 12px 14px;
-  border-radius: 8px;
+  padding: 8px 10px;
+  border-radius: 6px;
 }
 
 .card h2 {
@@ -177,17 +257,42 @@ table th {
   overflow: hidden;
 }
 
-.invoice-details .card { padding-top: 10px; }
+.invoice-details .card {
+  padding-top: 10px;
+}
 
 /* New layout rows/columns */
-.row { display: flex; gap: 6px; margin-bottom: 4px; }
-  .row { display: flex; gap: 4px; margin-bottom: 2px; }
-  .top-row { align-items: stretch; margin-bottom: 0; }
-.top-row .left-col { flex: 2; }
-.top-row .right-col { flex: 1; }
-  .bottom-row { align-items: flex-start; margin-top: 0; }
-.bottom-row .col { flex: 1; }
-.col-3 { width: 33.333%; }
+.row {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.top-row {
+  align-items: stretch;
+  margin-bottom: 0;
+}
+
+.top-row .left-col {
+  flex: 2;
+}
+
+.top-row .right-col {
+  flex: 1;
+}
+
+.bottom-row {
+  align-items: flex-start;
+  margin-top: 0;
+}
+
+.bottom-row .col {
+  flex: 1;
+}
+
+.col-3 {
+  width: 33.333%;
+}
 
 /* Slightly reduce width of inputs in the buyer (left) column to leave some whitespace */
 .top-row .left-col .form-input {
@@ -202,55 +307,92 @@ table th {
 
 .form-row {
   position: relative;
-  margin-bottom: 4px; 
+  margin-bottom: 4px;
   display: flex;
   flex-direction: row;
-  /* gap: 6px; */
   align-items: center;
-  line-height: 1.15; /* reduce default line height inside rows */
+  line-height: 1.08;
 }
+
 .form-row.stacked {
   flex-direction: column;
   align-items: stretch;
   gap: 6px;
 }
-#contact-person-input, #buyer-name-input {
+
+#contact-person-input,
+#buyer-name-input {
   font-size: 15px;
   font-weight: 600;
 }
 
-.form-row.small { 
-  display:flex; 
-  align-items:center; 
-  margin-bottom:2px;
+.form-row.small {
+  display: flex;
+  align-items: center;
+  margin-bottom: 2px;
   gap: 6px;
 }
+
 .form-input {
   width: 100%;
-  padding: 6px 8px; /* reduced padding to tighten rows */
+  padding: 3px 6px;
   border: 1px solid #d1d5db;
   border-radius: 6px;
-  font-size: 13px;
+  font-size: 11px;
   background: #fff;
-  line-height: 1.15;
-  height: auto; /* allow natural height with reduced padding */
+  line-height: 1.05;
+  height: auto;
+  box-sizing: border-box;
 }
+
+/* Ensure inputs inside proforma show full typed content (no truncation). Allow scrolling if value exceeds visible width. */
+.proforma-container input,
+.proforma-container textarea,
+.proforma-container select {
+  white-space: pre;
+  overflow: auto;
+  text-overflow: clip;
+}
+
+/* Address textarea: allow multi-line wrap, autosize friendly */
+.address-textarea {
+  /* resize: none; */
+  white-space: nowrap; 
+  overflow: visible;
+  min-height: 50px;
+}
+input, textarea {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+
 .input-label {
   display: block;
-  font-size: 11px; /* slightly smaller label to reduce vertical footprint */
+  font-size: 11px;
+  /* slightly smaller label to reduce vertical footprint */
   color: #374151;
   margin-bottom: 0;
   margin-right: 6px;
   font-weight: 600;
   line-height: 1.1;
 }
-.form-row.stacked .input-label { margin-bottom: 6px; margin-right: 0; }
-.small-input { width: 100%; padding: 4px 6px; }
+
+.form-row.stacked .input-label {
+  margin-bottom: 6px;
+  margin-right: 0;
+}
+
+.small-input {
+  width: 100%;
+  padding: 4px 6px;
+}
 
 /* Compact inputs used for PI No and Date in inline small rows */
 .form-row.small label {
   display: inline-block;
-  margin-right: 6px; /* tighter gap between label and small input */
+  margin-right: 6px;
+  /* tighter gap between label and small input */
   font-size: 12px;
   white-space: nowrap;
 }
@@ -270,7 +412,7 @@ table th {
   position: absolute;
   background: #fff;
   border: 1px solid #e6e9ee;
-  box-shadow: 0 6px 18px rgba(16,24,40,0.06);
+  box-shadow: 0 6px 18px rgba(16, 24, 40, 0.06);
   width: calc(100% - 28px);
   max-height: 220px;
   overflow: auto;
@@ -278,69 +420,105 @@ table th {
   border-radius: 6px;
   margin-top: 6px;
 }
-.suggestion-item { padding: 8px 10px; cursor: pointer; border-bottom: 1px solid #f3f4f6; }
-.suggestion-item:last-child { border-bottom: none; }
-.suggestion-item:hover { background: #f8fafc; }
-.s-name { font-weight: 600; font-size: 13px; color: #0f172a }
-.s-meta { font-size: 12px; color: #475569 }
+
+.suggestion-item {
+  padding: 8px 10px;
+  cursor: pointer;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.suggestion-item:last-child {
+  border-bottom: none;
+}
+
+.suggestion-item:hover {
+  background: #f8fafc;
+}
+
+.s-name {
+  font-weight: 600;
+  font-size: 13px;
+  color: #0f172a
+}
+
+.s-meta {
+  font-size: 12px;
+  color: #475569
+}
 
 .table-wrap {
   width: 100%;
-  overflow-x: auto;
-  margin-bottom: 16px;
-  -webkit-overflow-scrolling: touch;
+  overflow-x: visible; /* make table fit; avoid horizontal scroll */
+  margin-bottom: 12px;
 }
+
 .invoice-table {
   width: 100%;
-  min-width: 900px;
+  min-width: 0; /* allow table to shrink to container */
   border-collapse: collapse;
   background: #fff;
-
+  table-layout: fixed; /* distribute columns within width */
 }
+
 .invoice-table th,
 .invoice-table td {
   border: 1px solid #e5e7eb;
-  padding: 8px 10px;
-  font-size: 13px;
+  padding: 4px 6px;
+  font-size: 10.5px;
   text-align: left;
 }
+
 .invoice-table {
-  table-layout: fixed; /* prevent cells from resizing when inputs change */
+  table-layout: fixed;
+  /* prevent cells from resizing when inputs change */
 }
 
 /* Inputs inside invoice table should fit the cell and not overflow */
 .invoice-table .form-input {
   box-sizing: border-box;
   width: 100%;
-  padding: 4px 6px; /* slightly smaller padding to fit */
-  height: 30px; /* slightly reduced height to tighten table rows */
+  padding: 2px 6px;
+  height: 24px;
   margin: 0;
-  line-height: 1.1;
+  line-height: 1.0;
+  font-size: 10.5px;
+  /* Allow the full typed value to be visible. Remove truncation; allow scrolling if needed */
+  white-space: normal;
+  overflow: auto;
+  text-overflow: clip;
 }
 
-.invoice-table td, .invoice-table th { vertical-align: middle; }
+.invoice-table td,
+.invoice-table th {
+  vertical-align: middle;
+}
 
 /* Make table inputs borderless and visually fit the cell */
 .invoice-table .form-input {
   border: none;
   background: transparent;
 }
+
 .invoice-table .form-input:focus {
   outline: none;
   box-shadow: none;
 }
+
 .invoice-table thead th {
   background: #f8fafc;
   color: #302f2f;
   font-weight: 600;
   text-align: center;
+  font-size: 10.5px;
+  padding: 4px 6px;
 }
 
 .invoice-table th:nth-child(2),
 .invoice-table td:nth-child(2),
 .invoice-table th:nth-child(3),
 .invoice-table td:nth-child(3) {
-  width: 75px; /* small increase to improve visibility */
+  width: 75px;
+  /* small increase to improve visibility */
 }
 
 /* Totals two-column layout */
@@ -349,54 +527,104 @@ table th {
   gap: 18px;
   justify-content: space-between;
   margin-top: 12px;
-  align-items: stretch; /* ensure children stretch to same height */
+  align-items: stretch;
+  /* ensure children stretch to same height */
 }
-.invoice-total-left, .invoice-total-right {
+
+.invoice-total-left,
+.invoice-total-right {
   flex: 1 1 50%;
   display: flex;
-  flex-direction: column; /* allow the table to expand vertically */
+  flex-direction: column;
+  /* allow the table to expand vertically */
 }
-.invoice-total-left > .totals-table,
-.invoice-total-right > .totals-table {
-  flex: 1 1 auto; /* let table grow to fill parent column */
+
+.invoice-total-left>.totals-table,
+.invoice-total-right>.totals-table {
+  flex: 1 1 auto;
+  /* let table grow to fill parent column */
   height: 100%;
 }
+
 .totals-table {
   width: 100%;
   border-collapse: collapse;
   background: #fff;
 }
+
 .totals-table td {
   padding: 6px 8px;
   border: 1px solid #e6e9ee;
   font-size: 13px;
 }
-.totals-table td:first-child { font-weight: 600; width: 55%; }
-.totals-table .grand td { font-weight: 800; font-size: 15px; color: #065f46; }
-.totals-table.right td { text-align: right; }
-.invoice-total-right .totals-table td { text-align: right; }
-.invoice-total-left .totals-table td input, .invoice-total-left .totals-table td textarea { width: 100%; box-sizing: border-box; }
+
+.totals-table td:first-child {
+  font-weight: 600;
+  width: 55%;
+}
+
+.totals-table .grand td {
+  font-weight: 800;
+  font-size: 15px;
+  color: #065f46;
+}
+
+/* Make left totals compact: smaller font and tighter rows */
+.totals-table.left td {
+  padding: 4px 6px;
+  font-size: 12px;
+}
+
+.totals-table.left td:first-child {
+  font-weight: 600;
+  width: 55%;
+}
+
+.amount-in-words {
+  font-size: 12px;
+  padding: 4px 6px;
+  min-height: 30px;
+}
+
+.totals-table.right td {
+  text-align: right;
+}
+
+.invoice-total-right .totals-table td {
+  text-align: right;
+}
+
+.invoice-total-left .totals-table td input,
+.invoice-total-left .totals-table td textarea {
+  width: 100%;
+  box-sizing: border-box;
+}
 
 /* Make totals table inputs look like plain text by hiding borders/backgrounds */
 .totals-table input,
 .totals-table textarea {
   border: none;
   background: transparent;
-  padding: 0; /* keep cell padding from td */
+  padding: 0;
+  /* keep cell padding from td */
   margin: 0;
   font-size: 13px;
   color: inherit;
 }
+
 .totals-table input:focus,
 .totals-table textarea:focus {
   outline: none;
   box-shadow: none;
 }
-#auth{
+
+#auth {
   text-align: center;
-  margin-top: 6px;
+  margin-top: 9px;
   font-weight: 600;
   color: #111827;
+  padding: 10px;
+
 }
 
 /* Amount-in-words paragraph (read-only) */
@@ -408,21 +636,23 @@ table th {
   font-size: 13px;
   color: #0f172a;
   line-height: 1.25;
-  min-height: 40px; /* keep table row from collapsing when empty */
+  min-height: 40px;
+  /* keep table row from collapsing when empty */
 }
 
-#add-row-input{
-    width: 35px;
-    padding: 6px;
-    font-size: 13px;
-    border: 1px solid #c8c9da;
-    border-radius: 8px;
-    box-sizing: border-box;
+#add-row-input {
+  width: 35px;
+  padding: 6px;
+  font-size: 13px;
+  border: 1px solid #c8c9da;
+  border-radius: 8px;
+  box-sizing: border-box;
 }
+
 #add-row-btn {
-    text-align: center;
-    height: 35px;
-    font-size: 13px;
+  text-align: center;
+  height: 35px;
+  font-size: 13px;
 }
 
 .invoice-total {
@@ -430,9 +660,21 @@ table th {
   margin-top: 10px;
   font-size: 14px;
 }
-.invoice-total p { margin: 3px 0 }
-.invoice-total .grand { font-weight: 700; font-size: 16px; color: #065f46 }
-.invoice-total .italic { font-style: italic; color: #374151 }
+
+.invoice-total p {
+  margin: 3px 0
+}
+
+.invoice-total .grand {
+  font-weight: 700;
+  font-size: 16px;
+  color: #065f46
+}
+
+.invoice-total .italic {
+  font-style: italic;
+  color: #374151
+}
 
 .invoice-footer {
   border-top: 1px solid #e6e9ee;
@@ -441,16 +683,36 @@ table th {
   margin-top: 5px;
   font-size: 12px;
   color: #6b7280;
-  text-align: start; /* align footer text to start (left) */
+  text-align: start;
+  /* align footer text to start (left) */
 }
 
 /* Responsive adjustments */
 @media (max-width: 900px) {
-  .top-row, .bottom-row, .row { flex-direction: column; }
-  .top-row .left-col, .top-row .right-col, .bottom-row .col { width: 100%; }
-  .invoice-table { min-width: 780px }
+
+  .top-row,
+  .bottom-row,
+  .row {
+    flex-direction: column;
+  }
+
+  .top-row .left-col,
+  .top-row .right-col,
+  .bottom-row .col {
+    width: 100%;
+  }
+
+  .invoice-table {
+    min-width: 0;
+  }
 }
+
 @media (max-width: 600px) {
-  .proforma-root { padding: 16px }
-  .invoice-table { min-width: 640px }
+  .proforma-root {
+    padding: 16px
+  }
+
+  .invoice-table {
+    min-width: 0;
+  }
 }
