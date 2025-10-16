@@ -255,68 +255,7 @@ const ProformaInvoice = () => {
     }, [grand]);
 
 
-//     const handleDownloadPdf = () => {
 
-//         const element = document.querySelector(".proforma-container");
-
-//         // Hide only unnecessary buttons (Add Row, Download, etc.)
-//         const hiddenElements = document.querySelectorAll(
-//             ".add-row-btn, #download-pdf-btn .add-row-input"
-//         );
-
-//         hiddenElements.forEach(el => (el.style.display = "none"));
-
-//         // Temporarily remove input borders for PDF export
-//         const inputs = document.querySelectorAll("input, select, textarea");
-//         inputs.forEach(el => {
-//             el.setAttribute("data-old-border", el.style.border || ""); // save old style
-//             el.style.border = "none";
-//             el.style.outline = "none";
-//             el.style.background = "transparent";
-//         });
-
-
-
-// //         // Hide Cash Discount row in PDF if amount is 0
-// //         const cdRow = document.querySelector(".cd-row");
-// //         if (cdRow) {
-// //             cdRow.style.display = parseFloat(cdAmount) === 0 ? "none" : "";
-        
-        
-// // }
-// const cdRow = document.querySelector(".cd-row");
-// if (cdRow && cdAmount === 0) cdRow.style.display = "none";
-
-
-
-
-//         const options = {
-//             margin: 0.5,
-//             filename: `Proforma_Invoice_${invoice.number || "BTIPL"}.pdf`,
-//             image: { type: "jpeg", quality: 0.98 },
-//             html2canvas: { scale: 2 },
-//             jsPDF: { unit: "in", format: "a4", orientation: "portrait" },
-//         };
-
-
-
-//         html2pdf()
-//             .set(options)
-//             .from(element)
-//             .save()
-//             .then(() => {
-//                 // Restore hidden buttons and input styles
-//                 hiddenElements.forEach(el => (el.style.display = ""));
-//                 inputs.forEach(el => {
-//                     el.style.border = el.getAttribute("data-old-border");
-//                     el.removeAttribute("data-old-border");
-//                     el.style.background = "";
-//                 });
-//             });
-//         // Restore Cash Discount row visibility
-//         if (cdRow) cdRow.style.display = "";
-
-//     };
 
 const handleDownloadPdf = () => {
     const element = document.querySelector(".proforma-container");
@@ -362,6 +301,8 @@ const handleDownloadPdf = () => {
             });
         });
 };
+
+
 
 
     return (
@@ -614,8 +555,8 @@ const handleDownloadPdf = () => {
                                         />
                                     </td>
                                 </tr>
-                                <tr>
-                                    <td>Cash Discount (CD)</td>
+                                <tr className="cd-row">
+                                    <td >Cash Discount (CD)</td>
                                     <td>
                                         <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
                                             <input
