@@ -22,7 +22,7 @@ export default function MultipleCustomersForm() {
   const types = ["Trade", "Consumer"];
 
   const fields = [
-    "Customer Name", "GST", "Category", "Sales Person", "Type", "Contact Person Position", "Number", "Email", "Office Address"
+    "Customer Name", "GST", "Category", "Sales Person", "Type", "Contact Person Name", "Number", "Email", "Office Address"
   ];
 
   const handleDownloadTemplate = () => {
@@ -33,7 +33,7 @@ export default function MultipleCustomersForm() {
         "Category": categories[0],
         "Sales Person": "John Doe",
         "Type": types[0],
-        "Contact Person Position": "",
+        "Contact Person Name": "",
         "Number": "",
         "Email": "",
         "Office Address": ""

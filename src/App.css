@@ -352,6 +352,19 @@ color: #556170;
   max-width: 120px;
 }
 
+/* Data table borders: darker color as requested */
+.data-table th,
+.data-table td {
+  border: 1px solid #878585;
+}
+
+/* Make Manage Customer table header text black */
+.data-table thead th {
+  color: #000;
+  background: transparent; /* keep header background neutral */
+  font-weight: 700;
+}
+
 /* Ensure the Actions column doesn't clip its buttons */
 .data-table th:last-child,
 .data-table td:last-child {

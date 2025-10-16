@@ -7,7 +7,7 @@ export default function SingleCustomerForm() {
     category: "",
     salesperson: "",
     type: "",
-    position: "",
+    contactPerson: "",
     number: "",
     email: "",
     address: "",
@@ -31,7 +31,7 @@ export default function SingleCustomerForm() {
       Category: customer.category,
       "Sales Person": customer.salesperson,
       Type: customer.type,
-      "Contact Person Position": customer.position,
+      "Contact Person Name": customer.contactPerson,
       Number: customer.number,
       Email: customer.email,
       "Office Address": customer.address,
@@ -56,7 +56,7 @@ export default function SingleCustomerForm() {
       category: "",
       salesperson: "",
       type: "",
-      position: "",
+      contactPerson: "",
       number: "",
       email: "",
       address: "",
@@ -202,14 +202,14 @@ export default function SingleCustomerForm() {
           </div>
 
           <div className="input-group">
-            <label>Contact Person Position</label>
+            <label>Contact Person Name</label>
             <div className="input-box">
               <input
                 type="text"
-                name="position"
-                value={customer.position}
+                name="contactPerson"
+                value={customer.contactPerson}
                 onChange={handleChange}
-                placeholder="Enter Position"
+                placeholder="Enter Contact Person Name"
                 autoComplete="off"
               />
             </div>

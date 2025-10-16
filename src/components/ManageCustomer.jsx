@@ -7,7 +7,7 @@ const initialCustomers = [
     Category: "Automobile OEM - cars",
     "Sales Person": "John Doe",
     Type: "Trade",
-    "Contact Person Position": "Manager",
+    "Contact Person Name": "Manager",
     Number: "9876543210",
     Email: "customer@example.com",
     "Office Address": "123, Main Street",
@@ -21,7 +21,7 @@ const fields = [
   "Category",
   "Sales Person",
   "Type",
-  "Contact Person Position",
+  "Contact Person Name",
   "Number",
   "Email",
   "Office Address",
@@ -59,8 +59,27 @@ export default function ManageCustomer() {
     try {
       const saved = JSON.parse(localStorage.getItem("customers") || "null");
       if (Array.isArray(saved) && saved.length) {
-        setCustomers(saved);
-        console.log("Fetched customers from localStorage:", saved);
+        // Normalize legacy keys if present
+        let changed = false;
+        const normalized = saved.map((rec) => {
+          const copy = { ...rec };
+          if (!copy["Contact Person Name"] && copy["Contact Person"]) {
+            copy["Contact Person Name"] = copy["Contact Person"];
+            delete copy["Contact Person"];
+            changed = true;
+          }
+          if (!copy["Contact Person Name"] && copy["Contact Person Position"]) {
+            copy["Contact Person Name"] = copy["Contact Person Position"];
+            delete copy["Contact Person Position"];
+            changed = true;
+          }
+          return copy;
+        });
+        setCustomers(normalized);
+        if (changed) {
+          try { localStorage.setItem("customers", JSON.stringify(normalized)); } catch (e) { /* ignore */ }
+        }
+        console.log("Fetched customers from localStorage:", normalized);
       } else {
         setCustomers(initialCustomers);
         console.log("Using initial customers:", initialCustomers);
