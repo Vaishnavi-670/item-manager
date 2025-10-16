@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import "./ProformaInvoice.css";
 import companyLogo from "../assets/bt logo.jpg";
 import html2pdf from "html2pdf.js";
-  
+
 
 const ProformaInvoice = () => {
     const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
@@ -33,6 +33,8 @@ const ProformaInvoice = () => {
             preparedBy: "",
             freight: 0,
             insurance: 0,
+            cd: "",
+            cdMode: "%",
             deliveryStatus: "",
             paymentTerms: "",
             validity: "",
@@ -66,7 +68,7 @@ const ProformaInvoice = () => {
     const [buyerLocked, setBuyerLocked] = useState(false);
     const [items, setItems] = useState(() => {
         const base = Array.isArray(initialData.items) ? [...initialData.items] : [];
-        while (base.length < 10) {
+        while (base.length < 5) {
             base.push({
                 srNo: base.length + 1,
                 cpn: "",
@@ -191,11 +193,11 @@ const ProformaInvoice = () => {
     const subtotal = items.reduce((s, it) => s + (parseFloat(it.amount) || 0), 0);
     const freight = parseFloat(invoice.freight) || 0;
     const insurance = parseFloat(invoice.insurance) || 0;
-    const igst = +(subtotal * 0.18).toFixed(2);
-    // Use IGST only; SGST and CGST are zero as requested
-    const sgst = 0;
-    const cgst = 0;
-    const grand = +(subtotal + freight + insurance + igst).toFixed(2);
+    const cdInput = invoice.cd === "" ? 0 : parseFloat(invoice.cd) || 0;
+    const cdAmount = invoice.cdMode === "%" ? +(subtotal * cdInput / 100).toFixed(2) : +cdInput.toFixed(2);
+    const taxable = +(Math.max(0, subtotal - cdAmount)).toFixed(2);
+    const gst = +(taxable * 0.18).toFixed(2);
+    const grand = +(taxable + freight + insurance + gst).toFixed(2);
 
     // Helper: convert number to words (Indian system) - supports up to crores
     const numberToWords = (num) => {
@@ -252,56 +254,114 @@ const ProformaInvoice = () => {
         setInvoice((p) => ({ ...p, amountInWords: words }));
     }, [grand]);
 
-   
+
+//     const handleDownloadPdf = () => {
+
+//         const element = document.querySelector(".proforma-container");
+
+//         // Hide only unnecessary buttons (Add Row, Download, etc.)
+//         const hiddenElements = document.querySelectorAll(
+//             ".add-row-btn, #download-pdf-btn .add-row-input"
+//         );
+
+//         hiddenElements.forEach(el => (el.style.display = "none"));
+
+//         // Temporarily remove input borders for PDF export
+//         const inputs = document.querySelectorAll("input, select, textarea");
+//         inputs.forEach(el => {
+//             el.setAttribute("data-old-border", el.style.border || ""); // save old style
+//             el.style.border = "none";
+//             el.style.outline = "none";
+//             el.style.background = "transparent";
+//         });
+
+
+
+// //         // Hide Cash Discount row in PDF if amount is 0
+// //         const cdRow = document.querySelector(".cd-row");
+// //         if (cdRow) {
+// //             cdRow.style.display = parseFloat(cdAmount) === 0 ? "none" : "";
+        
+        
+// // }
+// const cdRow = document.querySelector(".cd-row");
+// if (cdRow && cdAmount === 0) cdRow.style.display = "none";
+
+
+
+
+//         const options = {
+//             margin: 0.5,
+//             filename: `Proforma_Invoice_${invoice.number || "BTIPL"}.pdf`,
+//             image: { type: "jpeg", quality: 0.98 },
+//             html2canvas: { scale: 2 },
+//             jsPDF: { unit: "in", format: "a4", orientation: "portrait" },
+//         };
+
+
+
+//         html2pdf()
+//             .set(options)
+//             .from(element)
+//             .save()
+//             .then(() => {
+//                 // Restore hidden buttons and input styles
+//                 hiddenElements.forEach(el => (el.style.display = ""));
+//                 inputs.forEach(el => {
+//                     el.style.border = el.getAttribute("data-old-border");
+//                     el.removeAttribute("data-old-border");
+//                     el.style.background = "";
+//                 });
+//             });
+//         // Restore Cash Discount row visibility
+//         if (cdRow) cdRow.style.display = "";
+
+//     };
+
 const handleDownloadPdf = () => {
-    
-  const element = document.querySelector(".proforma-container");
+    const element = document.querySelector(".proforma-container");
 
-  // Hide only unnecessary buttons (Add Row, Download, etc.)
-  const hiddenElements = document.querySelectorAll(
-    ".add-row-btn, .download-btn"
-  );
-
-  hiddenElements.forEach(el => (el.style.display = "none"));
-
-  // Temporarily remove input borders for PDF export
-  const inputs = document.querySelectorAll("input, select, textarea");
-  inputs.forEach(el => {
-    el.setAttribute("data-old-border", el.style.border || ""); // save old style
-    el.style.border = "none";
-    el.style.outline = "none";
-    el.style.background = "transparent";
-  });
-//   const addressInput = document.querySelector('input[name="address"]');
-// if (addressInput) {
-//   addressInput.style.width = "100%";
-//   addressInput.style.whiteSpace = "normal";
-//   addressInput.style.overflow = "visible";
-// }
-
-  const options = {
-    margin: 0.5,
-    filename: `Proforma_Invoice_${invoice.number || "BTIPL"}.pdf`,
-    image: { type: "jpeg", quality: 0.98 },
-    html2canvas: { scale: 2 },
-    jsPDF: { unit: "in", format: "a4", orientation: "portrait" },
-  };
-
-  html2pdf()
-    .set(options)
-    .from(element)
-    .save()
-    .then(() => {
-      // Restore hidden buttons and input styles
-      hiddenElements.forEach(el => (el.style.display = ""));
-      inputs.forEach(el => {
-        el.style.border = el.getAttribute("data-old-border");
-        el.removeAttribute("data-old-border");
-        el.style.background = "";
-      });
+    // Hide Add Rows section, Download button, and CD row if CD = 0
+    const hiddenElements = document.querySelectorAll(".add-row-wrapper, #download-pdf-btn, .cd-row");
+    hiddenElements.forEach(el => {
+        if (el.classList.contains("cd-row")) {
+            el.style.display = parseFloat(cdAmount) === 0 ? "none" : "";
+        } else {
+            el.style.display = "none";
+        }
     });
-};
 
+    // Temporarily remove input borders for PDF export
+    const inputs = document.querySelectorAll("input, select, textarea");
+    inputs.forEach(el => {
+        el.setAttribute("data-old-border", el.style.border || "");
+        el.style.border = "none";
+        el.style.outline = "none";
+        el.style.background = "transparent";
+    });
+
+    const options = {
+        margin: 0.5,
+        filename: `Proforma_Invoice_${invoice.number || "BTIPL"}.pdf`,
+        image: { type: "jpeg", quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: "in", format: "a4", orientation: "portrait" },
+    };
+
+    html2pdf()
+        .set(options)
+        .from(element)
+        .save()
+        .then(() => {
+            // Restore hidden elements
+            hiddenElements.forEach(el => (el.style.display = ""));
+            inputs.forEach(el => {
+                el.style.border = el.getAttribute("data-old-border");
+                el.removeAttribute("data-old-border");
+                el.style.background = "";
+            });
+        });
+};
 
 
     return (
@@ -380,7 +440,7 @@ const handleDownloadPdf = () => {
                             </div>
                             <div className="form-row small">
                                 <label>Date:</label>
-                                <input type="date" max={new Date().toISOString().slice(0,10)} className="form-input small-input" value={invoice.date} onChange={(e) => onInvoiceChange("date", e.target.value)} disabled={!buyerLocked} />
+                                <input type="date" max={new Date().toISOString().slice(0, 10)} className="form-input small-input" value={invoice.date} onChange={(e) => onInvoiceChange("date", e.target.value)} disabled={!buyerLocked} />
                             </div>
                         </div>
                     </div>
@@ -494,11 +554,13 @@ const handleDownloadPdf = () => {
                         </tbody>
                     </table>
 
-                    <div style={{ marginTop: 12, display: "flex", gap: 8, alignItems: "center" }}>
-                        <input id="add-row-input" type="number" min={1} value={rowsToAdd} onChange={(e) => setRowsToAdd(e.target.value)} disabled={!buyerLocked} />
-                        <button id="add-row-btn" type="button" onClick={() => { addRows(rowsToAdd); setRowsToAdd(1); }} disabled={!buyerLocked}>
-                            Add rows
-                        </button>
+                    <div className="add-row-wrapper" style={{ marginTop: 12, display: "flex", gap: 8, alignItems: "center" }}>
+                            <div className="add-row-controls">
+                                <input className="add-row-input" id="add-row-input" type="number" min={1} value={rowsToAdd} onChange={(e) => setRowsToAdd(e.target.value)} disabled={!buyerLocked} />
+                                <button className="add-row-btn" id="add-row-btn" type="button" onClick={() => { addRows(rowsToAdd); setRowsToAdd(1); }} disabled={!buyerLocked}>
+                                    Add rows
+                                </button>
+                            </div>
                     </div>
                 </div>
 
@@ -553,6 +615,25 @@ const handleDownloadPdf = () => {
                                     </td>
                                 </tr>
                                 <tr>
+                                    <td>Cash Discount (CD)</td>
+                                    <td>
+                                        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                                            <input
+                                                className="form-input small-input"
+                                                type="number"
+                                                step="0.01"
+                                                value={invoice.cd === "" ? "" : invoice.cd}
+                                                onChange={(e) => onInvoiceChange("cd", e.target.value)}
+                                                disabled={!buyerLocked}
+                                            />
+                                            <select className="form-input small-input" value={invoice.cdMode || "%"} onChange={(e) => onInvoiceChange("cdMode", e.target.value)} disabled={!buyerLocked}>
+                                                <option value="%">%</option>
+                                                <option value="₹">₹</option>
+                                            </select>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
                                     <td> Freight Insurance</td>
                                     <td>
                                         <input
@@ -581,6 +662,22 @@ const handleDownloadPdf = () => {
                                     <td>Total</td>
                                     <td>₹{subtotal.toFixed(2)}</td>
                                 </tr>
+                                <tr className="cd-row">
+                                    <td>Cash Discount</td>
+                                    <td>- ₹{cdAmount.toFixed(2)}</td>
+                                </tr>
+
+                                {/* {cdAmount > 0 && (
+                                    <tr className="cd-row">
+                                        <td>Cash Discount</td>
+                                        <td>- ₹{cdAmount.toFixed(2)}</td>
+                                    </tr>
+                                )} */}
+
+                                <tr>
+                                    <td>Taxable Amount</td>
+                                    <td>₹{taxable.toFixed(2)}</td>
+                                </tr>
                                 <tr>
                                     <td>Insurance</td>
                                     <td>₹{insurance.toFixed(2)}</td>
@@ -590,17 +687,10 @@ const handleDownloadPdf = () => {
                                     <td>₹{freight.toFixed(2)}</td>
                                 </tr>
                                 <tr>
-                                    <td>IGST (18%)</td>
-                                    <td>₹{igst.toFixed(2)}</td>
+                                    <td>GST (18%)</td>
+                                    <td>₹{gst.toFixed(2)}</td>
                                 </tr>
-                                <tr>
-                                    <td>SGST</td>
-                                    <td>₹{sgst.toFixed(2)}</td>
-                                </tr>
-                                <tr>
-                                    <td>CGST</td>
-                                    <td>₹{cgst.toFixed(2)}</td>
-                                </tr>
+
                                 <tr className="grand">
                                     <td>Grand Total</td>
                                     <td>₹{grand.toFixed(2)}</td>
