@@ -1,9 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import './Enquiry.css'
 
-/* ================================
-   Dummy Data for 3 Tables
-================================ */
+
 const stockSummaryData = [
     {
         item: "2311SKC3 Bearing",
@@ -89,9 +87,9 @@ const Enquiry = () => {
     const [meta, setMeta] = useState({ enqNo: '', date: new Date().toISOString().slice(0, 10), customer: '', contact: '' })
     const [search, setSearch] = useState({ customer: '', item: '', qty: '' })
     const [filteredItems, setFilteredItems] = useState(undefined)
-        const [filteredTop, setFilteredTop] = useState(undefined)
-        const [filteredPrice, setFilteredPrice] = useState(undefined)
-        const [filteredStock, setFilteredStock] = useState(undefined)
+    const [filteredTop, setFilteredTop] = useState(undefined)
+    const [filteredPrice, setFilteredPrice] = useState(undefined)
+    const [filteredStock, setFilteredStock] = useState(undefined)
     const [suggestions, setSuggestions] = useState([])
     const [showSuggestions, setShowSuggestions] = useState({ visible: false, row: null, field: null })
     const [searchApplied, setSearchApplied] = useState(false)
@@ -112,6 +110,7 @@ const Enquiry = () => {
         branch: 'main branch',
         customer: '',
         discount: 0,
+        type: 'Enquiry', // per-row type: Enquiry or Order
     }
 
     const normalizeItems = (arr) => {
@@ -137,6 +136,7 @@ const Enquiry = () => {
     // start with no rows in the left table per user's request
     const [items, setItems] = useState(() => [])
     const nextSr = useRef(1)
+    const [leftSearch, setLeftSearch] = useState('')
 
     useEffect(() => {
         try {
@@ -163,6 +163,25 @@ const Enquiry = () => {
         }
         copy[idx].amount = +((parseFloat(copy[idx].qty) || 0) * (parseFloat(copy[idx].rate) || 0)).toFixed(2)
         setItems(copy)
+    }
+
+    // ensure an item exists at index and set a field (creates row if missing)
+    const setItemField = (idx, field, val) => {
+        setItems(prev => {
+            const copy = Array.isArray(prev) ? prev.map(it => ({ ...it })) : []
+            const numericFields = new Set(['qty', 'rate', 'del', 'mum', 'com', 'hyd', 'ahm', 'readyDel', 'readyMum', 'mrp', 'stock', 'discount'])
+            while (copy.length <= idx) {
+                copy.push({ ...dummyRow, srNo: copy.length + 1 })
+            }
+            if (numericFields.has(field)) {
+                const num = val === '' ? 0 : parseFloat(val)
+                copy[idx][field] = Number.isNaN(num) ? 0 : num
+            } else {
+                copy[idx][field] = val
+            }
+            copy[idx].amount = +((parseFloat(copy[idx].qty) || 0) * (parseFloat(copy[idx].rate) || 0)).toFixed(2)
+            return copy
+        })
     }
 
     // item name suggestion helpers
@@ -196,12 +215,12 @@ const Enquiry = () => {
         const q = (val || '').toString().trim().toLowerCase()
         if (!q) {
             setSuggestions(pool.slice(0, 8))
-            setShowSuggestions({ visible: true, row: idx, field: 'item' })
+            setShowSuggestions({ visible: true, row: idx, field: 'item', id: `${idx}-item` })
             return
         }
         const filtered = pool.filter(p => p.toLowerCase().includes(q)).slice(0, 8)
         setSuggestions(filtered)
-        setShowSuggestions({ visible: true, row: idx, field: 'item' })
+        setShowSuggestions({ visible: true, row: idx, field: 'item', id: `${idx}-item` })
     }
 
     const onCustomerInputChange = (idx, val) => {
@@ -210,12 +229,12 @@ const Enquiry = () => {
         const q = (val || '').toString().trim().toLowerCase()
         if (!q) {
             setSuggestions(pool.slice(0, 8))
-            setShowSuggestions({ visible: true, row: idx, field: 'customer' })
+            setShowSuggestions({ visible: true, row: idx, field: 'customer', id: `${idx}-customer` })
             return
         }
         const filtered = pool.filter(p => p.toLowerCase().includes(q)).slice(0, 8)
         setSuggestions(filtered)
-        setShowSuggestions({ visible: true, row: idx, field: 'customer' })
+        setShowSuggestions({ visible: true, row: idx, field: 'customer', id: `${idx}-customer` })
     }
 
     const onSearchCustomerInputChange = (val) => {
@@ -224,12 +243,12 @@ const Enquiry = () => {
         const q = (val || '').toString().trim().toLowerCase()
         if (!q) {
             setSuggestions(pool.slice(0, 8))
-            setShowSuggestions({ visible: true, row: 'search', field: 'customer' })
+            setShowSuggestions({ visible: true, row: 'search', field: 'customer', id: `search-customer` })
             return
         }
         const filtered = pool.filter(p => p.toLowerCase().includes(q)).slice(0, 8)
         setSuggestions(filtered)
-        setShowSuggestions({ visible: true, row: 'search', field: 'customer' })
+        setShowSuggestions({ visible: true, row: 'search', field: 'customer', id: `search-customer` })
     }
 
     const onSearchItemInputChange = (val) => {
@@ -238,12 +257,12 @@ const Enquiry = () => {
         const q = (val || '').toString().trim().toLowerCase()
         if (!q) {
             setSuggestions(pool.slice(0, 8))
-            setShowSuggestions({ visible: true, row: 'search', field: 'item' })
+            setShowSuggestions({ visible: true, row: 'search', field: 'item', id: `search-item` })
             return
         }
         const filtered = pool.filter(p => p.toLowerCase().includes(q)).slice(0, 8)
         setSuggestions(filtered)
-        setShowSuggestions({ visible: true, row: 'search', field: 'item' })
+        setShowSuggestions({ visible: true, row: 'search', field: 'item', id: `search-item` })
     }
 
     const chooseSuggestion = (row, val, field = 'item') => {
@@ -251,13 +270,16 @@ const Enquiry = () => {
             if (row === 'search') {
                 setSearch(s => ({ ...s, item: val }))
             } else {
-                updateItem(row, 'itemName', val)
+                // if row doesn't exist yet, create it
+                if (!items[row]) setItemField(row, 'itemName', val)
+                else updateItem(row, 'itemName', val)
             }
         } else if (field === 'customer') {
             if (row === 'search') {
                 setSearch(s => ({ ...s, customer: val }))
             } else {
-                updateItem(row, 'customer', val)
+                if (!items[row]) setItemField(row, 'customer', val)
+                else updateItem(row, 'customer', val)
             }
         }
         setShowSuggestions({ visible: false, row: null, field: null })
@@ -266,140 +288,123 @@ const Enquiry = () => {
     const performSearch = () => {
         const itm = (search.item || '').trim().toLowerCase()
         const filtered = items.filter(it => {
-            // only apply item-name filtering here
             if (itm && !((it.itemName || '').toLowerCase().includes(itm))) return false
             return true
         })
         return filtered
     }
 
-        const handleSearch = () => {
-            // reuse existing items filter for left panel
-            const left = performSearch()
-            setFilteredItems(left)
+    const handleSearch = () => {
+        const left = performSearch()
+        setFilteredItems(left)
 
-            const itm = (search.item || '').trim().toLowerCase()
+        const itm = (search.item || '').trim().toLowerCase()
 
-            // Top table (stockSummaryData) filter — only item name
-            const topFiltered = stockSummaryData.filter(r => {
-                if (itm && !((r.item || '').toLowerCase().includes(itm))) return false
-                return true
-            })
+        const topFiltered = stockSummaryData.filter(r => {
+            if (itm && !((r.item || '').toLowerCase().includes(itm))) return false
+            return true
+        })
 
-            // Price table filter — only item name
-            const priceFiltered = priceAvailabilityData.filter(r => {
-                if (itm && !((r.item || '').toLowerCase().includes(itm))) return false
-                return true
-            })
+        const priceFiltered = priceAvailabilityData.filter(r => {
+            if (itm && !((r.item || '').toLowerCase().includes(itm))) return false
+            return true
+        })
 
-            // Stock table filter — only item name
-            const stockFiltered = locationStockData.filter(r => {
-                if (itm && !((r.itemName || '').toLowerCase().includes(itm))) return false
-                return true
-            })
+        const stockFiltered = locationStockData.filter(r => {
+            if (itm && !((r.itemName || '').toLowerCase().includes(itm))) return false
+            return true
+        })
 
-            setFilteredTop(topFiltered)
-            setFilteredPrice(priceFiltered)
-            setFilteredStock(stockFiltered)
+        setFilteredTop(topFiltered)
+        setFilteredPrice(priceFiltered)
+        setFilteredStock(stockFiltered)
 
-            // also set meta.customer if provided (convenience)
-            if (search.customer) setMeta(m => ({ ...m, customer: search.customer }))
+        if (search.customer) setMeta(m => ({ ...m, customer: search.customer }))
 
-            // Merge right-side filtered results into left table rows so they appear on the left panel
-            const merged = new Map()
+        const merged = new Map()
 
-            // helper to ensure a base row exists
-            const ensure = (key) => {
-                if (!merged.has(key)) {
-                    merged.set(key, {
-                        ...dummyRow,
-                        srNo: nextSr.current++,
-                        itemName: key,
-                        brand: '',
-                        qty: Number(search.qty) || 0,
-                        customer: search.customer || '',
-                        rate: 0,
-                        amount: 0,
-                    })
-                }
-                return merged.get(key)
-            }
-
-            topFiltered.forEach(r => {
-                const key = (r.item || r.itemName || '').toString()
-                if (!key) return
-                const row = ensure(key)
-                row.brand = r.brand || row.brand
-                row.total = r.total || row.total
-                row.del = r.del || row.del
-                row.mum = r.mum || row.mum
-                row.com = r.com || row.com
-                row.hyd = r.hyd || row.hyd
-                row.ahm = r.ahm || row.ahm
-                row.readyDel = r.readyDel || row.readyDel
-                row.readyMum = r.readyMum || row.readyMum
-            })
-
-            priceFiltered.forEach(r => {
-                const key = (r.item || r.itemName || '').toString()
-                if (!key) return
-                const row = ensure(key)
-                // copy price info
-                row.mrp = r.mrp || row.mrp
-                // prefer a city price as rate if available
-                row.rate = row.rate || r.delhi || r.mumbai || r.ahm || r.hyd || r.com || r.mrp || row.rate
-            })
-
-            stockFiltered.forEach(r => {
-                const key = (r.itemName || r.item || '').toString()
-                if (!key) return
-                const row = ensure(key)
-                // set location-specific stock if available (overwrite with last found)
-                row.location = r.location || row.location
-                row.stock = Number(r.stock || row.stock || 0)
-            })
-
-            const mergedArr = Array.from(merged.values()).map((it, i) => {
-                const qty = Number(it.qty || 0)
-                const rate = Number(it.rate || 0)
-                return ({
-                    ...it,
-                    srNo: i + 1,
-                    qty,
-                    rate,
-                    amount: +((qty || 0) * (rate || 0)).toFixed(2)
+        const ensure = (key) => {
+            if (!merged.has(key)) {
+                merged.set(key, {
+                    ...dummyRow,
+                    srNo: nextSr.current++,
+                    itemName: key,
+                    brand: '',
+                    qty: Number(search.qty) || 0,
+                    customer: search.customer || '',
+                    rate: 0,
+                    amount: 0,
                 })
-            })
-
-            if (mergedArr.length) {
-                // append merged results to existing items instead of replacing
-                setItems(prev => {
-                    const adjusted = mergedArr.map((it) => ({ ...it }))
-                    return Array.isArray(prev) ? [...prev, ...adjusted] : adjusted
-                })
-            } else {
-                // if nothing found in right-side datasets, but performSearch found left items, append them
-                if ((left || []).length) {
-                    setItems(prev => {
-                        const adjusted = (left || []).map((it) => ({ ...it }))
-                        return Array.isArray(prev) ? [...prev, ...adjusted] : adjusted
-                    })
-                }
             }
-
-            // clear search inputs after sending data to left table
-            setSearch({ customer: '', item: '', qty: '' })
-            setSearchApplied(true)
-            searchAppliedRef.current = true
-            // ignore the next click (the button click) so listener doesn't clear immediately
-            ignoreNextClickRef.current = true
+            return merged.get(key)
         }
 
-    // clear applied search filters when user starts typing again or clicks elsewhere
+        topFiltered.forEach(r => {
+            const key = (r.item || r.itemName || '').toString()
+            if (!key) return
+            const row = ensure(key)
+            row.brand = r.brand || row.brand
+            row.total = r.total || row.total
+            row.del = r.del || row.del
+            row.mum = r.mum || row.mum
+            row.com = r.com || row.com
+            row.hyd = r.hyd || row.hyd
+            row.ahm = r.ahm || row.ahm
+            row.readyDel = r.readyDel || row.readyDel
+            row.readyMum = r.readyMum || row.readyMum
+        })
+
+        priceFiltered.forEach(r => {
+            const key = (r.item || r.itemName || '').toString()
+            if (!key) return
+            const row = ensure(key)
+            row.mrp = r.mrp || row.mrp
+            row.rate = row.rate || r.delhi || r.mumbai || r.ahm || r.hyd || r.com || r.mrp || row.rate
+        })
+
+        stockFiltered.forEach(r => {
+            const key = (r.itemName || r.item || '').toString()
+            if (!key) return
+            const row = ensure(key)
+            row.location = r.location || row.location
+            row.stock = Number(r.stock || row.stock || 0)
+        })
+
+        const mergedArr = Array.from(merged.values()).map((it, i) => {
+            const qty = Number(it.qty || 0)
+            const rate = Number(it.rate || 0)
+            return ({
+                ...it,
+                srNo: i + 1,
+                qty,
+                rate,
+                amount: +((qty || 0) * (rate || 0)).toFixed(2)
+            })
+        })
+
+        if (mergedArr.length) {
+            setItems(prev => {
+                const adjusted = mergedArr.map((it) => ({ ...it }))
+                return Array.isArray(prev) ? [...prev, ...adjusted] : adjusted
+            })
+        } else {
+            if ((left || []).length) {
+                setItems(prev => {
+                    const adjusted = (left || []).map((it) => ({ ...it }))
+                    return Array.isArray(prev) ? [...prev, ...adjusted] : adjusted
+                })
+            }
+        }
+
+        setSearch({ customer: '', item: '', qty: '' })
+        setSearchApplied(true)
+        searchAppliedRef.current = true
+        ignoreNextClickRef.current = true
+    }
+
     useEffect(() => {
         const onKey = (e) => {
             if (!searchAppliedRef.current) return
-            // don't clear when pressing Enter on the search input if that was the submit
             setFilteredTop(undefined)
             setFilteredPrice(undefined)
             setFilteredStock(undefined)
@@ -428,6 +433,27 @@ const Enquiry = () => {
         }
     }, [])
 
+    const isObjectRowEmpty = (obj, keys) => {
+        if (!obj) return true
+        for (const k of keys) {
+            const v = obj[k]
+            if (v === undefined || v === null || v === '') continue
+            if (typeof v === 'number') return false
+            if (typeof v === 'string' && v.trim() !== '') return false
+            if (v) return false
+        }
+        return true
+    }
+
+    // focused row state for left table — index of the row currently focused, or null
+    const [focusedLeftRow, setFocusedLeftRow] = useState(null)
+    // checked state for left rows (by visual index)
+    const [checkedRows, setCheckedRows] = useState({})
+
+    const toggleChecked = (rowIdx) => {
+        setCheckedRows(prev => ({ ...prev, [rowIdx]: !prev[rowIdx] }))
+    }
+
     return (
         <div className="enquiry-root">
             <div className="enquiry-header">
@@ -436,10 +462,14 @@ const Enquiry = () => {
 
             <div className="enquiry-grid">
                 <div className="left-panel card">
+                    <div className="left-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                        <h3 style={{ margin: 0, fontSize: 16 }}>Enquiry / Order</h3>
+                        <input className="left-search" placeholder="Search customer" value={leftSearch} onChange={e => setLeftSearch(e.target.value)} />
+                    </div>
                     <table className="enquiry-table">
                         <thead>
                             <tr>
-                                <th>Enquiry Order</th>
+                                <th>Enquiry/Order</th>
                                 <th>Branch</th>
                                 <th>Customer Name</th>
                                 <th>Item Name</th>
@@ -448,44 +478,99 @@ const Enquiry = () => {
                                 <th>Rate</th>
                                 <th>Discount</th>
                                 <th>Amount</th>
+                                <th style={{ width: 36 }}></th>
                             </tr>
                         </thead>
-                        <tbody> {items.map((it, idx) =>
-                        (<tr key={it.srNo || idx}>
-                            <td>{it.srNo}</td>
-                            <td>
-                                <input value={it.branch || ''} onChange={(e) => updateItem(idx, 'branch', e.target.value)} /></td>
-                            <td style={{ position: 'relative' }}>
-                                <input value={it.customer || ''} onChange={(e) => onCustomerInputChange(idx, e.target.value)} onFocus={() => { setSuggestions(getSuggestionPool('customer').slice(0, 8)); setShowSuggestions({ visible: true, row: idx, field: 'customer' }) }} onBlur={() => setTimeout(() => setShowSuggestions({ visible: false, row: null, field: null }), 150)} />
-                                {showSuggestions.visible && showSuggestions.row === idx && showSuggestions.field === 'customer' && suggestions && suggestions.length ? (
-                                    <div className="suggestions-list" style={{ position: 'absolute', zIndex: 40 }}>
-                                        {suggestions.map((s, i) => (
-                                            <div key={i} className="suggestion-item" onMouseDown={() => chooseSuggestion(idx, s, 'customer')}>{s}</div>
-                                        ))}
-                                    </div>
-                                ) : null}
-                            </td>
-                            <td style={{ position: 'relative' }}>
-                                <input value={it.itemName} onChange={(e) => onItemInputChange(idx, e.target.value)} onFocus={() => { setSuggestions(getSuggestionPool().slice(0, 8)); setShowSuggestions({ visible: true, row: idx }) }} onBlur={() => setTimeout(() => setShowSuggestions({ visible: false, row: null }), 150)} />
-                                {showSuggestions.visible && showSuggestions.row === idx && suggestions && suggestions.length ? (
-                                    <div className="suggestions-list" style={{ position: 'absolute', zIndex: 40 }}>
-                                        {suggestions.map((s, i) => (
-                                            <div key={i} className="suggestion-item" onMouseDown={() => chooseSuggestion(idx, s)}>{s}</div>
-                                        ))}
-                                    </div>
-                                ) : null}
-                            </td>
-                            <td>
-                                <input value={it.brand} onChange={(e) => updateItem(idx, 'brand', e.target.value)} /></td>
-                            <td>
-                                <input type="number" value={it.qty} onChange={(e) => updateItem(idx, 'qty', e.target.value)} /></td>
-                            <td>
-                                <input type="number" value={it.rate} onChange={(e) => updateItem(idx, 'rate', e.target.value)} /></td>
-                            <td>
-                                <input type="number" value={it.discount || 0} onChange={(e) => updateItem(idx, 'discount', e.target.value)} /></td>
-                            <td>₹{(it.amount || 0).toFixed(2)}</td>
-                        </tr>
-                        ))}
+                        <tbody>
+                            {leftSearch ? (
+                                (items.filter(it => (it.customer || '').toString().toLowerCase().includes((leftSearch || '').toLowerCase()))).map((it, rowIdx) => (
+                                    <tr key={it.srNo || `f-${rowIdx}`} className={focusedLeftRow === rowIdx ? 'row-focused' : ''} onFocus={() => setFocusedLeftRow(rowIdx)} onBlur={() => setFocusedLeftRow(null)} tabIndex={-1}>
+                                        <td>
+                                            <select value={it ? (it.type || 'Enquiry') : 'Enquiry'} onChange={(e) => it ? updateItem(items.indexOf(it), 'type', e.target.value) : null} onFocus={() => setFocusedLeftRow(rowIdx)} onBlur={() => setFocusedLeftRow(null)}>
+                                                <option>Enquiry</option>
+                                                <option>Order</option>
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <input value={it ? (it.branch || '') : ''} onChange={(e) => updateItem(items.indexOf(it), 'branch', e.target.value)} onFocus={() => setFocusedLeftRow(rowIdx)} onBlur={() => setFocusedLeftRow(null)} /></td>
+                                        <td style={{ position: 'relative' }}>
+                                            <input value={it ? (it.customer || '') : ''} onChange={(e) => updateItem(items.indexOf(it), 'customer', e.target.value)} onFocus={() => setFocusedLeftRow(rowIdx)} onBlur={() => setFocusedLeftRow(null)} />
+                                        </td>
+                                        <td style={{ position: 'relative' }}>
+                                            <input value={it ? it.itemName : ''} onChange={(e) => updateItem(items.indexOf(it), 'itemName', e.target.value)} onFocus={() => setFocusedLeftRow(rowIdx)} onBlur={() => setFocusedLeftRow(null)} />
+                                        </td>
+                                        <td>
+                                            <input value={it ? it.brand : ''} onChange={(e) => updateItem(items.indexOf(it), 'brand', e.target.value)} onFocus={() => setFocusedLeftRow(rowIdx)} onBlur={() => setFocusedLeftRow(null)} /></td>
+                                        <td>
+                                            <input type="number" value={it ? it.qty : ''} onChange={(e) => updateItem(items.indexOf(it), 'qty', e.target.value)} onFocus={() => setFocusedLeftRow(rowIdx)} onBlur={() => setFocusedLeftRow(null)} /></td>
+                                        <td>
+                                            <input type="number" value={it ? it.rate : ''} onChange={(e) => updateItem(items.indexOf(it), 'rate', e.target.value)} onFocus={() => setFocusedLeftRow(rowIdx)} onBlur={() => setFocusedLeftRow(null)} /></td>
+                                        <td>
+                                            <input type="number" value={it ? (it.discount || 0) : ''} onChange={(e) => updateItem(items.indexOf(it), 'discount', e.target.value)} onFocus={() => setFocusedLeftRow(rowIdx)} onBlur={() => setFocusedLeftRow(null)} /></td>
+                                        <td>₹{it ? (it.amount || 0).toFixed(2) : '0.00'}</td>
+                                        <td className="row-action-cell">
+                                            <button type="button" className={`row-check ${checkedRows[rowIdx] ? 'checked' : ''}`} onMouseDown={(e) => { e.preventDefault(); toggleChecked(rowIdx) }} aria-label={checkedRows[rowIdx] ? 'Checked' : 'Check row'}>✓</button>
+                                        </td>
+                                    </tr>
+                                ))
+                            ) : (
+                                Array.from({ length: 7 }).map((_, rowIdx) => {
+                                    const it = items[rowIdx] || null
+                                    return (
+                                        <tr key={it ? (it.srNo || rowIdx) : `tpl-${rowIdx}`} className={focusedLeftRow === rowIdx ? 'row-focused' : ''} onFocus={() => setFocusedLeftRow(rowIdx)} onBlur={() => setFocusedLeftRow(null)} tabIndex={-1}>
+                                            <td>
+                                                    <select value={it ? (it.type || 'Enquiry') : 'Enquiry'} onChange={(e) => setItemField(rowIdx, 'type', e.target.value)} onFocus={() => setFocusedLeftRow(rowIdx)} onBlur={() => setFocusedLeftRow(null)}>
+                                                        <option>Enquiry</option>
+                                                        <option>Order</option>
+                                                    </select>
+                                                </td>
+                                            <td>
+                                                <input value={it ? (it.branch || '') : ''} onChange={(e) => setItemField(rowIdx, 'branch', e.target.value)} onFocus={() => setFocusedLeftRow(rowIdx)} onBlur={() => setFocusedLeftRow(null)} /></td>
+                                            <td style={{ position: 'relative' }}>
+                                                <input value={it ? (it.customer || '') : ''} onChange={(e) => setItemField(rowIdx, 'customer', e.target.value)} onFocus={() => { setFocusedLeftRow(rowIdx); setSuggestions(getSuggestionPool('customer').slice(0, 8)); setShowSuggestions({ visible: true, row: rowIdx, field: 'customer', id: `${rowIdx}-customer` }) }} onBlur={() => setTimeout(() => { setShowSuggestions({ visible: false, row: null, field: null, id: null }); setFocusedLeftRow(null) }, 150)} />
+                                                {showSuggestions.visible && showSuggestions.row === rowIdx && showSuggestions.field === 'customer' && suggestions && suggestions.length ? (
+                                                    <div className="suggestions-list" style={{ position: 'absolute', zIndex: 40 }}>
+                                                        {suggestions.map((s, i) => (
+                                                            <div key={i} className="suggestion-item" onMouseDown={() => chooseSuggestion(rowIdx, s, 'customer')}>{s}</div>
+                                                        ))}
+                                                    </div>
+                                                ) : null}
+                                            </td>
+                                            <td style={{ position: 'relative' }}>
+                                                <input
+                                                    value={it ? it.itemName : ''}
+                                                    onChange={(e) => setItemField(rowIdx, 'itemName', e.target.value)}
+                                                    onFocus={() => {
+                                                        setFocusedLeftRow(rowIdx)
+                                                        setSuggestions(getSuggestionPool().slice(0, 8));
+                                                        setShowSuggestions({ visible: true, row: rowIdx, field: 'item' })
+                                                    }}
+                                                    onBlur={() => setTimeout(() => { setShowSuggestions({ visible: false, row: null, field: null }); setFocusedLeftRow(null) }, 150)}
+                                                />
+                                                {showSuggestions.visible && showSuggestions.row === rowIdx && showSuggestions.field === 'item' && suggestions && suggestions.length ? (
+                                                    <div className="suggestions-list" style={{ position: 'absolute', zIndex: 40 }}>
+                                                        {suggestions.map((s, i) => (
+                                                            <div key={i} className="suggestion-item" onMouseDown={() => chooseSuggestion(rowIdx, s)}>{s}</div>
+                                                        ))}
+                                                    </div>
+                                                ) : null}
+                                            </td>
+                                            <td>
+                                                <input value={it ? it.brand : ''} onChange={(e) => setItemField(rowIdx, 'brand', e.target.value)} onFocus={() => setFocusedLeftRow(rowIdx)} onBlur={() => setFocusedLeftRow(null)} /></td>
+                                            <td>
+                                                <input type="number" value={it ? it.qty : ''} onChange={(e) => setItemField(rowIdx, 'qty', e.target.value)} onFocus={() => setFocusedLeftRow(rowIdx)} onBlur={() => setFocusedLeftRow(null)} /></td>
+                                            <td>
+                                                <input type="number" value={it ? it.rate : ''} onChange={(e) => setItemField(rowIdx, 'rate', e.target.value)} onFocus={() => setFocusedLeftRow(rowIdx)} onBlur={() => setFocusedLeftRow(null)} /></td>
+                                            <td>
+                                                <input type="number" value={it ? (it.discount || 0) : ''} onChange={(e) => setItemField(rowIdx, 'discount', e.target.value)} onFocus={() => setFocusedLeftRow(rowIdx)} onBlur={() => setFocusedLeftRow(null)} /></td>
+                                            <td>₹{it ? (it.amount || 0).toFixed(2) : '0.00'}</td>
+                                            <td className="row-action-cell">
+                                                <button type="button" className={`row-check ${checkedRows[rowIdx] ? 'checked' : ''}`} onMouseDown={(e) => { e.preventDefault(); toggleChecked(rowIdx) }} aria-label={checkedRows[rowIdx] ? 'Checked' : 'Check row'}>✓</button>
+                                            </td>
+                                        </tr>
+                                    )
+                                })
+                            )}
                         </tbody>
                     </table>
                 </div>
@@ -493,7 +578,7 @@ const Enquiry = () => {
                 <div className="right-panel card">
                     <div className="right-header">
                         <div style={{ position: 'relative' }}>
-                            <input className="right-search" placeholder="Customer name" value={search.customer} onChange={e => onSearchCustomerInputChange(e.target.value)} onFocus={() => { setSuggestions(getSuggestionPool('customer').slice(0, 8)); setShowSuggestions({ visible: true, row: 'search', field: 'customer' }) }} onBlur={() => setTimeout(() => setShowSuggestions({ visible: false, row: null, field: null }), 150)} />
+                            <input className="right-search" placeholder="Customer name" value={search.customer} onChange={e => onSearchCustomerInputChange(e.target.value)} onFocus={() => { setSuggestions(getSuggestionPool('customer').slice(0, 8)); setShowSuggestions({ visible: true, row: 'search', field: 'customer', id: `search-customer` }) }} onBlur={() => setTimeout(() => setShowSuggestions({ visible: false, row: null, field: null, id: null }), 150)} />
                             {showSuggestions.visible && showSuggestions.row === 'search' && showSuggestions.field === 'customer' && suggestions && suggestions.length ? (
                                 <div className="suggestions-list" style={{ position: 'absolute', zIndex: 40 }}>
                                     {suggestions.map((s, i) => (
@@ -503,21 +588,20 @@ const Enquiry = () => {
                             ) : null}
                         </div>
                         <div style={{ position: 'relative' }}>
-                            <input className="right-search" placeholder="Item name" value={search.item} onChange={e => onSearchItemInputChange(e.target.value)} onFocus={() => { setSuggestions(getSuggestionPool('item').slice(0, 8)); setShowSuggestions({ visible: true, row: 'search', field: 'item' }) }} onBlur={() => setTimeout(() => setShowSuggestions({ visible: false, row: null, field: null }), 150)} />
+                            <input className="right-search" placeholder="Item name" value={search.item} onChange={e => onSearchItemInputChange(e.target.value)} onFocus={() => { setSuggestions(getSuggestionPool('item').slice(0, 8)); setShowSuggestions({ visible: true, row: 'search', field: 'item', id: `search-item` }) }} onBlur={() => setTimeout(() => setShowSuggestions({ visible: false, row: null, field: null, id: null }), 150)} />
                             {showSuggestions.visible && showSuggestions.row === 'search' && showSuggestions.field === 'item' && suggestions && suggestions.length ? (
                                 <div className="suggestions-list" style={{ position: 'absolute', zIndex: 40 }}>
                                     {suggestions.map((s, i) => (
                                         <div key={i} className="suggestion-item" onMouseDown={() => chooseSuggestion('search', s, 'item')}>{s}</div>
                                     ))}
                                 </div>
-                            ) : null}
+                            ) : null} 
                         </div>
                         <input className="right-search" placeholder="Qty" value={search.qty} onChange={e => setSearch(s => ({ ...s, qty: e.target.value }))} />
                         <button className="primary" onClick={handleSearch}>Send</button>
                     </div>
 
                     <div className="nested-outer">
-                        {/* === Top Table === */}
                         <div className="nested-top">
 
                             <div className="table-scroll">
@@ -536,27 +620,31 @@ const Enquiry = () => {
                                             <th>Ready MUM</th>
                                         </tr>
                                     </thead>
-                                                <tbody>
-                                                    {(filteredTop || stockSummaryData).map((it, idx) => (
-                                                        <tr key={`top-${idx}`}>
-                                                            <td>{it.item}</td>
-                                                            <td>{it.brand}</td>
-                                                            <td>{it.total}</td>
-                                                            <td>{it.del}</td>
-                                                            <td>{it.mum}</td>
-                                                            <td>{it.com}</td>
-                                                            <td>{it.hyd}</td>
-                                                            <td>{it.ahm}</td>
-                                                            <td>{it.readyDel}</td>
-                                                            <td>{it.readyMum}</td>
-                                                        </tr>
-                                                    ))}
-                                                </tbody>
+                                    <tbody>
+                                        {Array.from({ length: 3 }).map((_, i) => {
+                                            const rows = filteredTop || stockSummaryData
+                                            const it = rows[i] || {}
+                                            const empty = isObjectRowEmpty(it, ['item', 'brand', 'total', 'del', 'mum', 'com', 'hyd', 'ahm', 'readyDel', 'readyMum'])
+                                            return (
+                                                <tr key={`top-${i}`} className={empty ? 'row-empty' : ''}>
+                                                    <td>{it.item || ''}</td>
+                                                    <td>{it.brand || ''}</td>
+                                                    <td>{it.total || ''}</td>
+                                                    <td>{it.del || ''}</td>
+                                                    <td>{it.mum || ''}</td>
+                                                    <td>{it.com || ''}</td>
+                                                    <td>{it.hyd || ''}</td>
+                                                    <td>{it.ahm || ''}</td>
+                                                    <td>{it.readyDel || ''}</td>
+                                                    <td>{it.readyMum || ''}</td>
+                                                </tr>
+                                            )
+                                        })}
+                                    </tbody>
                                 </table>
                             </div>
                         </div>
 
-                        {/* === Bottom 2 Tables === */}
                         <div className="nested-bottom">
                             <div className="nested-col">
                                 <div className="table-scroll">
@@ -574,18 +662,23 @@ const Enquiry = () => {
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {(filteredPrice || priceAvailabilityData).map((it, idx) => (
-                                                <tr key={`b1-${idx}`}>
-                                                    <td>{it.item}</td>
-                                                    <td>{it.brand}</td>
-                                                    <td>₹{it.mrp.toFixed(2)}</td>
-                                                    <td>{it.delhi}</td>
-                                                    <td>{it.ahm}</td>
-                                                    <td>{it.mumbai}</td>
-                                                    <td>{it.hyd}</td>
-                                                    <td>{it.com}</td>
-                                                </tr>
-                                            ))}
+                                            {Array.from({ length: 6 }).map((_, i) => {
+                                                const rows = filteredPrice || priceAvailabilityData
+                                                const it = rows[i] || {}
+                                                const empty = isObjectRowEmpty(it, ['item', 'brand', 'mrp', 'delhi', 'ahm', 'mumbai', 'hyd', 'com'])
+                                                return (
+                                                    <tr key={`b1-${i}`} className={empty ? 'row-empty' : ''}>
+                                                        <td>{it.item || ''}</td>
+                                                        <td>{it.brand || ''}</td>
+                                                        <td>{it.mrp !== undefined ? `₹${(it.mrp || 0).toFixed(2)}` : ''}</td>
+                                                        <td>{it.delhi || ''}</td>
+                                                        <td>{it.ahm || ''}</td>
+                                                        <td>{it.mumbai || ''}</td>
+                                                        <td>{it.hyd || ''}</td>
+                                                        <td>{it.com || ''}</td>
+                                                    </tr>
+                                                )
+                                            })}
                                         </tbody>
                                     </table>
                                 </div>
@@ -602,13 +695,18 @@ const Enquiry = () => {
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {(filteredStock || locationStockData).map((it, idx) => (
-                                                <tr key={`b2-${idx}`}>
-                                                    <td>{it.itemName}</td>
-                                                    <td>{it.location}</td>
-                                                    <td>{it.stock}</td>
-                                                </tr>
-                                            ))}
+                                                {Array.from({ length: 6 }).map((_, i) => {
+                                                    const rows = filteredStock || locationStockData
+                                                    const it = rows[i] || {}
+                                                    const empty = isObjectRowEmpty(it, ['itemName', 'location', 'stock'])
+                                                    return (
+                                                        <tr key={`b2-${i}`} className={empty ? 'row-empty' : ''}>
+                                                            <td>{it.itemName || ''}</td>
+                                                            <td>{it.location || ''}</td>
+                                                            <td>{it.stock !== undefined ? it.stock : ''}</td>
+                                                        </tr>
+                                                    )
+                                                })}
                                         </tbody>
                                     </table>
                                 </div>
@@ -616,6 +714,8 @@ const Enquiry = () => {
                         </div>
                     </div>
                 </div>
+
+
             </div>
         </div>
     )
