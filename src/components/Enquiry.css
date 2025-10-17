@@ -1,0 +1,278 @@
+/* Enquiry component styles (properties on separate lines for readability) */
+
+:root {
+  --bg: #ffffff;
+  --muted: #6b7280;
+  --primary: #0f62fe;
+  --accent: #065f46;
+  --surface: #fbfdff;
+  --border: #e6e9ee;
+  --row-h: 34px; /* expected visible row height */
+  --table-header-h: 36px; /* estimated table header height */
+}
+
+.enquiry-root {
+  width: 100vw;
+  max-width: 98vw;
+  margin: 0;
+  padding: 8px 12px; /* reduced top/bottom padding */
+  box-sizing: border-box;
+}
+
+.enquiry-root {
+  background: #f3f4f6; /* subtle gray page background so cards/tables pop */
+}
+
+.enquiry-header h2 {
+  margin: 0 0 12px 0;
+  font-size: 20px;
+  text-align: center;
+}
+
+.enquiry-grid {
+    
+  background: #f2f3f5;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px; /* slightly reduced gap between panels */
+  align-items: start;
+}
+
+.card {
+  /* background: var(--bg); */
+  padding: 14px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+}
+
+/* LEFT PANEL - form-like table */
+.left-panel {
+  background: linear-gradient(180deg, #ffffff, var(--surface));
+}
+
+.left-panel-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: transparent;
+}
+
+.left-panel-table td {
+  padding: 8px 6px;
+  vertical-align: middle;
+  border: none;
+}
+
+.left-panel-table .lp-label {
+  width: 110px;
+  font-weight: 700;
+  color: #0b4a6f;
+  padding-right: 8px;
+}
+
+.left-panel-table .lp-field input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+}
+
+.left-panel .actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.upload-label {
+  display: inline-block;
+  padding: 6px 10px;
+  background: var(--primary);
+  color: #fff;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+/* RIGHT PANEL - data grid */
+.enquiry-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+}
+
+.enquiry-table th,
+.enquiry-table td {
+  border: 1px solid var(--border);
+  padding: 6px 8px; /* slightly smaller padding for compactness */
+  font-size: 12px; /* reduced font size */
+  text-align: left;
+}
+
+.enquiry-table thead th {
+  background: var(--primary);
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.enquiry-table tbody tr:hover {
+  background: #fbfbff;
+}
+
+.enquiry-table tbody tr:nth-child(even) {
+  background: #fcfcfd;
+}
+
+.enquiry-table input {
+  width: 100%;
+  padding: 4px 6px; /* smaller input padding */
+  border: none;
+  background: transparent;
+  font-size: 12px; /* input font matches table cell font */
+}
+
+.nested-outer,
+.nested-inner {
+  padding: 0;
+}
+
+.nested-outer {
+  display: flex;
+  flex-direction: column;
+  gap: 6px; /* reduced vertical gap */
+  box-sizing: border-box;
+}
+
+.right-header {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 6px; /* bring header closer to nested content */
+}
+
+.right-search {
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: #fff;
+  width: 180px;
+  box-sizing: border-box;
+}
+
+.nested-top {
+  width: 100%;
+  margin-bottom: 0;
+  background: var(--bg);
+  padding: 6px; /* reduced padding */
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
+  position: relative;
+  z-index: 2; /* keep above nested-bottom while scrolling */
+  box-sizing: border-box;
+  overflow: hidden; /* prevent children from overflowing the card */
+  max-width: 100%;
+}
+
+.nested-bottom {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* ensure equal width columns */
+  gap: 8px;
+  align-items: start;
+}
+
+.nested-bottom {
+  position: relative;
+  z-index: 1;
+}
+
+.nested-col {
+  background: var(--bg);
+  padding: 6px; /* match nested-top reduced padding */
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04);
+  border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  min-width: 0; /* allow children to shrink properly inside grid */
+}
+
+.table-scroll {
+  max-height: 220px; /* shows roughly 5 rows depending on row height */
+  overflow: auto;
+  border-radius: 6px;
+  background: transparent;
+  padding: 2px; /* inner padding so content doesn't touch edge */
+  box-sizing: border-box;
+}
+
+/* For the bottom two columns: force the visible area to show 3 rows (plus header) so both columns match
+   and overflow scrolls when there are more rows. This uses estimated header and row heights. */
+.nested-bottom .table-scroll {
+  height: calc(var(--table-header-h) + (var(--row-h) * 3));
+  max-height: none; /* use fixed height for visibility parity */
+}
+
+.enquiry-table tbody tr {
+  height: var(--row-h);
+}
+
+.suggestions-list{
+  background:#fff;
+  border:1px solid #ddd;
+  box-shadow:0 2px 6px rgba(0,0,0,0.12);
+  max-height:200px;
+  overflow:auto;
+  width:100%;
+  box-sizing: border-box;
+  margin-top: 6px;
+}
+.suggestion-item{
+  padding:6px 8px;
+  cursor:pointer;
+}
+.suggestion-item:hover{
+  background:#f0f0f0;
+}
+
+.table-scroll tbody {
+  padding-bottom: 4px; /* ensure last row isn't hidden under scrollbar */
+}
+
+@media (max-width: 900px) {
+  .nested-bottom {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Buttons */
+button.primary {
+  background: var(--accent);
+  color: #fff;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+}
+
+button {
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid #c8c9da;
+  background: #fff;
+  cursor: pointer;
+}
+
+/* small screens */
+@media (max-width: 900px) {
+  .enquiry-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .left-panel-table .lp-label {
+    width: 95px;
+  }
+}
+
+/* utility */
+.muted {
+  color: var(--muted);
+}

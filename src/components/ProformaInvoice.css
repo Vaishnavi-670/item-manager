@@ -49,6 +49,9 @@ body {
   .no-print {
     display: none !important;
   }
+  #download-pdf-btn{
+    background-color: #084fc1;
+  }
 
   /* Render inputs/textarea as plain text in print */
   .totals-table input,
@@ -348,9 +351,10 @@ table th {
 }
 
 .address-textarea {
-  white-space: nowrap; 
-  overflow: visible;
+  white-space: pre-wrap;
+  overflow: auto;
   min-height: 50px;
+  resize: vertical;
 }
 input, textarea {
   white-space: pre-wrap;
@@ -420,6 +424,20 @@ input, textarea {
 
 .suggestion-item:hover {
   background: #f8fafc;
+}
+
+.item-suggestions-list {
+  position: absolute;
+  left: 0;
+  top: 36px;
+  width: 320px;
+  max-height: 200px;
+  overflow: auto;
+  background: #fff;
+  border: 1px solid #e6e9ee;
+  box-shadow: 0 6px 18px rgba(16,24,40,0.06);
+  z-index: 50;
+  border-radius: 6px;
 }
 
 .s-name {
@@ -645,6 +663,23 @@ input, textarea {
   gap: 6px; 
   align-items: center;
 }
+.upload-wrapper {
+  display: flex;
+  align-items: center;
+}
+.upload-btn {
+  display: inline-block;
+  padding: 6px 10px;
+  background: #0f62fe;
+  color: #fff;
+  border-radius: 8px;
+  font-size: 13px;
+  cursor: pointer;
+  border: none;
+}
+.upload-btn:hover {
+  background: #084fc1;
+}
 .add-row-controls .add-row-input {
   width: 48px;
   padding: 4px 6px;
@@ -653,6 +688,30 @@ input, textarea {
 .add-row-controls .add-row-btn {
   height: 28px;
   padding: 4px 10px;
+}
+
+/* Ensure the Download PDF button is visible by default (hidden only when printing) */
+#download-pdf-btn {
+  display: inline-block;
+  opacity: 1;
+  visibility: visible;
+  background-color: #084fc1;
+  color: #fff;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+#send-btn {
+  display: inline-block;
+  opacity: 1;
+  visibility: visible;
+  background-color: #084fc1;
+  color: #fff;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
 }
 
 .invoice-total {

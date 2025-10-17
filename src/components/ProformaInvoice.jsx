@@ -61,6 +61,9 @@ const ProformaInvoice = () => {
     const [buyer, setBuyer] = useState(initialData.buyer);
     const [invoice, setInvoice] = useState(initialData.invoice);
     const [customers, setCustomers] = useState([]);
+    const [itemMasterList, setItemMasterList] = useState([]); // items saved elsewhere in the app
+    const [itemNameSuggestions, setItemNameSuggestions] = useState([]);
+    const [showItemNameSuggestionsIndex, setShowItemNameSuggestionsIndex] = useState(null);
     const [suggestions, setSuggestions] = useState([]);
     const [showSuggestions, setShowSuggestions] = useState(false);
     const [contactOptions, setContactOptions] = useState([]);
@@ -91,10 +94,47 @@ const ProformaInvoice = () => {
         try {
             const saved = JSON.parse(localStorage.getItem("customers") || "null");
             if (Array.isArray(saved) && saved.length) setCustomers(saved);
+            // load global items (if present)
+            const savedItems = JSON.parse(localStorage.getItem('items') || '[]');
+            if (Array.isArray(savedItems) && savedItems.length) setItemMasterList(savedItems);
         } catch (e) {
             // ignore
         }
     }, []);
+
+    // when user types in item name cell, show suggestions from itemMasterList
+    const handleItemNameInput = (index, value) => {
+        updateItem(index, 'partNo', value);
+        if (!value || value.trim().length === 0) {
+            setItemNameSuggestions([]);
+            setShowItemNameSuggestionsIndex(null);
+            return;
+        }
+        const q = value.trim().toLowerCase();
+        const matches = itemMasterList
+            .filter(it => ((it.itemName || it.name || '') + '').toLowerCase().includes(q))
+            .slice(0, 8);
+        setItemNameSuggestions(matches);
+        setShowItemNameSuggestionsIndex(matches.length ? index : null);
+    };
+
+    const chooseItemName = (index, itm) => {
+        if (!itm) return;
+        // fill several fields where possible
+        const newItems = items.map(it => ({ ...it }));
+        newItems[index].partNo = itm.itemName || itm.name || '';
+        if (itm.brand) newItems[index].make = itm.brand;
+        if (itm.mrp) newItems[index].rate = parseFloat(itm.mrp) || newItems[index].rate;
+        // recompute netRate/amount
+        const rate = parseFloat(newItems[index].rate) || 0;
+        const qty = parseFloat(newItems[index].qty) || 0;
+        const discount = parseFloat(newItems[index].discount) || 0;
+        newItems[index].netRate = +(rate * (1 - discount / 100)).toFixed(2);
+        newItems[index].amount = +(newItems[index].netRate * qty).toFixed(2);
+        setItems(newItems);
+        setItemNameSuggestions([]);
+        setShowItemNameSuggestionsIndex(null);
+    };
 
     const onBuyerChange = (field, value) => setBuyer((p) => ({ ...p, [field]: value }));
     const onInvoiceChange = (field, value) => setInvoice((p) => ({ ...p, [field]: value }));
@@ -190,6 +230,87 @@ const ProformaInvoice = () => {
         setItems(newItems);
     };
 
+    // Upload handler: accepts CSV or XLSX and maps columns to invoice items
+    const handleFileUpload = async (file) => {
+        if (!file) return;
+        const name = file.name.toLowerCase();
+        const text = await file.text();
+
+        // Helper to normalize header names to keys we expect
+        const normalize = (s) => (s || "").toString().trim().toLowerCase();
+
+        // Try using SheetJS if available (xlsx). Fallback to CSV parsing.
+        try {
+            let rows = [];
+            if (name.endsWith('.xlsx') || name.endsWith('.xls')) {
+                // dynamic import so we don't force dependency unless used
+                const xlsx = await import('xlsx');
+                const wb = xlsx.read(await file.arrayBuffer());
+                const firstSheet = wb.Sheets[wb.SheetNames[0]];
+                rows = xlsx.utils.sheet_to_json(firstSheet, { defval: '' });
+            } else {
+                // parse CSV simple: first line headers, split by comma
+                const lines = text.split(/\r?\n/).filter(Boolean);
+                const headers = lines[0].split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/).map(h => h.replace(/^"|"$/g, '').trim());
+                for (let i = 1; i < lines.length; i++) {
+                    const cols = lines[i].split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/).map(c => c.replace(/^"|"$/g, '').trim());
+                    const obj = {};
+                    headers.forEach((h, idx) => obj[h] = cols[idx] || '');
+                    rows.push(obj);
+                }
+            }
+
+            if (!rows || !rows.length) return;
+
+            // map rows to items expected shape
+            const mapKey = (k) => normalize(k).replace(/\s+/g, '');
+            const mapped = rows.map((r, i) => {
+                const keys = Object.keys(r || {});
+                const lookup = {};
+                keys.forEach(k => lookup[mapKey(k)] = r[k]);
+
+                const toNum = (v) => {
+                    if (v === null || v === undefined || v === '') return 0;
+                    const n = parseFloat((v + '').toString().replace(/[^0-9.-]+/g, ''));
+                    return Number.isNaN(n) ? 0 : n;
+                };
+
+                // item code / product code
+                const cpn = lookup['cpn'] || lookup['productcode'] || lookup['sku'] || lookup['code'] || '';
+                // item name — accept many header variants including 'Item Name', 'Name', 'Item'
+                const partNo = lookup['partno'] || lookup['part'] || lookup['partnumber'] || lookup['itemname'] || lookup['item'] || lookup['name'] || '';
+                const hsn = lookup['hsn'] || lookup['hsncode'] || lookup['hsnno'];
+                const make = lookup['make'] || lookup['brand'] || '';
+                const delivery = lookup['delivery'] || lookup['deliverystatus'] || '';
+                const rate = toNum(lookup['rate'] || lookup['price'] || lookup['amountperunit']);
+                const qty = toNum(lookup['qty'] || lookup['quantity'] || lookup['q'] || lookup['pcs']);
+                const discount = toNum(lookup['dis(%)'] || lookup['discount'] || lookup['dispercent'] || lookup['dis']);
+                const netRate = +(rate * (1 - (discount || 0) / 100)).toFixed(2);
+                const amount = +(netRate * qty).toFixed(2);
+
+                return {
+                    srNo: i + 1,
+                    cpn: cpn || '',
+                    partNo: partNo || '',
+                    hsn: hsn || '',
+                    make,
+                    delivery,
+                    rate: +(rate || 0),
+                    qty: +(qty || 0),
+                    discount: +(discount || 0),
+                    netRate,
+                    amount,
+                };
+            });
+
+            // Replace items with mapped rows (or append if you prefer)
+            setItems(mapped);
+        } catch (err) {
+            console.error('Failed to parse uploaded file. Make sure it is CSV or XLSX.', err);
+            alert('Failed to parse uploaded file. If you want XLSX support, install the `xlsx` package: npm install xlsx');
+        }
+    };
+
     const subtotal = items.reduce((s, it) => s + (parseFloat(it.amount) || 0), 0);
     const freight = parseFloat(invoice.freight) || 0;
     const insurance = parseFloat(invoice.insurance) || 0;
@@ -254,6 +375,37 @@ const ProformaInvoice = () => {
         setInvoice((p) => ({ ...p, amountInWords: words }));
     }, [grand]);
 
+    const handleSendInvoice = () => {
+        // Build payload containing all invoice data and computed totals
+        try {
+            const payload = {
+                company,
+                buyer,
+                invoice: { ...invoice },
+                items: items.map((it) => ({ ...it })),
+                totals: {
+                    subtotal: +subtotal.toFixed(2),
+                    cdAmount: +cdAmount.toFixed(2),
+                    taxable: +taxable.toFixed(2),
+                    gst: +gst.toFixed(2),
+                    freight: +freight.toFixed(2),
+                    insurance: +insurance.toFixed(2),
+                    grand: +grand.toFixed(2),
+                },
+                sentAt: new Date().toISOString(),
+            };
+
+            // Read existing saved proformas (if any)
+            const key = "sentProformas";
+            const existing = JSON.parse(localStorage.getItem(key) || "[]");
+            existing.push(payload);
+            localStorage.setItem(key, JSON.stringify(existing));
+
+            console.log("Proforma saved to localStorage:", payload);
+        } catch (err) {
+            console.error("Failed to save proforma:", err);
+        }
+    }
 
 
 
@@ -261,7 +413,7 @@ const handleDownloadPdf = () => {
     const element = document.querySelector(".proforma-container");
 
     // Hide Add Rows section, Download button, and CD row if CD = 0
-    const hiddenElements = document.querySelectorAll(".add-row-wrapper, #download-pdf-btn, .cd-row");
+    const hiddenElements = document.querySelectorAll(".add-row-wrapper, #download-pdf-btn, .cd-row, #send-btn");
     hiddenElements.forEach(el => {
         if (el.classList.contains("cd-row")) {
             el.style.display = parseFloat(cdAmount) === 0 ? "none" : "";
@@ -391,7 +543,7 @@ const handleDownloadPdf = () => {
                             <h3 style={{ marginTop: 0 }}>Contact</h3>
                             <div className="form-row">
                                 <label className="input-label">Address</label>
-                                <input className="form-input" value={buyer.address} onChange={(e) => onBuyerChange("address", e.target.value)} readOnly={buyerLocked} disabled={!buyerLocked} />
+                                <textarea className="form-input address-textarea" value={buyer.address} onChange={(e) => onBuyerChange("address", e.target.value)} readOnly={buyerLocked} disabled={!buyerLocked} />
                             </div>
 
                             <div className="form-row">
@@ -449,7 +601,7 @@ const handleDownloadPdf = () => {
                             <tr>
                                 <th>S.No</th>
                                 <th>CPN</th>
-                                <th>Part No</th>
+                                <th>Item Name</th>
                                 <th>HSN Code</th>
                                 <th>Make</th>
                                 <th>Delivery</th>
@@ -467,8 +619,18 @@ const handleDownloadPdf = () => {
                                     <td>
                                         <input className="form-input" value={item.cpn} onChange={(e) => updateItem(idx, "cpn", e.target.value)} disabled={!buyerLocked} />
                                     </td>
-                                    <td>
-                                        <input className="form-input" value={item.partNo} onChange={(e) => updateItem(idx, "partNo", e.target.value)} disabled={!buyerLocked} />
+                                    <td style={{ position: 'relative' }}>
+                                        <input className="form-input" value={item.partNo} onChange={(e) => handleItemNameInput(idx, e.target.value)} disabled={!buyerLocked} onFocus={() => { if (itemNameSuggestions.length) setShowItemNameSuggestionsIndex(idx); }} onBlur={() => setTimeout(() => setShowItemNameSuggestionsIndex(null), 150)} />
+                                        {showItemNameSuggestionsIndex === idx && itemNameSuggestions.length > 0 && (
+                                            <div className="item-suggestions-list">
+                                                {itemNameSuggestions.map((it, i) => (
+                                                    <div key={i} className="suggestion-item" onMouseDown={() => chooseItemName(idx, it)}>
+                                                        <div className="s-name">{it.itemName || it.name}</div>
+                                                        <div className="s-meta">{it.brand || ''} {it.mrp ? ` • ₹${it.mrp}` : ''}</div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
                                     </td>
                                     <td>
                                         <input className="form-input" value={item.hsn} onChange={(e) => updateItem(idx, "hsn", e.target.value)} disabled={!buyerLocked} />
@@ -501,7 +663,12 @@ const handleDownloadPdf = () => {
                                 <button className="add-row-btn" id="add-row-btn" type="button" onClick={() => { addRows(rowsToAdd); setRowsToAdd(1); }} disabled={!buyerLocked}>
                                     Add rows
                                 </button>
+                                <div className="upload-wrapper">
+                                    <label className="upload-btn" htmlFor="upload-items">Upload items</label>
+                                    <input id="upload-items" type="file" accept=".csv, .xlsx, .xls" style={{ display: 'none' }} onChange={(e) => { const f = e.target.files && e.target.files[0]; if (f) handleFileUpload(f); e.target.value = null; }} />
+                                </div>
                             </div>
+                           
                     </div>
                 </div>
 
@@ -654,6 +821,9 @@ const handleDownloadPdf = () => {
                 </footer>
                 <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 12 }}>
                     <button id="download-pdf-btn" type="button" onClick={handleDownloadPdf}>Download PDF</button>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 12 }}>
+                    <button id="send-btn" type="button" onClick={handleSendInvoice}>Send</button>
                 </div>
 
             </div>

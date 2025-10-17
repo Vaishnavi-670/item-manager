@@ -384,6 +384,30 @@ color: #556170;
   word-break: break-word; /* wrap very long strings like long emails/addresses */
 }
 
+/* Ensure action buttons and header buttons in tables are visible by default (not only on hover) */
+.data-table button,
+.mc-action-btn,
+.mc-actions-cell button,
+.actions button,
+.table button,
+.enquiry-table button {
+  opacity: 1 !important;
+  visibility: visible !important;
+  display: inline-block !important;
+  transform: none !important;
+  pointer-events: auto !important;
+}
+
+/* Make header buttons visible and styled */
+.data-table thead th button,
+.enquiry-table thead th button,
+.mc-table thead th button {
+  opacity: 1 !important;
+  visibility: visible !important;
+  display: inline-block !important;
+  margin-left: 6px;
+}
+
 .no-data{
   text-align: center;
   padding: 12px;
@@ -497,6 +521,39 @@ color: #556170;
   margin: 0;
   padding: 0 20px;
   box-sizing: border-box;
+}
+
+/* Visual overrides for ManageCustomer view (don't edit ManageCustomer.css) */
+.manage-customer {
+  background: var(--primary-bg); /* page-level subtle background */
+  padding: 18px 20px;
+}
+
+.manage-customer aside {
+  background: var(--fourthary-bg);
+  padding: 12px;
+  border-radius: 8px;
+  box-shadow: var(--primary-shadow);
+}
+
+.manage-customer > div:last-child {
+  background: var(--pure-white);
+  padding: 12px;
+  border-radius: 8px;
+  box-shadow: var(--secondary-shadow);
+}
+
+.data-table {
+  background: transparent; /* keep table background transparent inside white panel */
+}
+
+.data-table thead th {
+  background: linear-gradient(0deg, var(--secondary-bg), var(--secondary-bg));
+  color: var(--secondary-color);
+}
+
+.data-table td {
+  background: transparent; /* rows inherit panel background */
 }
 
 .manage-customer aside {
