@@ -82,6 +82,13 @@ const locationStockData = [
     { itemName: "NU2207 Roller", location: "Coimbatore", stock: 25 },
     { itemName: "NU2207 Roller", location: "Delhi", stock: 50 },
 ];
+const salesData = [
+    { date: "2025-10-10", customerName: "Ravi Kumar", item: "2311SKC3 Bearing", brand: "NTN", qty: 10, price: 3400, total: 34000 },
+    { date: "2025-10-11", customerName: "Sonal Agarwal", item: "6205ZZ Bearing", brand: "JAF", qty: 5, price: 2750, total: 13750 },
+    { date: "2025-10-12", customerName: "Tech Motors", item: "NU2207 Roller", brand: "EZO", qty: 2, price: 4000, total: 8000 },
+    { date: "2025-10-13", customerName: "PQR Industries", item: "2311SKC3 Bearing", brand: "NTN", qty: 3, price: 3400, total: 10200 },
+    { date: "2025-10-14", customerName: "AK Traders", item: "6205ZZ Bearing", brand: "JAF", qty: 8, price: 2750, total: 22000 },
+];
 
 const Enquiry = () => {
     const [meta, setMeta] = useState({ enqNo: '', date: new Date().toISOString().slice(0, 10), customer: '', contact: '' })
@@ -207,6 +214,62 @@ const Enquiry = () => {
             } catch (err) { }
         }
         return Array.from(pool)
+    }
+
+    // sales suggestions: pool of item names and brands from salesData
+    const getSalesSuggestionPool = (type = 'q') => {
+        const pool = new Set()
+        if (type === 'q') {
+            salesData.forEach(s => { if (s.item) pool.add(s.item); if (s.brand) pool.add(s.brand) })
+        } else if (type === 'customer') {
+            salesData.forEach(s => { if (s.customerName) pool.add(s.customerName) })
+            // include customers from customer pool
+            try {
+                const raw = localStorage.getItem('customers')
+                if (raw) {
+                    const parsed = JSON.parse(raw)
+                    if (Array.isArray(parsed)) parsed.forEach(p => {
+                        const name = (p && (p['Customer Name'] || p.name || p.customerName || p.fullName || p.customer || ''))
+                        if (name) pool.add(name)
+                    })
+                }
+            } catch (err) { }
+        }
+        return Array.from(pool)
+    }
+
+    const onSalesQueryChange = (val) => {
+        setSalesFilter(s => ({ ...s, q: val }))
+        const pool = getSalesSuggestionPool('q')
+        const q = (val || '').toString().trim().toLowerCase()
+        if (!q) {
+            setSuggestions(pool.slice(0, 8))
+            setShowSuggestions({ visible: true, row: 'sales', field: 'q', id: `sales-q` })
+            return
+        }
+        const filtered = pool.filter(p => p.toLowerCase().includes(q)).slice(0, 8)
+        setSuggestions(filtered)
+        setShowSuggestions({ visible: true, row: 'sales', field: 'q', id: `sales-q` })
+    }
+
+    const onSalesCustomerChange = (val) => {
+        setSalesFilter(s => ({ ...s, customer: val }))
+        const pool = getSalesSuggestionPool('customer')
+        const q = (val || '').toString().trim().toLowerCase()
+        if (!q) {
+            setSuggestions(pool.slice(0, 8))
+            setShowSuggestions({ visible: true, row: 'sales', field: 'customer', id: `sales-customer` })
+            return
+        }
+        const filtered = pool.filter(p => p.toLowerCase().includes(q)).slice(0, 8)
+        setSuggestions(filtered)
+        setShowSuggestions({ visible: true, row: 'sales', field: 'customer', id: `sales-customer` })
+    }
+
+    const chooseSalesSuggestion = (field, val) => {
+        if (field === 'q') setSalesFilter(s => ({ ...s, q: val }))
+        else if (field === 'customer') setSalesFilter(s => ({ ...s, customer: val }))
+        setShowSuggestions({ visible: false, row: null, field: null })
     }
 
     const onItemInputChange = (idx, val) => {
@@ -450,8 +513,15 @@ const Enquiry = () => {
     // checked state for left rows (by visual index)
     const [checkedRows, setCheckedRows] = useState({})
 
+    // sales table filters (inline controls)
+    const [salesFilter, setSalesFilter] = useState({ q: '', customer: '' })
+
     const toggleChecked = (rowIdx) => {
         setCheckedRows(prev => ({ ...prev, [rowIdx]: !prev[rowIdx] }))
+    }
+
+    const setChecked = (rowIdx, value) => {
+        setCheckedRows(prev => ({ ...prev, [rowIdx]: !!value }))
     }
 
     return (
@@ -484,7 +554,7 @@ const Enquiry = () => {
                         <tbody>
                             {leftSearch ? (
                                 (items.filter(it => (it.customer || '').toString().toLowerCase().includes((leftSearch || '').toLowerCase()))).map((it, rowIdx) => (
-                                    <tr key={it.srNo || `f-${rowIdx}`} className={focusedLeftRow === rowIdx ? 'row-focused' : ''} onFocus={() => setFocusedLeftRow(rowIdx)} onBlur={() => setFocusedLeftRow(null)} tabIndex={-1}>
+                                    <tr key={it.srNo || `f-${rowIdx}`} className={`${focusedLeftRow === rowIdx ? 'row-focused' : ''} ${checkedRows[rowIdx] ? 'row-checked' : ''}`.trim()} onFocus={() => setFocusedLeftRow(rowIdx)} onBlur={() => setFocusedLeftRow(null)} tabIndex={-1}>
                                         <td>
                                             <select value={it ? (it.type || 'Enquiry') : 'Enquiry'} onChange={(e) => it ? updateItem(items.indexOf(it), 'type', e.target.value) : null} onFocus={() => setFocusedLeftRow(rowIdx)} onBlur={() => setFocusedLeftRow(null)}>
                                                 <option>Enquiry</option>
@@ -509,7 +579,24 @@ const Enquiry = () => {
                                             <input type="number" value={it ? (it.discount || 0) : ''} onChange={(e) => updateItem(items.indexOf(it), 'discount', e.target.value)} onFocus={() => setFocusedLeftRow(rowIdx)} onBlur={() => setFocusedLeftRow(null)} /></td>
                                         <td>₹{it ? (it.amount || 0).toFixed(2) : '0.00'}</td>
                                         <td className="row-action-cell">
-                                            <button type="button" className={`row-check ${checkedRows[rowIdx] ? 'checked' : ''}`} onMouseDown={(e) => { e.preventDefault(); toggleChecked(rowIdx) }} aria-label={checkedRows[rowIdx] ? 'Checked' : 'Check row'}>✓</button>
+                                            {(focusedLeftRow === rowIdx || checkedRows[rowIdx]) ? (
+                                                <div className="action-box">
+                                                    <button
+                                                        type="button"
+                                                        className={`row-check btn-mark`}
+                                                        onMouseDown={(e) => { e.preventDefault(); setChecked(rowIdx, true) }}
+                                                        aria-label={`Mark row ${rowIdx}`}
+                                                    >✓</button>
+                                                    <button
+                                                        type="button"
+                                                        className={`row-check btn-unmark ${checkedRows[rowIdx] ? 'active' : ''}`}
+                                                        onMouseDown={(e) => { e.preventDefault(); setChecked(rowIdx, false) }}
+                                                        aria-label={`Unmark row ${rowIdx}`}
+                                                    >❌</button>
+                                                </div>
+                                            ) : (
+                                                <span style={{ display: 'inline-block', width: 20, height: 20 }} />
+                                            )}
                                         </td>
                                     </tr>
                                 ))
@@ -517,13 +604,13 @@ const Enquiry = () => {
                                 Array.from({ length: 7 }).map((_, rowIdx) => {
                                     const it = items[rowIdx] || null
                                     return (
-                                        <tr key={it ? (it.srNo || rowIdx) : `tpl-${rowIdx}`} className={focusedLeftRow === rowIdx ? 'row-focused' : ''} onFocus={() => setFocusedLeftRow(rowIdx)} onBlur={() => setFocusedLeftRow(null)} tabIndex={-1}>
+                                        <tr key={it ? (it.srNo || rowIdx) : `tpl-${rowIdx}`} className={`${focusedLeftRow === rowIdx ? 'row-focused' : ''} ${checkedRows[rowIdx] ? 'row-checked' : ''}`.trim()} onFocus={() => setFocusedLeftRow(rowIdx)} onBlur={() => setFocusedLeftRow(null)} tabIndex={-1}>
                                             <td>
-                                                    <select value={it ? (it.type || 'Enquiry') : 'Enquiry'} onChange={(e) => setItemField(rowIdx, 'type', e.target.value)} onFocus={() => setFocusedLeftRow(rowIdx)} onBlur={() => setFocusedLeftRow(null)}>
-                                                        <option>Enquiry</option>
-                                                        <option>Order</option>
-                                                    </select>
-                                                </td>
+                                                <select value={it ? (it.type || 'Enquiry') : 'Enquiry'} onChange={(e) => setItemField(rowIdx, 'type', e.target.value)} onFocus={() => setFocusedLeftRow(rowIdx)} onBlur={() => setFocusedLeftRow(null)}>
+                                                    <option>Enquiry</option>
+                                                    <option>Order</option>
+                                                </select>
+                                            </td>
                                             <td>
                                                 <input value={it ? (it.branch || '') : ''} onChange={(e) => setItemField(rowIdx, 'branch', e.target.value)} onFocus={() => setFocusedLeftRow(rowIdx)} onBlur={() => setFocusedLeftRow(null)} /></td>
                                             <td style={{ position: 'relative' }}>
@@ -565,7 +652,24 @@ const Enquiry = () => {
                                                 <input type="number" value={it ? (it.discount || 0) : ''} onChange={(e) => setItemField(rowIdx, 'discount', e.target.value)} onFocus={() => setFocusedLeftRow(rowIdx)} onBlur={() => setFocusedLeftRow(null)} /></td>
                                             <td>₹{it ? (it.amount || 0).toFixed(2) : '0.00'}</td>
                                             <td className="row-action-cell">
-                                                <button type="button" className={`row-check ${checkedRows[rowIdx] ? 'checked' : ''}`} onMouseDown={(e) => { e.preventDefault(); toggleChecked(rowIdx) }} aria-label={checkedRows[rowIdx] ? 'Checked' : 'Check row'}>✓</button>
+                                                {(focusedLeftRow === rowIdx || checkedRows[rowIdx]) ? (
+                                                    <div className="action-box">
+                                                        <button
+                                                            type="button"
+                                                            className={`row-check btn-mark`}
+                                                            onMouseDown={(e) => { e.preventDefault(); setChecked(rowIdx, true) }}
+                                                            aria-label={`Mark row ${rowIdx}`}
+                                                        >✓</button>
+                                                        <button
+                                                            type="button"
+                                                            className={`row-check btn-unmark ${checkedRows[rowIdx] ? 'active' : ''}`}
+                                                            onMouseDown={(e) => { e.preventDefault(); setChecked(rowIdx, false) }}
+                                                            aria-label={`Unmark row ${rowIdx}`}
+                                                        >❌</button>
+                                                    </div>
+                                                ) : (
+                                                    <span style={{ display: 'inline-block', width: 20, height: 20 }} />
+                                                )}
                                             </td>
                                         </tr>
                                     )
@@ -595,7 +699,7 @@ const Enquiry = () => {
                                         <div key={i} className="suggestion-item" onMouseDown={() => chooseSuggestion('search', s, 'item')}>{s}</div>
                                     ))}
                                 </div>
-                            ) : null} 
+                            ) : null}
                         </div>
                         <input className="right-search" placeholder="Qty" value={search.qty} onChange={e => setSearch(s => ({ ...s, qty: e.target.value }))} />
                         <button className="primary" onClick={handleSearch}>Send</button>
@@ -695,18 +799,18 @@ const Enquiry = () => {
                                             </tr>
                                         </thead>
                                         <tbody>
-                                                {Array.from({ length: 6 }).map((_, i) => {
-                                                    const rows = filteredStock || locationStockData
-                                                    const it = rows[i] || {}
-                                                    const empty = isObjectRowEmpty(it, ['itemName', 'location', 'stock'])
-                                                    return (
-                                                        <tr key={`b2-${i}`} className={empty ? 'row-empty' : ''}>
-                                                            <td>{it.itemName || ''}</td>
-                                                            <td>{it.location || ''}</td>
-                                                            <td>{it.stock !== undefined ? it.stock : ''}</td>
-                                                        </tr>
-                                                    )
-                                                })}
+                                            {Array.from({ length: 6 }).map((_, i) => {
+                                                const rows = filteredStock || locationStockData
+                                                const it = rows[i] || {}
+                                                const empty = isObjectRowEmpty(it, ['itemName', 'location', 'stock'])
+                                                return (
+                                                    <tr key={`b2-${i}`} className={empty ? 'row-empty' : ''}>
+                                                        <td>{it.itemName || ''}</td>
+                                                        <td>{it.location || ''}</td>
+                                                        <td>{it.stock !== undefined ? it.stock : ''}</td>
+                                                    </tr>
+                                                )
+                                            })}
                                         </tbody>
                                     </table>
                                 </div>
@@ -716,6 +820,79 @@ const Enquiry = () => {
                 </div>
 
 
+
+            </div>
+            <div className="sales-container">
+                <h2>Sales Table</h2>
+                <div className="sales-controls">
+                    <div style={{ position: 'relative' }}>
+                        <input
+                            type="text"
+                            placeholder="Search sales (item / brand)"
+                            value={salesFilter.q}
+                            onChange={e => onSalesQueryChange(e.target.value)}
+                            onFocus={() => { setSuggestions(getSalesSuggestionPool('q').slice(0, 8)); setShowSuggestions({ visible: true, row: 'sales', field: 'q', id: 'sales-q' }) }}
+                            onBlur={() => setTimeout(() => setShowSuggestions({ visible: false, row: null, field: null, id: null }), 150)}
+                        />
+                        {showSuggestions.visible && showSuggestions.row === 'sales' && showSuggestions.field === 'q' && suggestions && suggestions.length ? (
+                            <div className="suggestions-list" style={{ position: 'absolute', zIndex: 40 }}>
+                                {suggestions.map((s, i) => (
+                                    <div key={i} className="suggestion-item" onMouseDown={() => chooseSalesSuggestion('q', s)}>{s}</div>
+                                ))}
+                            </div>
+                        ) : null}
+                    </div>
+                    <div style={{ position: 'relative' }}>
+                        <input
+                            type="text"
+                            placeholder="Select Customer"
+                            value={salesFilter.customer}
+                            onChange={e => onSalesCustomerChange(e.target.value)}
+                            onFocus={() => { setSuggestions(getSalesSuggestionPool('customer').slice(0, 8)); setShowSuggestions({ visible: true, row: 'sales', field: 'customer', id: 'sales-customer' }) }}
+                            onBlur={() => setTimeout(() => setShowSuggestions({ visible: false, row: null, field: null, id: null }), 150)}
+                        />
+                        {showSuggestions.visible && showSuggestions.row === 'sales' && showSuggestions.field === 'customer' && suggestions && suggestions.length ? (
+                            <div className="suggestions-list" style={{ position: 'absolute', zIndex: 40 }}>
+                                {suggestions.map((s, i) => (
+                                    <div key={i} className="suggestion-item" onMouseDown={() => chooseSalesSuggestion('customer', s)}>{s}</div>
+                                ))}
+                            </div>
+                        ) : null}
+                    </div>
+                </div>
+                <table className="sales-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Customer Name</th>
+                            <th>Item</th>
+                            <th>Brand</th>
+                            <th>Qty</th>
+                            <th>Price (₹)</th>
+                            <th>Total (₹)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {salesData
+                            .filter(sale => {
+                                const matchCustomer = salesFilter.customer ? sale.customerName === salesFilter.customer : true
+                                const q = (salesFilter.q || '').trim().toLowerCase()
+                                const matchQ = !q || (sale.item || '').toString().toLowerCase().includes(q) || (sale.brand || '').toString().toLowerCase().includes(q)
+                                return matchCustomer && matchQ
+                            })
+                            .map((sale, index) => (
+                                <tr key={index}>
+                                    <td>{sale.date}</td>
+                                    <td>{sale.customerName}</td>
+                                    <td>{sale.item}</td>
+                                    <td>{sale.brand}</td>
+                                    <td>{sale.qty}</td>
+                                    <td>{sale.price}</td>
+                                    <td className="total">{sale.total}</td>
+                                </tr>
+                            ))}
+                    </tbody>
+                </table>
             </div>
         </div>
     )

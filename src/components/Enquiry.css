@@ -2,7 +2,8 @@
   --bg: #ffffff;
   --muted: #6b7280;
   --primary: #0f62fe;
-  --accent: #065f46;
+  --accent: #0f3c2f;
+  --accent-dark: #054e3b;
   --surface: #fbfdff;
   --border: #e6e9ee;
   --row-h: 34px;
@@ -99,8 +100,9 @@
 .enquiry-table th,
 .enquiry-table td {
   border: 1px solid var(--border);
-  padding: 6px 8px;
-  font-size: 12px;
+  /* tighter padding for denser rows */
+  padding: 4px 6px;
+  font-size: 11px;
   text-align: left;
 }
 
@@ -120,10 +122,12 @@
 
 .enquiry-table input {
   width: 100%;
-  padding: 4px 6px; 
+  /* denser input sizing */
+  padding: 2px 4px; 
   border: none;
   background: transparent;
-  font-size: 12px; 
+  font-size: 11px; 
+  min-width: 0; /* prevent inputs from forcing column width */
 }
 .enquiry-table input,
 .enquiry-table select {
@@ -151,6 +155,53 @@
   -moz-appearance: none;
   cursor: pointer;
   height: 28px; }
+
+/* make numeric columns (Qty and Rate) wider so inputs don't get cramped */
+.enquiry-table th:nth-child(6),
+.enquiry-table td:nth-child(6) {
+  min-width: 48px;
+  width: 48px;
+}
+.enquiry-table th:nth-child(7),
+.enquiry-table td:nth-child(7) {
+  min-width: 64px;
+  width: 64px;
+}
+
+/* ensure Amount column has a modest width so totals are visible */
+.enquiry-table th:nth-child(9),
+.enquiry-table td:nth-child(9) {
+  min-width: 64px;
+  width: 64px;
+}
+
+@media (max-width: 900px) {
+  /* on small screens allow the columns to shrink naturally */
+  .enquiry-table th:nth-child(6),
+  .enquiry-table td:nth-child(6),
+  .enquiry-table th:nth-child(7),
+  .enquiry-table td:nth-child(7),
+  .enquiry-table th:nth-child(9),
+  .enquiry-table td:nth-child(9) {
+    min-width: auto;
+    width: auto;
+  }
+
+/* right-align numeric inputs for better readability */
+.enquiry-table td:nth-child(6) input,
+.enquiry-table td:nth-child(7) input,
+.enquiry-table td:nth-child(9) {
+  text-align: right;
+  /* tighter numeric styling */
+  font-size: 10px;
+  padding-right: 6px;
+}
+
+/* slightly reduce row height to fit more rows */
+:root {
+  --row-h: 30px;
+}
+}
 
 .enquiry-table td > select {
   display: block;
@@ -263,8 +314,8 @@
 
 .nested-bottom .table-scroll {
   height: calc(var(--table-header-h) + (var(--row-h) * 3));
-  max-height: none; /* use fixed height for visibility parity */
-}
+  max-height: none;
+ }
 
 .enquiry-table tbody tr {
   height: var(--row-h);
@@ -356,6 +407,51 @@
   color:inherit;
 }
 
+/* style for the action button states */
+.row-check{
+  font-weight: 600;
+  line-height: 1;
+  transition: transform 120ms ease, color 120ms ease;
+}
+.row-check:active{ transform: scale(0.96); }
+.row-check.checked{
+  color: #b91c1c; /* red for ❌ */
+}
+
+/* action box containing both symbols */
+.action-box{
+  display:inline-flex;
+  gap:4px;
+  align-items:center;
+  justify-content:center;
+  width:36px;
+}
+.action-box .row-check{
+  width:16px;
+  height:16px;
+  font-size:12px;
+  border-radius:3px;
+}
+.action-box .btn-mark{
+  color: #12b83e; 
+}
+.action-box .btn-unmark{
+  color: #6b7280;
+}
+.action-box .btn-unmark.active{
+  color: #b91c1c; 
+}
+
+.left-panel .enquiry-table tbody tr.row-checked {
+  background: rgb(10, 190, 10);
+}
+.left-panel .enquiry-table tbody tr.row-checked td {
+  border-color: rgba(0, 0, 0, 0.18);
+}
+.left-panel .enquiry-table tbody tr.row-checked td:first-child {
+  box-shadow:  #0a1310; 
+}
+
 @media (max-width: 900px) {
   .nested-bottom {
     grid-template-columns: 1fr;
@@ -377,6 +473,95 @@ button {
   border: 1px solid #c8c9da;
   cursor: pointer;
 }
+
+.sales-container {
+  margin: 20px 0;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px;
+  font-family: "Poppins", sans-serif;
+  background: linear-gradient(180deg, #ffffff, var(--surface));
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+}
+
+.sales-container h2 {
+  font-size: 16px;
+  color: var(--accent-dark);
+  margin: 0 0 10px 0;
+  font-weight: 700;
+}
+
+.sales-table {
+  width: 100%;
+  max-width: 100%;
+  border-collapse: collapse;
+  background: transparent;
+}
+
+.sales-table th,
+.sales-table td {
+  border: 1px solid var(--border);
+  padding: 6px 8px;
+  text-align: left;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.sales-table th {
+  background: var(--primary);
+  color: #fff;
+  font-weight: 700;
+}
+
+.sales-table tr:hover {
+  background: rgba(15,99,243,0.03);
+}
+
+.sales-table .total {
+  font-weight: 700;
+  color: var(--accent);
+  text-align: right;
+}
+
+/* Make sure the table consumes the full width of its parent container and is responsive */
+.sales-container .sales-table {
+  width: 100%;
+  display: table;
+}
+
+@media (max-width: 700px) {
+  .sales-table th,
+  .sales-table td {
+    padding: 8px 6px;
+    font-size: 12px;
+  }
+  .sales-table th,
+  .sales-table td {
+    text-align: left;
+  }
+}
+
+.sales-controls{
+  display:flex;
+  gap:8px;
+  align-items: start;
+  justify-content: start;
+  margin:8px 0 12px 0;
+}
+.sales-controls input[type="text"], .sales-controls select{
+  padding:8px 10px;
+  border-radius:6px;
+  border:1px solid var(--border);
+  background:#fff;
+  font-size:13px;
+  box-sizing: border-box;
+  width: 150px;
+  flex: 0 0 150px; /* fixed width for both controls */
+}
+
+
 
 @media (max-width: 900px) {
   .enquiry-grid {

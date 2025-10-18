@@ -9,6 +9,7 @@ import ItemLocator from "./components/ItemLocator";
 import PurchaseItem from "./components/PurchaseItem";
 import ProformaInvoice from "./components/ProformaInvoice";
 import Enquiry from "./components/Enquiry";
+import Trade from "./components/Trade";
 
 function App() {
   const [formType, setFormType] = useState("singleItem");
@@ -19,61 +20,67 @@ function App() {
 
       <div className="form-toggle-buttons">
         <button
-          className={formType === "singleItem" ? "active" : ""}
+          className={`form-toggle-buttons small ${formType === "singleItem" ? "active" : ""}`}
           onClick={() => setFormType("singleItem")}
         >
           Add Single Item
         </button>
 
         <button
-          className={formType === "multipleItem" ? "active" : ""}
+          className={`form-toggle-buttons small ${formType === "multipleItem" ? "active" : ""}`}
           onClick={() => setFormType("multipleItem")}
         >
           Add Multiple Items
         </button>
 
         <button
-          className={formType === "singleCustomer" ? "active" : ""}
+          className={`form-toggle-buttons small ${formType === "singleCustomer" ? "active" : ""}`}
           onClick={() => setFormType("singleCustomer")}
         >
          Single Customer
         </button>
 
         <button
-          className={formType === "multipleCustomer" ? "active" : ""}
+          className={`form-toggle-buttons small ${formType === "multipleCustomer" ? "active" : ""}`}
           onClick={() => setFormType("multipleCustomer")}
         >
           Multiple Customers
         </button>
         <button
-          className={formType === "manageCustomer" ? "active" : ""}
+          className={`form-toggle-buttons small ${formType === "manageCustomer" ? "active" : ""}`}
           onClick={() => setFormType("manageCustomer")}
         >
           Manage Customers
         </button>
         <button
-          className={formType === "itemLocator" ? "active" : ""}
+          className={`form-toggle-buttons small ${formType === "itemLocator" ? "active" : ""}`}
           onClick={() => setFormType("itemLocator")}
         >
           Item Locator
         </button>
         <button
-          className={formType === "purchaseItem" ? "active" : ""}
+          className={`form-toggle-buttons small ${formType === "purchaseItem" ? "active" : ""}`}
           onClick={() => setFormType("purchaseItem")}
         >
           Purchase Item
         </button>
         <button
-          className={formType === "proformaInvoice" ? "active" : ""}
+          className={`form-toggle-buttons small ${formType === "proformaInvoice" ? "active" : ""}`}
           onClick={() => setFormType("proformaInvoice")}
         >
           Proforma Invoice
         </button>
         <button
-          className={formType === "enquiry" ? "active" : ""}
+          className={`form-toggle-buttons small ${formType === "enquiry" ? "active" : ""}`}
           onClick={() => setFormType("enquiry")}
         >
           Enquiry
+        </button>
+        <button
+          className={`form-toggle-buttons small ${formType === "Trade" ? "active" : ""}`}
+          onClick={() => setFormType("Trade")}
+        >
+          Trade
         </button>
       </div>
 
@@ -87,6 +94,7 @@ function App() {
         {formType === "purchaseItem" && <PurchaseItem />}
         {formType === "proformaInvoice" && <ProformaInvoice />}
         {formType === "enquiry" && <Enquiry />}
+        {formType === "Trade" && <Trade />}
       </div>
       </div>
   );
