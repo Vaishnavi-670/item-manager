@@ -25,7 +25,7 @@
 .trade-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 14px; /* ensure table text is larger */
+  font-size: 14px; 
 }
 
 .trade-table th,
@@ -85,7 +85,6 @@
   cursor: pointer;
 }
 
-/* the .checkbox-indicator span provides the visible indicator */
 
 .checkbox-indicator {
   position: absolute;
@@ -213,3 +212,37 @@
     font-weight: 600;
     text-align: center;
 }
+
+.alloc-inline-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.alloc-inline-item {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.inline-add, .inline-remove {
+  border: 1px solid #2655b2; 
+  background: #2655b2; 
+  color: #fff;
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 600;
+}
+.inline-add:hover, .inline-remove:hover { background: #0f2f6f }
+.inline-add:focus, .inline-remove:focus { outline: 2px solid rgba(18,58,138,0.25); outline-offset: 2px }
+
+.loc-qty-input {
+  border: none;
+  background: transparent;
+  padding: 6px 8px;
+  width: 90px;
+  border-radius: 4px;
+}
+.loc-qty-input:focus {
+  outline: 2px solid rgba(37, 99, 235, 0.15);
+}
+
