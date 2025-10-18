@@ -117,14 +117,13 @@
   line-height: 18px;
 }
 
-/* Modal styles for packing invoice */
 .modal-overlay {
   position: fixed;
   inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  /* background: rgba(0,0,0,0.4); */
+  background: rgba(0,0,0,0.35);
   z-index: 9999;
 }
 
@@ -134,7 +133,6 @@
   background: #fff;
   border-radius: 8px;
   overflow: auto;
-  /* box-shadow: 0 10px 30px rgba(0,0,0,0.2); */
 }
 
 .modal-header {
@@ -182,7 +180,6 @@
   padding: 6px 8px;
 }
 
-/* suitable options (avail >= qty) will appear normal; small highlight for them */
 .modal-body option:not([disabled]) {
   background: #fff;
 }

@@ -16,7 +16,6 @@ const TradeOrderProcess = [
     { tradeType: 'Order', branch: 'Main', customerName: 'Diana Evans', itemName: 'Apparatus', brand: 'Zeta', qty: 7, rate: 99.99, discount: 7 },
     { tradeType: 'Order', branch: 'Main', customerName: 'Frank Green', itemName: 'Device', brand: 'Eta', qty: 4, rate: 180.0, discount: 0 },
 ]
-// Dummy location availability per itemName (user-provided mapping)
 const locationAvailability = {
     'Widget': [{ loc: 'LOC-A', avail: 12 }, { loc: 'LOC-B', avail: 4 }, { loc: 'LOC-C', avail: 4 }],
     'Thingamajig': [{ loc: 'LOC-C', avail: 6 }, { loc: 'LOC-D', avail: 2 }, { loc: 'LOC-E', avail: 1 }],
@@ -25,7 +24,6 @@ const locationAvailability = {
     'Contraption': [{ loc: 'LOC-H', avail: 3 }, { loc: 'LOC-i', avail: 4 }],
     'Apparatus': [{ loc: 'LOC-I', avail: 9 }],
     'Device': [{ loc: 'LOC-J', avail: 5 }, { loc: 'LOC-K', avail: 2 }],
-
 }
 const Trade = () => {
     const [selectedCustomer, setSelectedCustomer] = useState(null)
@@ -121,6 +119,8 @@ const Trade = () => {
                 <div className="button-contain">
                     <button className="gen-btn" onClick={() => {
                         if (selectedCustomer && selectedRows.size > 0) {
+                            // reset modal selections so each selected item shows empty Location and Loc Qty by default
+                            setModalSelections({})
                             setShowModal(true)
                         }
                     }}>Generate Packing Invoice</button>
@@ -151,8 +151,10 @@ const Trade = () => {
                                             const suitable = availList.filter(a => a.avail >= (r.qty || 0))
                                             const other = availList.filter(a => a.avail < (r.qty || 0))
                                             const options = suitable.concat(other)
-                                            const selectedLoc = (modalSelections[srcIndex] && modalSelections[srcIndex].loc) || (options[0] ? options[0].loc : '')
+                                            // start with no selection by default
+                                            const selectedLoc = (modalSelections[srcIndex] && modalSelections[srcIndex].loc) || ''
                                             const selectedAvail = options.find(o => o.loc === selectedLoc)?.avail
+                                            const selectedQty = (modalSelections[srcIndex] && modalSelections[srcIndex].qty) ?? ''
                                             return (
                                                 <tr key={idx}>
                                                     <td>{r.itemName}</td>
@@ -160,17 +162,25 @@ const Trade = () => {
                                                     <td>{r.qty}</td>
                                                     <td>
                                                         <select
+                                                            key={srcIndex}
                                                             value={selectedLoc}
-                                                            onChange={(e) => setModalSelections(prev => ({ ...prev, [srcIndex]: { loc: e.target.value } }))}
+                                                            onChange={(e) => {
+                                                                const loc = e.target.value
+                                                                const avail = options.find(o => o.loc === loc)?.avail ?? 0
+                                                                // default Loc Qty to the smaller of location availability and required qty
+                                                                const autoQty = Math.min(avail, (r.qty || 0))
+                                                                setModalSelections(prev => ({ ...prev, [srcIndex]: { loc, qty: autoQty } }))
+                                                            }}
                                                         >
+                                                            <option value="" disabled>Select location</option>
                                                             {options.map(o => (
-                                                                <option key={o.loc} value={o.loc} disabled={o.avail < (r.qty || 0)}>
+                                                                <option key={o.loc} value={o.loc}>
                                                                     {o.loc} (AVL: {o.avail})
                                                                 </option>
                                                             ))}
                                                         </select>
                                                     </td>
-                                                    <td>{typeof selectedAvail === 'number' ? selectedAvail : 'N/A'}</td>
+                                                    <td>{selectedQty !== '' ? selectedQty : ''}</td>
                                                 </tr>
                                             )
                                         })}
