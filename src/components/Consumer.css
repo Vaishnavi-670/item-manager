@@ -36,7 +36,6 @@
     gap: 16px;
     padding: 12px 14px;
     align-items: center;
-    border-radius: 8px;
     margin-bottom: 14px;
 }
 
@@ -44,7 +43,6 @@
     width: 72px;
     height: 72px;
     object-fit: cover;
-    border-radius: 6px;
 }
 
 .consumer-pi-company-info {
@@ -55,16 +53,6 @@
     font-size: 25px;
     font-weight: 700;
     margin-bottom: 2px;
-}
-
-.consumer-pi-company-meta {
-    font-size: 13px;
-    color: var(--pi-muted)
-}
-
-.consumer-pi-link {
-    color: var(--pi-primary);
-    text-decoration: none
 }
 
 .consumer-pi-details {
@@ -89,14 +77,7 @@
 
 .consumer-pi-card {
     background: #fff;
-    border-radius: 8px;
     padding: 8px;
-}
-
-.consumer-pi-card h2,
-.consumer-pi-card h3 {
-    margin: 0 0 10px 0;
-    color: var(--pi-text)
 }
 
 .consumer-pi-form-row {
@@ -132,8 +113,9 @@
     min-width: 0;
     padding: 4px;
     border: 1px solid var(--pi-border);
-    border-radius: 6px;
     font-size: 14px;
+        border-radius: 6px;
+
     outline: none;
     box-sizing: border-box;
 }
@@ -147,12 +129,6 @@
     width: 100%
 }
 
-.consumer-pi-address-textarea {
-    min-height: 70px;
-    resize: vertical;
-    width: 100%
-}
-
 .consumer-pi-top-row input,
 .consumer-pi-top-row select,
 .consumer-pi-top-row textarea {
@@ -162,7 +138,6 @@
 /* Table */
 .consumer-pi-table-wrap {
     border: none;
-    border-radius: 8px;
     overflow: hidden;
     background: #fff;
     margin-bottom: 14px
@@ -243,48 +218,6 @@
     outline: none;
 }
 
-/* Add rows & upload */
-.consumer-pi-add-row-section {
-    padding: 10px 12px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 10px
-}
-
-.consumer-pi-add-row-controls {
-    display: flex;
-    gap: 8px;
-    align-items: center
-}
-
-.consumer-pi-add-row-input {
-    width: 80px;
-    padding: 8px 10px;
-    border: 1px solid var(--pi-border);
-    border-radius: 6px
-}
-
-.consumer-pi-add-row-btn {
-    padding: 8px 12px;
-    background: var(--pi-primary);
-    color: #fff;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: 600
-}
-
-.consumer-pi-upload-btn {
-    display: inline-block;
-    padding: 8px 12px;
-    border: 1px dashed var(--pi-primary);
-    color: var(--pi-primary);
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: 600
-}
-
 /* Totals */
 .consumer-pi-totals {
     display: grid;
@@ -297,7 +230,7 @@
 .consumer-pi-totals-right {
     background: #fff;
     border: 1px solid var(--pi-border);
-    border-radius: 8px;
+    /* border-radius: 8px; */
     padding: 6px
 }
 
@@ -340,14 +273,12 @@
     padding: 2px 0
 }
 
-.consumer-pi-totals-table-left,
 .consumer-pi-totals-table-right {
     width: 100%;
     border-collapse: collapse;
     table-layout: fixed
 }
 
-.consumer-pi-totals-table-left td,
 .consumer-pi-totals-table-right td {
     padding: 4px 6px;
     border-bottom: 1px solid var(--pi-border);
@@ -357,12 +288,10 @@
 }
 
 /* Make first column (labels) bold */
-.consumer-pi-totals-table-left td:first-child,
 .consumer-pi-totals-table-right td:first-child {
     font-weight: 700
 }
 
-.consumer-pi-totals-table-left tr:last-child td,
 .consumer-pi-totals-table-right tr:last-child td {
     border-bottom: none
 }
@@ -372,22 +301,7 @@
     font-weight: 600
 }
 
-.consumer-pi-grand td {
-    font-size: 16px
-}
-
-.consumer-pi-amount-in-words {
-    margin: 0;
-    font-style: italic;
-    color: var(--pi-muted)
-}
-
-.consumer-pi-cd-row select {
-    max-width: 90px
-}
-
 /* Remove border from input boxes in totals tables */
-.consumer-pi-totals-table-left input,
 .consumer-pi-totals-table-right input {
 	border: none;
 	outline: none;
@@ -430,46 +344,12 @@
 .consumer-pi-prepared-item input {
     margin: 0;
     font-size: 12px;
-    /* font-weight: 500; */
     color: var(--pi-text);
     text-align: center;
-    /* padding: 6px 8px; */
     background: white;
     border: none;
     outline: none;
     border-radius: 4px
-}
-
-#consumer-pi-auth {
-    font-weight: 700;
-    color: var(--pi-text)
-}
-
-/* Actions */
-.consumer-pi-action-buttons {
-    display: flex;
-    gap: 10px;
-    justify-content: flex-end;
-    margin-top: 12px
-}
-
-#consumer-pi-download-btn,
-#consumer-pi-send-btn {
-    padding: 10px 14px;
-    border-radius: 6px;
-    border: none;
-    font-weight: 700;
-    cursor: pointer
-}
-
-#consumer-pi-download-btn {
-    background: #10b981;
-    color: #fff
-}
-
-#consumer-pi-send-btn {
-    background: var(--pi-primary);
-    color: #fff
 }
 
 /* Responsive */
