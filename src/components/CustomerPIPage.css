@@ -15,7 +15,6 @@
     flex: 1;
     background: white;
     padding: 16px;
-    border-radius: 12px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
@@ -23,7 +22,6 @@
     flex: 2;
     background: white;
     padding: 16px;
-    border-radius: 12px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
@@ -110,5 +108,96 @@
 }
 
 .pi-submit-btn:active {
+    transform: scale(0.98);
+}
+
+.green-tick {
+    color: #10b981;
+    font-size: 20px;
+    font-weight: bold;
+    margin-left: 8px;
+}
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: white;
+    padding: 30px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    min-width: 400px;
+    max-width: 500px;
+    border-radius: 0;
+}
+
+.modal-content h3 {
+    margin: 0 0 20px 0;
+    color: #1f2ce2;
+    font-size: 20px;
+    text-align: center;
+}
+
+.invoice-input {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #e5e7eb;
+    font-size: 14px;
+    margin-bottom: 20px;
+    box-sizing: border-box;
+    outline: none;
+    transition: border-color 0.3s ease;
+}
+
+.invoice-input:focus {
+    border-color: #1f2ce2;
+}
+
+.modal-buttons {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+}
+
+.save-btn,
+.close-btn {
+    padding: 10px 24px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.save-btn {
+    background-color: #10b981;
+    color: white;
+}
+
+.save-btn:hover {
+    background-color: #059669;
+}
+
+.close-btn {
+    background-color: #6b7280;
+    color: white;
+}
+
+.close-btn:hover {
+    background-color: #4b5563;
+}
+
+.save-btn:active,
+.close-btn:active {
     transform: scale(0.98);
 }
