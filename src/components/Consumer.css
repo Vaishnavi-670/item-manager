@@ -1,0 +1,415 @@
+/* Consumer PI Page Styles */
+
+:root {
+    --pi-primary: #1f2ce2;
+    --pi-accent: #2809b2;
+    --pi-text: #111827;
+    --pi-muted: #6b7280;
+    --pi-border: #e5e7eb;
+    --pi-bg: #ffffff;
+}
+
+.consumer-pi-root {
+    width: 100vw;
+    min-height: 100vh;
+    box-sizing: border-box;
+    padding: 16px;
+    background: var(--pi-bg);
+}
+
+.consumer-pi-container {
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+.consumer-pi-heading {
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--pi-accent);
+    text-align: center;
+    margin-bottom: 16px;
+}
+
+/* Header */
+.consumer-pi-header {
+    background: #f8fafc;
+    border: 1px solid var(--pi-border);
+    border-radius: 8px;
+    margin-bottom: 14px;
+}
+
+.consumer-pi-header-inner {
+    display: flex;
+    gap: 16px;
+    padding: 12px 14px;
+    align-items: center;
+}
+
+.consumer-pi-logo-wrap {
+    flex: 0 0 auto
+}
+
+.consumer-pi-logo {
+    width: 72px;
+    height: 72px;
+    object-fit: cover;
+    border-radius: 6px;
+    border: 1px solid var(--pi-border);
+}
+
+.consumer-pi-company-info {
+    color: var(--pi-text)
+}
+
+.consumer-pi-company-name {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 4px
+}
+
+.consumer-pi-company-meta {
+    font-size: 13px;
+    color: var(--pi-muted)
+}
+
+.consumer-pi-link {
+    color: var(--pi-primary);
+    text-decoration: none
+}
+
+.consumer-pi-details {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 14px
+}
+
+.consumer-pi-row {
+    display: grid;
+    gap: 12px
+}
+
+.consumer-pi-top-row {
+    grid-template-columns: 1.2fr 0.8fr
+}
+
+.consumer-pi-bottom-row {
+    grid-template-columns: repeat(3, 1fr)
+}
+
+.consumer-pi-card {
+    background: #fff;
+    border-radius: 8px;
+    padding: 8px;
+}
+
+.consumer-pi-card h2,
+.consumer-pi-card h3 {
+    margin: 0 0 10px 0;
+    color: var(--pi-text)
+}
+
+.consumer-pi-form-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 10px
+}
+
+.consumer-pi-stacked {
+    flex-direction: column;
+    align-items: flex-start;
+    width: 100%
+}
+
+.consumer-pi-label {
+    width: 160px;
+    font-size: 13px;
+    color: black;
+    font-weight: 600;
+    flex-shrink: 0
+}
+
+.consumer-pi-input,
+.consumer-pi-input[type="date"],
+.consumer-pi-input[type="number"],
+.consumer-pi-input select,
+.consumer-pi-form-row select,
+.consumer-pi-form-row input,
+.consumer-pi-form-row textarea {
+    flex: 1 1 auto;
+    width: 100%;
+    min-width: 0;
+    padding: 4px;
+    border: 1px solid var(--pi-border);
+    border-radius: 6px;
+    font-size: 14px;
+    outline: none;
+    box-sizing: border-box;
+}
+
+.consumer-pi-small {
+    gap: 8px
+}
+
+.consumer-pi-small-input {
+    max-width: none;
+    width: 100%
+}
+
+.consumer-pi-address-textarea {
+    min-height: 70px;
+    resize: vertical;
+    width: 100%
+}
+
+.consumer-pi-top-row input,
+.consumer-pi-top-row select,
+.consumer-pi-top-row textarea {
+    border: none;
+}
+
+/* Table */
+.consumer-pi-table-wrap {
+    border: 1px solid var(--pi-border);
+    border-radius: 8px;
+    overflow: hidden;
+    background: #fff;
+    margin-bottom: 14px
+}
+
+.consumer-pi-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    table-layout: fixed
+}
+
+.consumer-pi-table th,
+.consumer-pi-table td {
+    padding: 6px 8px;
+    border-bottom: 1px solid var(--pi-border);
+    text-align: left;
+    word-wrap: break-word;
+    overflow: hidden
+}
+
+.consumer-pi-table thead th {
+    background: var(--pi-primary);
+    color: #fff;
+    font-weight: 700
+}
+
+.consumer-pi-table tbody tr:last-child td {
+    border-bottom: none
+}
+
+/* Column widths for 10 columns to fit in viewport */
+.consumer-pi-table :is(th, td):nth-child(1) {
+    width: 6%
+}
+
+.consumer-pi-table :is(th, td):nth-child(2) {
+    width: 15%
+}
+
+.consumer-pi-table :is(th, td):nth-child(3) {
+    width: 12%
+}
+
+.consumer-pi-table :is(th, td):nth-child(4) {
+    width: 7%
+}
+
+.consumer-pi-table :is(th, td):nth-child(5) {
+    width: 10%
+}
+
+.consumer-pi-table :is(th, td):nth-child(6) {
+    width: 15%
+}
+
+.consumer-pi-table :is(th, td):nth-child(7) {
+    width: 9%
+}
+
+.consumer-pi-table :is(th, td):nth-child(8) {
+    width: 7%
+}
+
+.consumer-pi-table :is(th, td):nth-child(9) {
+    width: 9%
+}
+
+.consumer-pi-table :is(th, td):nth-child(10) {
+    width: 10%
+}
+
+/* Remove border from input boxes inside table */
+.consumer-pi-table input,
+.consumer-pi-table select,
+.consumer-pi-table textarea {
+    border: none;
+    outline: none;
+}
+
+/* Add rows & upload */
+.consumer-pi-add-row-section {
+    padding: 10px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px
+}
+
+.consumer-pi-add-row-controls {
+    display: flex;
+    gap: 8px;
+    align-items: center
+}
+
+.consumer-pi-add-row-input {
+    width: 80px;
+    padding: 8px 10px;
+    border: 1px solid var(--pi-border);
+    border-radius: 6px
+}
+
+.consumer-pi-add-row-btn {
+    padding: 8px 12px;
+    background: var(--pi-primary);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600
+}
+
+.consumer-pi-upload-btn {
+    display: inline-block;
+    padding: 8px 12px;
+    border: 1px dashed var(--pi-primary);
+    color: var(--pi-primary);
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600
+}
+
+/* Totals */
+.consumer-pi-totals {
+    display: grid;
+    grid-template-columns: 1.1fr 0.9fr;
+    gap: 12px;
+    margin-bottom: 14px
+}
+
+.consumer-pi-totals-left,
+.consumer-pi-totals-right {
+    background: #fff;
+    border: 1px solid var(--pi-border);
+    border-radius: 8px
+}
+
+.consumer-pi-totals-table-left,
+.consumer-pi-totals-table-right {
+    width: 100%;
+    border-collapse: collapse
+}
+
+.consumer-pi-totals-table-left td,
+.consumer-pi-totals-table-right td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--pi-border)
+}
+
+.consumer-pi-totals-table-left tr:last-child td,
+.consumer-pi-totals-table-right tr:last-child td {
+    border-bottom: none
+}
+
+.consumer-pi-totals-table-right td:last-child {
+    text-align: right;
+    font-weight: 600
+}
+
+.consumer-pi-grand td {
+    font-size: 16px
+}
+
+.consumer-pi-amount-in-words {
+    margin: 0;
+    font-style: italic;
+    color: var(--pi-muted)
+}
+
+.consumer-pi-cd-row select {
+    max-width: 90px
+}
+
+/* Remove border from input boxes in totals tables */
+.consumer-pi-totals-table-left input,
+.consumer-pi-totals-table-right input {
+    border: none;
+    outline: none;
+}
+
+
+/* Footer */
+.consumer-pi-footer {
+    text-align: center;
+    color: var(--pi-muted);
+    font-size: 12px;
+    line-height: 1.6;
+    margin-top: 10px
+}
+
+#consumer-pi-auth {
+    font-weight: 700;
+    color: var(--pi-text)
+}
+
+/* Actions */
+.consumer-pi-action-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 12px
+}
+
+#consumer-pi-download-btn,
+#consumer-pi-send-btn {
+    padding: 10px 14px;
+    border-radius: 6px;
+    border: none;
+    font-weight: 700;
+    cursor: pointer
+}
+
+#consumer-pi-download-btn {
+    background: #10b981;
+    color: #fff
+}
+
+#consumer-pi-send-btn {
+    background: var(--pi-primary);
+    color: #fff
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+    .consumer-pi-top-row {
+        grid-template-columns: 1fr
+    }
+
+    .consumer-pi-bottom-row {
+        grid-template-columns: 1fr
+    }
+
+    .consumer-pi-totals {
+        grid-template-columns: 1fr
+    }
+
+    .consumer-pi-label {
+        width: 120px
+    }
+}

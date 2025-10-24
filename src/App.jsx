@@ -10,6 +10,7 @@ import PurchaseItem from "./components/PurchaseItem";
 import ProformaInvoice from "./components/ProformaInvoice";
 import Enquiry from "./components/Enquiry";
 import Trade from "./components/Trade";
+import Consumer from "./components/Consumer";
 
 function App() {
   const [formType, setFormType] = useState("singleItem");
@@ -82,6 +83,12 @@ function App() {
         >
           Trade
         </button>
+        <button
+          className={`form-toggle-buttons small ${formType === "Consumer" ? "active" : ""}`}
+          onClick={() => setFormType("Consumer")}
+        >
+          Consumer
+        </button>
       </div>
 
       <div className="form-container">
@@ -95,6 +102,7 @@ function App() {
         {formType === "proformaInvoice" && <ProformaInvoice />}
         {formType === "enquiry" && <Enquiry />}
         {formType === "Trade" && <Trade />}
+        {formType === "Consumer" && <Consumer />}
       </div>
       </div>
   );
