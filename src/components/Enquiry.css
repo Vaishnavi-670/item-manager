@@ -27,60 +27,47 @@
   font-size: 20px;
   text-align: center;
 }
-
 .enquiry-grid {
-    
   background: #f2f3f5;
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 8px;
   align-items: start;
 }
-
 .card {
   padding: 14px;
-  border-radius: 8px;
   box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
 }
-
-/* LEFT PANEL - form-like table */
 .left-panel {
   background: linear-gradient(180deg, #ffffff, var(--surface));
 }
-
 .left-panel-table {
   width: 100%;
   border-collapse: collapse;
   background: transparent;
 }
-
 .left-panel-table td {
   padding: 8px 6px;
   vertical-align: middle;
   border: none;
 }
-
 .left-panel-table .lp-label {
   width: 110px;
   font-weight: 700;
   color: #0b4a6f;
   padding-right: 8px;
 }
-
 .left-panel-table .lp-field input {
   width: 100%;
   box-sizing: border-box;
   padding: 8px 10px;
-  border-radius: 6px;
   border: 1px solid #d1d5db;
 }
-
 .left-panel .actions {
   display: flex;
   gap: 8px;
   align-items: center;
 }
-
 .upload-label {
   display: inline-block;
   padding: 6px 10px;
@@ -89,14 +76,11 @@
   border-radius: 6px;
   cursor: pointer;
 }
-
-/* RIGHT PANEL - data grid */
 .enquiry-table {
   width: 100%;
   border-collapse: collapse;
   background: #fff;
 }
-
 .enquiry-table th,
 .enquiry-table td {
   border: 1px solid var(--border);
@@ -105,48 +89,41 @@
   font-size: 11px;
   text-align: left;
 }
-
 .enquiry-table thead th {
   background: var(--primary);
   color: #ffffff;
   font-weight: 700;
 }
-
 .enquiry-table tbody tr:hover {
   background: #fbfbff;
 }
-
 .enquiry-table tbody tr:nth-child(even) {
   background: #fcfcfd;
 }
-
 .enquiry-table input {
   width: 100%;
-  /* denser input sizing */
   padding: 2px 4px; 
   border: none;
   background: transparent;
   font-size: 11px; 
-  min-width: 0; /* prevent inputs from forcing column width */
+  min-width: 0; 
 }
+
 .enquiry-table input,
 .enquiry-table select {
   box-sizing: border-box;
   max-width: 100%;
 }
-
 .enquiry-table input[disabled],
 .enquiry-table select[disabled] {
   opacity: 0.6;
   background: transparent;
   cursor: default;
 }
-
 .enquiry-table select {
   text-align: center;
   width: 100px;
   font-size: 12px;
-  border-radius: 6px;
   border: none;
   background: #fff;
   box-sizing: border-box;
@@ -155,7 +132,6 @@
   -moz-appearance: none;
   cursor: pointer;
   height: 28px; }
-
 /* make numeric columns (Qty and Rate) wider so inputs don't get cramped */
 .enquiry-table th:nth-child(6),
 .enquiry-table td:nth-child(6) {
@@ -167,7 +143,6 @@
   min-width: 64px;
   width: 64px;
 }
-
 /* ensure Amount column has a modest width so totals are visible */
 .enquiry-table th:nth-child(9),
 .enquiry-table td:nth-child(9) {
@@ -187,17 +162,14 @@
     width: auto;
   }
 
-/* right-align numeric inputs for better readability */
 .enquiry-table td:nth-child(6) input,
 .enquiry-table td:nth-child(7) input,
 .enquiry-table td:nth-child(9) {
   text-align: right;
-  /* tighter numeric styling */
   font-size: 10px;
   padding-right: 6px;
 }
 
-/* slightly reduce row height to fit more rows */
 :root {
   --row-h: 30px;
 }
@@ -208,12 +180,10 @@
   margin: 0 auto;
 }
 
-/* show small chevron icon inside the first column select (visual only) */
 .enquiry-table td:first-child {
   position: relative;
 }
 .enquiry-table td:first-child select {
-  /* keep width the same, just make room for icon */
   padding-right: 24px;
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path d='M1 1 L6 6 L11 1' stroke='%23333' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' fill='none'/></svg>");
   background-repeat: no-repeat;
@@ -245,31 +215,25 @@
   align-items: center;
   margin-bottom: 6px;
 }
-
 .right-search {
   padding: 8px 10px;
-  border-radius: 6px;
   border: 1px solid var(--border);
   background: #fff;
   width: 180px;
   box-sizing: border-box;
 }
-
 .left-search {
   padding: 6px 8px;
-  border-radius: 6px;
   border: 1px solid var(--border);
   background: #fff;
   width: 180px;
   box-sizing: border-box;
 }
-
 .nested-top {
   width: 100%;
   margin-bottom: 0;
   background: var(--bg);
   padding: 6px;
-  border-radius: 8px;
   border: 1px solid var(--border);
   box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
   position: relative;
@@ -278,49 +242,38 @@
   overflow: hidden;
   max-width: 100%;
 }
-
 .nested-bottom {
   display: grid;
   grid-template-columns: repeat(2, 1fr); 
   gap: 8px;
   align-items: start;
 }
-
 .nested-bottom {
   position: relative;
   z-index: 1;
 }
-
 .nested-col {
   background: var(--bg);
   padding: 6px;
-  border-radius: 8px;
   box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04);
   border: 1px solid var(--border);
   display: flex;
   flex-direction: column;
   min-width: 0;
 }
-
 .table-scroll {
-  /* max-height: 120px;  */
   overflow: auto;
-  border-radius: 6px;
   background: transparent;
   padding: 2px; 
   box-sizing: border-box;
 }
-
-
 .nested-bottom .table-scroll {
   height: calc(var(--table-header-h) + (var(--row-h) * 3));
   max-height: none;
  }
-
 .enquiry-table tbody tr {
   height: var(--row-h);
 }
-
 .suggestions-list{
   position: absolute;
   left: 0;
@@ -342,12 +295,9 @@
 .suggestion-item:hover{
   background:#f0f0f0;
 }
-
 .table-scroll tbody {
   padding-bottom: 4px;
 }
-
-/* visually hide borders for rows that are fully empty (right-side tables) */
 .enquiry-table tbody tr.row-empty td {
   border-color: transparent;
   background: transparent;
@@ -357,7 +307,6 @@
   outline: none !important;
   background: transparent !important;
 }
-
 .left-panel .enquiry-table tbody tr.row-focused {
   background: linear-gradient(90deg, rgba(15,99,243,0.04), rgba(15,99,243,0.02));
 }
@@ -367,7 +316,6 @@
 .left-panel .enquiry-table tbody tr.row-focused td:first-child {
   box-shadow: inset 4px 0 0 #0f62fe;
 }
-
 .first-cell-inline{
   display:flex;
   align-items:center;
@@ -386,19 +334,16 @@
   justify-content:center;
   cursor:pointer;
 }
-
 .first-cell-inline select{
   width: calc(100% - 26px);
   min-width: 56px;
 }
-
 .row-action-cell{
   width:36px;
   text-align:center;
   padding:4px 6px;
 }
 .row-action-cell .row-check{
-  /* keep same minimal appearance in action column */
   width:20px;
   height:20px;
   padding:0;
@@ -406,8 +351,6 @@
   background:transparent;
   color:inherit;
 }
-
-/* style for the action button states */
 .row-check{
   font-weight: 600;
   line-height: 1;
@@ -430,10 +373,9 @@
   width:16px;
   height:16px;
   font-size:12px;
-  border-radius:3px;
 }
 .action-box .btn-mark{
-  color: #12b83e; 
+  color: #25b04a; 
 }
 .action-box .btn-unmark{
   color: #6b7280;
@@ -482,7 +424,6 @@ button {
   font-family: "Poppins", sans-serif;
   background: linear-gradient(180deg, #ffffff, var(--surface));
   border: 1px solid var(--border);
-  border-radius: 8px;
   box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
 }
 
@@ -552,7 +493,6 @@ button {
 }
 .sales-controls input[type="text"], .sales-controls select{
   padding:8px 10px;
-  border-radius:6px;
   border:1px solid var(--border);
   background:#fff;
   font-size:13px;

@@ -93,7 +93,6 @@
   transform: translate(-50%, -50%);
   width: 18px;
   height: 18px;
-  border-radius: 4px;
   border: 1px solid var(--border, #cfcfcf);
   background: var(--bg, #fff);
   pointer-events: none;
@@ -130,7 +129,6 @@
   width: min(700px, 96vw);
   max-height: 90vh;
   background: #fff;
-  border-radius: 8px;
   overflow: auto;
 }
 
@@ -161,7 +159,6 @@
   -moz-appearance: none;
   padding: 8px 8px;
   border: 1px solid var(--border, #d1d5db);
-  border-radius: 6px;
   background: white;
   min-width: 160px;
   cursor: pointer;
@@ -240,7 +237,6 @@
   background: transparent;
   padding: 6px 8px;
   width: 90px;
-  border-radius: 4px;
 }
 .loc-qty-input:focus {
   outline: 2px solid rgba(37, 99, 235, 0.15);

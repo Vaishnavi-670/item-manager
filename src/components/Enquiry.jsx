@@ -614,6 +614,7 @@ const Enquiry = () => {
                                             <td>
                                                 <input value={it ? (it.branch || '') : ''} onChange={(e) => setItemField(rowIdx, 'branch', e.target.value)} onFocus={() => setFocusedLeftRow(rowIdx)} onBlur={() => setFocusedLeftRow(null)} /></td>
                                             <td style={{ position: 'relative' }}>
+                                                
                                                 <input value={it ? (it.customer || '') : ''} onChange={(e) => setItemField(rowIdx, 'customer', e.target.value)} onFocus={() => { setFocusedLeftRow(rowIdx); setSuggestions(getSuggestionPool('customer').slice(0, 8)); setShowSuggestions({ visible: true, row: rowIdx, field: 'customer', id: `${rowIdx}-customer` }) }} onBlur={() => setTimeout(() => { setShowSuggestions({ visible: false, row: null, field: null, id: null }); setFocusedLeftRow(null) }, 150)} />
                                                 {showSuggestions.visible && showSuggestions.row === rowIdx && showSuggestions.field === 'customer' && suggestions && suggestions.length ? (
                                                     <div className="suggestions-list" style={{ position: 'absolute', zIndex: 40 }}>
@@ -678,7 +679,6 @@ const Enquiry = () => {
                         </tbody>
                     </table>
                 </div>
-
                 <div className="right-panel card">
                     <div className="right-header">
                         <div style={{ position: 'relative' }}>
@@ -704,10 +704,8 @@ const Enquiry = () => {
                         <input className="right-search" placeholder="Qty" value={search.qty} onChange={e => setSearch(s => ({ ...s, qty: e.target.value }))} />
                         <button className="primary" onClick={handleSearch}>Send</button>
                     </div>
-
                     <div className="nested-outer">
                         <div className="nested-top">
-
                             <div className="table-scroll">
                                 <table className="enquiry-table">
                                     <thead>
@@ -748,7 +746,6 @@ const Enquiry = () => {
                                 </table>
                             </div>
                         </div>
-
                         <div className="nested-bottom">
                             <div className="nested-col">
                                 <div className="table-scroll">
@@ -765,6 +762,7 @@ const Enquiry = () => {
                                                 <th>COM</th>
                                             </tr>
                                         </thead>
+
                                         <tbody>
                                             {Array.from({ length: 6 }).map((_, i) => {
                                                 const rows = filteredPrice || priceAvailabilityData
@@ -787,7 +785,6 @@ const Enquiry = () => {
                                     </table>
                                 </div>
                             </div>
-
                             <div className="nested-col">
                                 <div className="table-scroll">
                                     <table className="enquiry-table">
@@ -797,7 +794,7 @@ const Enquiry = () => {
                                                 <th>Location</th>
                                                 <th>Stock</th>
                                             </tr>
-                                        </thead>
+                                        </thead>                                
                                         <tbody>
                                             {Array.from({ length: 6 }).map((_, i) => {
                                                 const rows = filteredStock || locationStockData
