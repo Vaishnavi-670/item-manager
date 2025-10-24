@@ -1,0 +1,114 @@
+.customer-pi-root {
+    padding: 20px;
+    font-family: "Poppins", sans-serif;
+    background-color: #f9fafb;
+    min-height: 100vh;
+    width: 95vw;
+}
+
+.customer-pi-container {
+    display: flex;
+    gap: 20px;
+}
+
+.customer-pi-left {
+    flex: 1;
+    background: white;
+    padding: 16px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.customer-pi-right {
+    flex: 2;
+    background: white;
+    padding: 16px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.customer-pi-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.customer-pi-table th,
+.customer-pi-table td {
+    border: 1px solid #ddd;
+    padding: 8px 12px;
+    text-align: left;
+}
+
+.customer-pi-table th {
+    background-color: #1f2ce2;
+    color: white;
+    font-weight: 700;
+    font-size: 14px;
+}
+
+.customer-pi-table tr:hover {
+    background-color: #f9f9f9;
+    cursor: pointer;
+}
+
+.customer-pi-table tr.active {
+    background-color: #e6f0ff;
+    font-weight: 600;
+}
+
+.pi-details {
+    margin-top: 10px;
+}
+
+.pi-header p {
+    margin: 4px 0;
+    color: #333;
+}
+
+.pi-items-table {
+    width: 100%;
+    margin-top: 10px;
+    border-collapse: collapse;
+}
+
+.pi-items-table th,
+.pi-items-table td {
+    border: 1px solid #ccc;
+    padding: 8px 10px;
+    text-align: left;
+}
+
+.pi-items-table th {
+    background: #1f2ce2;
+    color: white;
+    font-weight: 700;
+    font-size: 14px;
+}
+
+.pi-total {
+    margin-top: 12px;
+    text-align: right;
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+.pi-submit-btn {
+    margin-top: 16px;
+    padding: 10px 24px;
+    background-color: #1f2ce2;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.pi-submit-btn:hover {
+    background-color: #2809b2;
+}
+
+.pi-submit-btn:active {
+    transform: scale(0.98);
+}

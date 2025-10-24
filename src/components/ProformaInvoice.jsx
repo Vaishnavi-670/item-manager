@@ -409,50 +409,50 @@ const ProformaInvoice = () => {
 
 
 
-const handleDownloadPdf = () => {
-    const element = document.querySelector(".proforma-container");
+    const handleDownloadPdf = () => {
+        const element = document.querySelector(".proforma-container");
 
-    // Hide Add Rows section, Download button, and CD row if CD = 0
-    const hiddenElements = document.querySelectorAll(".add-row-wrapper, #download-pdf-btn, .cd-row, #send-btn");
-    hiddenElements.forEach(el => {
-        if (el.classList.contains("cd-row")) {
-            el.style.display = parseFloat(cdAmount) === 0 ? "none" : "";
-        } else {
-            el.style.display = "none";
-        }
-    });
-
-    // Temporarily remove input borders for PDF export
-    const inputs = document.querySelectorAll("input, select, textarea");
-    inputs.forEach(el => {
-        el.setAttribute("data-old-border", el.style.border || "");
-        el.style.border = "none";
-        el.style.outline = "none";
-        el.style.background = "transparent";
-    });
-
-    const options = {
-        margin: 0.5,
-        filename: `Proforma_Invoice_${invoice.number || "BTIPL"}.pdf`,
-        image: { type: "jpeg", quality: 0.98 },
-        html2canvas: { scale: 2 },
-        jsPDF: { unit: "in", format: "a4", orientation: "portrait" },
-    };
-
-    html2pdf()
-        .set(options)
-        .from(element)
-        .save()
-        .then(() => {
-            // Restore hidden elements
-            hiddenElements.forEach(el => (el.style.display = ""));
-            inputs.forEach(el => {
-                el.style.border = el.getAttribute("data-old-border");
-                el.removeAttribute("data-old-border");
-                el.style.background = "";
-            });
+        // Hide Add Rows section, Download button, and CD row if CD = 0
+        const hiddenElements = document.querySelectorAll(".add-row-wrapper, #download-pdf-btn, .cd-row, #send-btn");
+        hiddenElements.forEach(el => {
+            if (el.classList.contains("cd-row")) {
+                el.style.display = parseFloat(cdAmount) === 0 ? "none" : "";
+            } else {
+                el.style.display = "none";
+            }
         });
-};
+
+        // Temporarily remove input borders for PDF export
+        const inputs = document.querySelectorAll("input, select, textarea");
+        inputs.forEach(el => {
+            el.setAttribute("data-old-border", el.style.border || "");
+            el.style.border = "none";
+            el.style.outline = "none";
+            el.style.background = "transparent";
+        });
+
+        const options = {
+            margin: 0.5,
+            filename: `Proforma_Invoice_${invoice.number || "BTIPL"}.pdf`,
+            image: { type: "jpeg", quality: 0.98 },
+            html2canvas: { scale: 2 },
+            jsPDF: { unit: "in", format: "a4", orientation: "portrait" },
+        };
+
+        html2pdf()
+            .set(options)
+            .from(element)
+            .save()
+            .then(() => {
+                // Restore hidden elements
+                hiddenElements.forEach(el => (el.style.display = ""));
+                inputs.forEach(el => {
+                    el.style.border = el.getAttribute("data-old-border");
+                    el.removeAttribute("data-old-border");
+                    el.style.background = "";
+                });
+            });
+    };
 
 
 
@@ -658,17 +658,17 @@ const handleDownloadPdf = () => {
                     </table>
 
                     <div className="add-row-wrapper" style={{ marginTop: 12, display: "flex", gap: 8, alignItems: "center" }}>
-                            <div className="add-row-controls">
-                                <input className="add-row-input" id="add-row-input" type="number" min={1} value={rowsToAdd} onChange={(e) => setRowsToAdd(e.target.value)} disabled={!buyerLocked} />
-                                <button className="add-row-btn" id="add-row-btn" type="button" onClick={() => { addRows(rowsToAdd); setRowsToAdd(1); }} disabled={!buyerLocked}>
-                                    Add rows
-                                </button>
-                                <div className="upload-wrapper">
-                                    <label className="upload-btn" htmlFor="upload-items">Upload items</label>
-                                    <input id="upload-items" type="file" accept=".csv, .xlsx, .xls" style={{ display: 'none' }} onChange={(e) => { const f = e.target.files && e.target.files[0]; if (f) handleFileUpload(f); e.target.value = null; }} />
-                                </div>
+                        <div className="add-row-controls">
+                            <input className="add-row-input" id="add-row-input" type="number" min={1} value={rowsToAdd} onChange={(e) => setRowsToAdd(e.target.value)} disabled={!buyerLocked} />
+                            <button className="add-row-btn" id="add-row-btn" type="button" onClick={() => { addRows(rowsToAdd); setRowsToAdd(1); }} disabled={!buyerLocked}>
+                                Add rows
+                            </button>
+                            <div className="upload-wrapper">
+                                <label className="upload-btn" htmlFor="upload-items">Upload items</label>
+                                <input id="upload-items" type="file" accept=".csv, .xlsx, .xls" style={{ display: 'none' }} onChange={(e) => { const f = e.target.files && e.target.files[0]; if (f) handleFileUpload(f); e.target.value = null; }} />
                             </div>
-                           
+                        </div>
+
                     </div>
                 </div>
 
