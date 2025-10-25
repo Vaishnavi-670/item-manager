@@ -102,6 +102,7 @@ const Enquiry = () => {
     const [searchApplied, setSearchApplied] = useState(false)
     const searchAppliedRef = useRef(false)
     const ignoreNextClickRef = useRef(false)
+    const actionClickRef = useRef(false)
 
     const dummyRow = {
         del: '',
@@ -117,33 +118,14 @@ const Enquiry = () => {
         branch: 'main branch',
         customer: '',
         discount: 0,
-        type: 'Enquiry', // per-row type: Enquiry or Order
+        type: 'Enquiry',
     }
 
-    const normalizeItems = (arr) => {
-        if (!Array.isArray(arr)) return []
-        return arr.map((it, idx) => {
-            const qty = Number(it.qty || it.qty === 0 ? Number(it.qty) : 0)
-            const rate = Number(it.rate || it.rate === 0 ? Number(it.rate) : 0)
-            const amount = +((qty || 0) * (rate || 0)).toFixed(2)
-            return {
-                srNo: it.srNo || idx + 1,
-                itemName: it.itemName || it.name || it.item || '',
-                hsn: it.hsn || '',
-                brand: it.brand || '',
-                qty: qty,
-                rate: rate,
-                amount: amount,
-                ...dummyRow,
-                ...it
-            }
-        })
-    }
-
-    // start with no rows in the left table per user's request
     const [items, setItems] = useState(() => [])
+    const [draftItems, setDraftItems] = useState([])
     const nextSr = useRef(1)
     const [leftSearch, setLeftSearch] = useState('')
+    const [addRow, setAddRow] = useState({ type: 'Enquiry', branch: '', customer: '', itemName: '', brand: '', qty: 0, rate: 0, discount: 0 })
 
     useEffect(() => {
         try {
@@ -160,33 +142,91 @@ const Enquiry = () => {
     }, [])
 
     const updateItem = (idx, field, val) => {
-        const copy = items.map(it => ({ ...it }))
-        const numericFields = new Set(['qty', 'rate', 'del', 'mum', 'com', 'hyd', 'ahm', 'readyDel', 'readyMum', 'mrp', 'stock', 'discount'])
-        if (numericFields.has(field)) {
-            const num = val === '' ? 0 : parseFloat(val)
-            copy[idx][field] = Number.isNaN(num) ? 0 : num
-        } else {
-            copy[idx][field] = val
-        }
-        copy[idx].amount = +((parseFloat(copy[idx].qty) || 0) * (parseFloat(copy[idx].rate) || 0)).toFixed(2)
-        setItems(copy)
-    }
-
-    // ensure an item exists at index and set a field (creates row if missing)
-    const setItemField = (idx, field, val) => {
-        setItems(prev => {
-            const copy = Array.isArray(prev) ? prev.map(it => ({ ...it })) : []
+        // write to draft only; commit to items happens on ✓
+        setDraftItems(prev => {
+            const copy = Array.isArray(prev) ? prev.map(it => (it ? { ...it } : it)) : []
+            while (copy.length <= idx) copy.push(undefined)
+            const base = copy[idx] ? { ...copy[idx] } : (items[idx] ? { ...items[idx] } : { ...dummyRow, srNo: idx + 1 })
             const numericFields = new Set(['qty', 'rate', 'del', 'mum', 'com', 'hyd', 'ahm', 'readyDel', 'readyMum', 'mrp', 'stock', 'discount'])
-            while (copy.length <= idx) {
-                copy.push({ ...dummyRow, srNo: copy.length + 1 })
-            }
             if (numericFields.has(field)) {
                 const num = val === '' ? 0 : parseFloat(val)
-                copy[idx][field] = Number.isNaN(num) ? 0 : num
+                base[field] = Number.isNaN(num) ? 0 : num
             } else {
-                copy[idx][field] = val
+                base[field] = val
             }
-            copy[idx].amount = +((parseFloat(copy[idx].qty) || 0) * (parseFloat(copy[idx].rate) || 0)).toFixed(2)
+            base.amount = +((parseFloat(base.qty) || 0) * (parseFloat(base.rate) || 0)).toFixed(2)
+            copy[idx] = base
+            return copy
+        })
+    }
+
+    // ensure a draft item exists at index and set a field (creates draft if missing)
+    const setItemField = (idx, field, val) => {
+        setDraftItems(prev => {
+            const copy = Array.isArray(prev) ? prev.map(it => (it ? { ...it } : it)) : []
+            while (copy.length <= idx) copy.push(undefined)
+            const base = copy[idx] ? { ...copy[idx] } : (items[idx] ? { ...items[idx] } : { ...dummyRow, srNo: idx + 1 })
+            const numericFields = new Set(['qty', 'rate', 'del', 'mum', 'com', 'hyd', 'ahm', 'readyDel', 'readyMum', 'mrp', 'stock', 'discount'])
+            if (numericFields.has(field)) {
+                const num = val === '' ? 0 : parseFloat(val)
+                base[field] = Number.isNaN(num) ? 0 : num
+            } else {
+                base[field] = val
+            }
+            base.amount = +((parseFloat(base.qty) || 0) * (parseFloat(base.rate) || 0)).toFixed(2)
+            copy[idx] = base
+            return copy
+        })
+    }
+
+    const commitRow = (idx) => {
+        setItems(prev => {
+            const next = Array.isArray(prev) ? prev.map(it => ({ ...it })) : []
+            while (next.length <= idx) next.push({ ...dummyRow, srNo: next.length + 1 })
+            const src = draftItems[idx] ? { ...draftItems[idx] } : (next[idx] ? { ...next[idx] } : { ...dummyRow, srNo: idx + 1 })
+            const numericFields = new Set(['qty', 'rate', 'del', 'mum', 'com', 'hyd', 'ahm', 'readyDel', 'readyMum', 'mrp', 'stock', 'discount'])
+            numericFields.forEach(f => {
+                if (src[f] !== undefined) src[f] = src[f] === '' ? 0 : Number(src[f]) || 0
+            })
+            const qty = Number(src.qty || 0)
+            const rate = Number(src.rate || 0)
+            src.amount = +((qty || 0) * (rate || 0)).toFixed(2)
+            src.srNo = src.srNo || (idx + 1)
+            next[idx] = src
+            return next
+        })
+        setDraftItems(prev => {
+            const copy = Array.isArray(prev) ? prev.slice() : []
+            if (copy.length > idx) copy[idx] = undefined
+            return copy
+        })
+    }
+
+    const discardRow = (idx) => {
+        setDraftItems(prev => {
+            const copy = Array.isArray(prev) ? prev.slice() : []
+            if (copy.length > idx) copy[idx] = undefined
+            return copy
+        })
+    }
+
+    // discard only currently focused field for the row if available; otherwise discard the whole row draft
+    const discardAt = (idx) => {
+        const ff = focusedField
+        if (!ff || ff.row !== idx || !ff.field) {
+            return discardRow(idx)
+        }
+        const field = ff.field
+        setDraftItems(prev => {
+            const copy = Array.isArray(prev) ? prev.map(it => (it ? { ...it } : it)) : []
+            if (!copy[idx]) return copy
+            const original = items[idx] ? { ...items[idx] } : { ...dummyRow, srNo: (items[idx]?.srNo) || (idx + 1) }
+            copy[idx][field] = original[field]
+            if (field === 'qty' || field === 'rate') {
+                const qty = Number(copy[idx].qty || 0)
+                const rate = Number(copy[idx].rate || 0)
+                copy[idx].amount = +((qty || 0) * (rate || 0)).toFixed(2)
+            }
             return copy
         })
     }
@@ -215,8 +255,8 @@ const Enquiry = () => {
         }
         return Array.from(pool)
     }
-
-    // sales suggestions: pool of item names and brands from salesData
+    
+   // sales suggestions: pool of item names and brands from salesData
     const getSalesSuggestionPool = (type = 'q') => {
         const pool = new Set()
         if (type === 'q') {
@@ -272,32 +312,37 @@ const Enquiry = () => {
         setShowSuggestions({ visible: false, row: null, field: null })
     }
 
-    const onItemInputChange = (idx, val) => {
-        updateItem(idx, 'itemName', val)
-        const pool = getSuggestionPool('item')
-        const q = (val || '').toString().trim().toLowerCase()
-        if (!q) {
-            setSuggestions(pool.slice(0, 8))
-            setShowSuggestions({ visible: true, row: idx, field: 'item', id: `${idx}-item` })
-            return
-        }
-        const filtered = pool.filter(p => p.toLowerCase().includes(q)).slice(0, 8)
-        setSuggestions(filtered)
-        setShowSuggestions({ visible: true, row: idx, field: 'item', id: `${idx}-item` })
+    function getCustomerPool() {
+        return Array.from(
+            new Set([
+                ...salesData.map(s => s.customerName),
+                ...(meta.customer ? [meta.customer] : [])
+            ])
+        );
+    }
+    function getItemPool() {
+        return Array.from(
+            new Set([
+                ...stockSummaryData.map(it => it.item),
+                ...priceAvailabilityData.map(it => it.item),
+                ...locationStockData.map(it => it.itemName),
+                ...salesData.map(s => s.item)
+            ])
+        );
     }
 
-    const onCustomerInputChange = (idx, val) => {
-        updateItem(idx, 'customer', val)
-        const pool = getSuggestionPool('customer')
-        const q = (val || '').toString().trim().toLowerCase()
-        if (!q) {
-            setSuggestions(pool.slice(0, 8))
-            setShowSuggestions({ visible: true, row: idx, field: 'customer', id: `${idx}-customer` })
-            return
-        }
-        const filtered = pool.filter(p => p.toLowerCase().includes(q)).slice(0, 8)
-        setSuggestions(filtered)
-        setShowSuggestions({ visible: true, row: idx, field: 'customer', id: `${idx}-customer` })
+    function onAddRowInputChange(field, value) {
+        setAddRow(r => ({ ...r, [field]: value }));
+
+        let pool = [];
+        if (field === "customer") pool = getCustomerPool();
+        else if (field === "itemName") pool = getItemPool();
+
+        const filtered = pool.filter(
+            (x) => x && x.toLowerCase().includes((value || '').toLowerCase())
+        ).slice(0, 8);
+        setSuggestions(filtered);
+        setShowSuggestions({ visible: true, row: "add", field });
     }
 
     const onSearchCustomerInputChange = (val) => {
@@ -508,21 +553,54 @@ const Enquiry = () => {
         return true
     }
 
+    // consider a left-table row "empty" if nothing meaningful is filled
+    const isLeftRowEmpty = (row) => {
+        if (!row) return true
+        const strEmpty = (v) => !v || (typeof v === 'string' && v.trim() === '')
+        const numZero = (v) => Number(v || 0) === 0
+        const hasText = !strEmpty(row.customer) || !strEmpty(row.itemName) || !strEmpty(row.brand) || !strEmpty(row.branch)
+        const hasNumbers = !numZero(row.qty) || !numZero(row.rate) || !numZero(row.discount)
+        // ignore type and amount for emptiness; 'Enquiry' default shouldn't make it non-empty
+        return !(hasText || hasNumbers)
+    }
+
+    // Helper to update addRow state
+    const setAddField = (field, val) => {
+        setAddRow(prev => {
+            const next = { ...prev }
+            const numericFields = new Set(['qty', 'rate', 'discount'])
+            if (numericFields.has(field)) {
+                const num = val === '' ? 0 : parseFloat(val)
+                next[field] = Number.isNaN(num) ? 0 : num
+            } else {
+                next[field] = val
+            }
+            return next
+        })
+    }
+
+    // Helper to add new row from addRow state
+    const addNewRow = () => {
+        // Basic validation
+        if (!addRow.customer || !addRow.itemName) {
+            alert('Please fill customer and item name')
+            return
+        }
+        const newItem = {
+            ...addRow,
+            srNo: nextSr.current++,
+            amount: +((Number(addRow.qty) || 0) * (Number(addRow.rate) || 0)).toFixed(2)
+        }
+        setItems(prev => [...prev, newItem])
+        setAddRow({ type: 'Enquiry', branch: '', customer: '', itemName: '', brand: '', qty: 0, rate: 0, discount: 0 })
+    }
+
     // focused row state for left table — index of the row currently focused, or null
     const [focusedLeftRow, setFocusedLeftRow] = useState(null)
-    // checked state for left rows (by visual index)
-    const [checkedRows, setCheckedRows] = useState({})
+    const [focusedField, setFocusedField] = useState({ row: null, field: null })
 
     // sales table filters (inline controls)
     const [salesFilter, setSalesFilter] = useState({ q: '', customer: '' })
-
-    const toggleChecked = (rowIdx) => {
-        setCheckedRows(prev => ({ ...prev, [rowIdx]: !prev[rowIdx] }))
-    }
-
-    const setChecked = (rowIdx, value) => {
-        setCheckedRows(prev => ({ ...prev, [rowIdx]: !!value }))
-    }
 
     return (
         <div className="enquiry-root">
@@ -536,153 +614,408 @@ const Enquiry = () => {
                         <h3 style={{ margin: 0, fontSize: 16 }}>Enquiry / Order</h3>
                         <input className="left-search" placeholder="Search customer" value={leftSearch} onChange={e => setLeftSearch(e.target.value)} />
                     </div>
-                    <table className="enquiry-table">
-                        <thead>
-                            <tr>
-                                <th>Enquiry/Order</th>
-                                <th>Branch</th>
-                                <th>Customer Name</th>
-                                <th>Item Name</th>
-                                <th>Brand</th>
-                                <th>Qty</th>
-                                <th>Rate</th>
-                                <th>Discount</th>
-                                <th>Amount</th>
-                                <th style={{ width: 36 }}></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {leftSearch ? (
-                                (items.filter(it => (it.customer || '').toString().toLowerCase().includes((leftSearch || '').toLowerCase()))).map((it, rowIdx) => (
-                                    <tr key={it.srNo || `f-${rowIdx}`} className={`${focusedLeftRow === rowIdx ? 'row-focused' : ''} ${checkedRows[rowIdx] ? 'row-checked' : ''}`.trim()} onFocus={() => setFocusedLeftRow(rowIdx)} onBlur={() => setFocusedLeftRow(null)} tabIndex={-1}>
-                                        <td>
-                                            <select value={it ? (it.type || 'Enquiry') : 'Enquiry'} onChange={(e) => it ? updateItem(items.indexOf(it), 'type', e.target.value) : null} onFocus={() => setFocusedLeftRow(rowIdx)} onBlur={() => setFocusedLeftRow(null)}>
-                                                <option>Enquiry</option>
-                                                <option>Order</option>
-                                            </select>
-                                        </td>
-                                        <td>
-                                            <input value={it ? (it.branch || '') : ''} onChange={(e) => updateItem(items.indexOf(it), 'branch', e.target.value)} onFocus={() => setFocusedLeftRow(rowIdx)} onBlur={() => setFocusedLeftRow(null)} /></td>
-                                        <td style={{ position: 'relative' }}>
-                                            <input value={it ? (it.customer || '') : ''} onChange={(e) => updateItem(items.indexOf(it), 'customer', e.target.value)} onFocus={() => setFocusedLeftRow(rowIdx)} onBlur={() => setFocusedLeftRow(null)} />
-                                        </td>
-                                        <td style={{ position: 'relative' }}>
-                                            <input value={it ? it.itemName : ''} onChange={(e) => updateItem(items.indexOf(it), 'itemName', e.target.value)} onFocus={() => setFocusedLeftRow(rowIdx)} onBlur={() => setFocusedLeftRow(null)} />
-                                        </td>
-                                        <td>
-                                            <input value={it ? it.brand : ''} onChange={(e) => updateItem(items.indexOf(it), 'brand', e.target.value)} onFocus={() => setFocusedLeftRow(rowIdx)} onBlur={() => setFocusedLeftRow(null)} /></td>
-                                        <td>
-                                            <input type="number" value={it ? it.qty : ''} onChange={(e) => updateItem(items.indexOf(it), 'qty', e.target.value)} onFocus={() => setFocusedLeftRow(rowIdx)} onBlur={() => setFocusedLeftRow(null)} /></td>
-                                        <td>
-                                            <input type="number" value={it ? it.rate : ''} onChange={(e) => updateItem(items.indexOf(it), 'rate', e.target.value)} onFocus={() => setFocusedLeftRow(rowIdx)} onBlur={() => setFocusedLeftRow(null)} /></td>
-                                        <td>
-                                            <input type="number" value={it ? (it.discount || 0) : ''} onChange={(e) => updateItem(items.indexOf(it), 'discount', e.target.value)} onFocus={() => setFocusedLeftRow(rowIdx)} onBlur={() => setFocusedLeftRow(null)} /></td>
-                                        <td>₹{it ? (it.amount || 0).toFixed(2) : '0.00'}</td>
-                                        <td className="row-action-cell">
-                                            {(focusedLeftRow === rowIdx || checkedRows[rowIdx]) ? (
-                                                <div className="action-box">
-                                                    <button
-                                                        type="button"
-                                                        className={`row-check btn-mark`}
-                                                        onMouseDown={(e) => { e.preventDefault(); setChecked(rowIdx, true) }}
-                                                        aria-label={`Mark row ${rowIdx}`}
-                                                    >✓</button>
-                                                    <button
-                                                        type="button"
-                                                        className={`row-check btn-unmark ${checkedRows[rowIdx] ? 'active' : ''}`}
-                                                        onMouseDown={(e) => { e.preventDefault(); setChecked(rowIdx, false) }}
-                                                        aria-label={`Unmark row ${rowIdx}`}
-                                                    >❌</button>
-                                                </div>
-                                            ) : (
-                                                <span style={{ display: 'inline-block', width: 20, height: 20 }} />
-                                            )}
-                                        </td>
-                                    </tr>
-                                ))
-                            ) : (
-                                Array.from({ length: 7 }).map((_, rowIdx) => {
-                                    const it = items[rowIdx] || null
+                    <div className="table-scroll">
+                        <table className="enquiry-table">
+                            <thead>
+                                <tr>
+                                    <th>Enquiry/Order</th>
+                                    <th>Branch</th>
+                                    <th>Customer Name</th>
+                                    <th>Item Name</th>
+                                    <th>Brand</th>
+                                    <th>Qty</th>
+                                    <th>Rate</th>
+                                    <th>Discount</th>
+                                    <th>Amount</th>
+                                    <th className="actions-col"></th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                {Array.from({ length: items.length }).map((_, visRowIdx) => {
+                                    // Get all non-empty items
+                                    const nonEmptyItems = leftSearch
+                                        ? items.filter(it => (it.customer || '').toString().toLowerCase().includes((leftSearch || '').toLowerCase()))
+                                        : items.filter((it, i) => !isLeftRowEmpty(draftItems[i] ?? it ?? null));
+
+                                    // Get the item for this visible row
+                                    const itemData = nonEmptyItems[visRowIdx];
+                                    const origIdx = itemData ? items.indexOf(itemData) : -1;
+                                    const row = origIdx >= 0 ? (draftItems[origIdx] ?? items[origIdx] ?? null) : null;
+                                    const isEmpty = !row || isLeftRowEmpty(row);
+
                                     return (
-                                        <tr key={it ? (it.srNo || rowIdx) : `tpl-${rowIdx}`} className={`${focusedLeftRow === rowIdx ? 'row-focused' : ''} ${checkedRows[rowIdx] ? 'row-checked' : ''}`.trim()} onFocus={() => setFocusedLeftRow(rowIdx)} onBlur={() => setFocusedLeftRow(null)} tabIndex={-1}>
+                                        <tr
+                                            key={row ? (row.srNo || origIdx) : `empty-${visRowIdx}`}
+                                            className={`${focusedLeftRow === visRowIdx ? 'row-focused' : ''} ${isEmpty ? 'row-empty' : ''}`.trim()}
+                                            onFocus={() => !isEmpty && setFocusedLeftRow(visRowIdx)}
+                                            onBlur={() => { if (!actionClickRef.current) setFocusedLeftRow(null); setTimeout(() => setFocusedField({ row: null, field: null }), 200) }}
+                                            tabIndex={isEmpty ? -1 : -1}
+                                        >
                                             <td>
-                                                <select value={it ? (it.type || 'Enquiry') : 'Enquiry'} onChange={(e) => setItemField(rowIdx, 'type', e.target.value)} onFocus={() => setFocusedLeftRow(rowIdx)} onBlur={() => setFocusedLeftRow(null)}>
-                                                    <option>Enquiry</option>
-                                                    <option>Order</option>
-                                                </select>
-                                            </td>
-                                            <td>
-                                                <input value={it ? (it.branch || '') : ''} onChange={(e) => setItemField(rowIdx, 'branch', e.target.value)} onFocus={() => setFocusedLeftRow(rowIdx)} onBlur={() => setFocusedLeftRow(null)} /></td>
-                                            <td style={{ position: 'relative' }}>
-                                                
-                                                <input value={it ? (it.customer || '') : ''} onChange={(e) => setItemField(rowIdx, 'customer', e.target.value)} onFocus={() => { setFocusedLeftRow(rowIdx); setSuggestions(getSuggestionPool('customer').slice(0, 8)); setShowSuggestions({ visible: true, row: rowIdx, field: 'customer', id: `${rowIdx}-customer` }) }} onBlur={() => setTimeout(() => { setShowSuggestions({ visible: false, row: null, field: null, id: null }); setFocusedLeftRow(null) }, 150)} />
-                                                {showSuggestions.visible && showSuggestions.row === rowIdx && showSuggestions.field === 'customer' && suggestions && suggestions.length ? (
-                                                    <div className="suggestions-list" style={{ position: 'absolute', zIndex: 40 }}>
-                                                        {suggestions.map((s, i) => (
-                                                            <div key={i} className="suggestion-item" onMouseDown={() => chooseSuggestion(rowIdx, s, 'customer')}>{s}</div>
-                                                        ))}
-                                                    </div>
-                                                ) : null}
-                                            </td>
-                                            <td style={{ position: 'relative' }}>
-                                                <input
-                                                    value={it ? it.itemName : ''}
-                                                    onChange={(e) => setItemField(rowIdx, 'itemName', e.target.value)}
-                                                    onFocus={() => {
-                                                        setFocusedLeftRow(rowIdx)
-                                                        setSuggestions(getSuggestionPool().slice(0, 8));
-                                                        setShowSuggestions({ visible: true, row: rowIdx, field: 'item' })
-                                                    }}
-                                                    onBlur={() => setTimeout(() => { setShowSuggestions({ visible: false, row: null, field: null }); setFocusedLeftRow(null) }, 150)}
-                                                />
-                                                {showSuggestions.visible && showSuggestions.row === rowIdx && showSuggestions.field === 'item' && suggestions && suggestions.length ? (
-                                                    <div className="suggestions-list" style={{ position: 'absolute', zIndex: 40 }}>
-                                                        {suggestions.map((s, i) => (
-                                                            <div key={i} className="suggestion-item" onMouseDown={() => chooseSuggestion(rowIdx, s)}>{s}</div>
-                                                        ))}
-                                                    </div>
+                                                {!isEmpty ? (
+                                                    <select
+                                                        value={row ? (row.type || 'Enquiry') : 'Enquiry'}
+                                                        onChange={(e) => origIdx >= 0 && setItemField(origIdx, 'type', e.target.value)}
+                                                        onFocus={() => { setFocusedLeftRow(visRowIdx); setFocusedField({ row: origIdx, field: 'type' }) }}
+                                                        onBlur={() => { if (!actionClickRef.current) setFocusedLeftRow(null) }}
+                                                    >
+                                                        <option>Enquiry</option>
+                                                        <option>Order</option>
+                                                    </select>
                                                 ) : null}
                                             </td>
                                             <td>
-                                                <input value={it ? it.brand : ''} onChange={(e) => setItemField(rowIdx, 'brand', e.target.value)} onFocus={() => setFocusedLeftRow(rowIdx)} onBlur={() => setFocusedLeftRow(null)} /></td>
+                                                {!isEmpty ? (
+                                                    <input
+                                                        value={row ? (row.branch || '') : ''}
+                                                        onChange={(e) => origIdx >= 0 && setItemField(origIdx, 'branch', e.target.value)}
+                                                        onFocus={() => { setFocusedLeftRow(visRowIdx); setFocusedField({ row: origIdx, field: 'branch' }) }}
+                                                        onBlur={() => { if (!actionClickRef.current) setFocusedLeftRow(null) }}
+                                                    />
+                                                ) : null}
+                                            </td>
+                                            <td style={{ position: 'relative' }}>
+                                                {!isEmpty ? (
+                                                    <>
+                                                        <input
+                                                            value={row ? (row.customer || '') : ''}
+                                                            onChange={(e) => origIdx >= 0 && setItemField(origIdx, 'customer', e.target.value)}
+                                                            onFocus={() => { setFocusedLeftRow(visRowIdx); setFocusedField({ row: origIdx, field: 'customer' }); setSuggestions(getSuggestionPool('customer').slice(0, 8)); setShowSuggestions({ visible: true, row: origIdx, field: 'customer', id: `${origIdx}-customer` }) }}
+                                                            onBlur={() => setTimeout(() => { setShowSuggestions({ visible: false, row: null, field: null, id: null }); if (!actionClickRef.current) setFocusedLeftRow(null) }, 150)}
+                                                        />
+                                                        {showSuggestions.visible && showSuggestions.row === origIdx && showSuggestions.field === 'customer' && suggestions && suggestions.length ? (
+                                                            <div className="suggestions-list" style={{ position: 'absolute', zIndex: 40 }}>
+                                                                {suggestions.map((s, i) => (
+                                                                    <div key={i} className="suggestion-item" onMouseDown={() => chooseSuggestion(origIdx, s, 'customer')}>{s}</div>
+                                                                ))}
+                                                            </div>
+                                                        ) : null}
+                                                    </>
+                                                ) : null}
+                                            </td>
+                                            <td style={{ position: 'relative' }}>
+                                                {!isEmpty ? (
+                                                    <>
+                                                        <input
+                                                            value={row ? row.itemName : ''}
+                                                            onChange={(e) => {
+                                                                const val = e.target.value
+                                                                origIdx >= 0 && setItemField(origIdx, 'itemName', val)
+                                                                const pool = getSuggestionPool('item')
+                                                                const q = (val || '').toString().trim().toLowerCase()
+                                                                const list = q ? pool.filter(p => p.toLowerCase().includes(q)).slice(0, 8) : pool.slice(0, 8)
+                                                                setSuggestions(list)
+                                                                setShowSuggestions({ visible: true, row: origIdx, field: 'item' })
+                                                            }}
+                                                            onFocus={() => {
+                                                                setFocusedLeftRow(visRowIdx)
+                                                                setFocusedField({ row: origIdx, field: 'itemName' })
+                                                                setSuggestions(getSuggestionPool('item').slice(0, 8))
+                                                                setShowSuggestions({ visible: true, row: origIdx, field: 'item' })
+                                                            }}
+                                                            onBlur={() => setTimeout(() => { setShowSuggestions({ visible: false, row: null, field: null }); if (!actionClickRef.current) setFocusedLeftRow(null) }, 200)}
+                                                        />
+                                                        {showSuggestions.visible && showSuggestions.row === origIdx && showSuggestions.field === 'item' && suggestions && suggestions.length ? (
+                                                            <div className="suggestions-list" style={{ position: 'absolute', zIndex: 40 }}>
+                                                                {suggestions.map((s, i) => (
+                                                                    <div key={i} className="suggestion-item" onMouseDown={() => chooseSuggestion(origIdx, s)}>{s}</div>
+                                                                ))}
+                                                            </div>
+                                                        ) : null}
+                                                    </>
+                                                ) : null}
+                                            </td>
                                             <td>
-                                                <input type="number" value={it ? it.qty : ''} onChange={(e) => setItemField(rowIdx, 'qty', e.target.value)} onFocus={() => setFocusedLeftRow(rowIdx)} onBlur={() => setFocusedLeftRow(null)} /></td>
+                                                {!isEmpty ? (
+                                                    <input
+                                                        value={row ? row.brand : ''}
+                                                        onChange={(e) => origIdx >= 0 && setItemField(origIdx, 'brand', e.target.value)}
+                                                        onFocus={() => { setFocusedLeftRow(visRowIdx); setFocusedField({ row: origIdx, field: 'brand' }) }}
+                                                        onBlur={() => { if (!actionClickRef.current) setFocusedLeftRow(null) }}
+                                                    />
+                                                ) : null}
+                                            </td>
                                             <td>
-                                                <input type="number" value={it ? it.rate : ''} onChange={(e) => setItemField(rowIdx, 'rate', e.target.value)} onFocus={() => setFocusedLeftRow(rowIdx)} onBlur={() => setFocusedLeftRow(null)} /></td>
+                                                {!isEmpty ? (
+                                                    <input
+                                                        type="number"
+                                                        value={row ? row.qty : ''}
+                                                        onChange={(e) => origIdx >= 0 && setItemField(origIdx, 'qty', e.target.value)}
+                                                        onFocus={() => { setFocusedLeftRow(visRowIdx); setFocusedField({ row: origIdx, field: 'qty' }) }}
+                                                        onBlur={() => { if (!actionClickRef.current) setFocusedLeftRow(null) }}
+                                                    />
+                                                ) : null}
+                                            </td>
                                             <td>
-                                                <input type="number" value={it ? (it.discount || 0) : ''} onChange={(e) => setItemField(rowIdx, 'discount', e.target.value)} onFocus={() => setFocusedLeftRow(rowIdx)} onBlur={() => setFocusedLeftRow(null)} /></td>
-                                            <td>₹{it ? (it.amount || 0).toFixed(2) : '0.00'}</td>
+                                                {!isEmpty ? (
+                                                    <input
+                                                        type="number"
+                                                        value={row ? row.rate : ''}
+                                                        onChange={(e) => origIdx >= 0 && setItemField(origIdx, 'rate', e.target.value)}
+                                                        onFocus={() => { setFocusedLeftRow(visRowIdx); setFocusedField({ row: origIdx, field: 'rate' }) }}
+                                                        onBlur={() => { if (!actionClickRef.current) setFocusedLeftRow(null) }}
+                                                    />
+                                                ) : null}
+                                            </td>
+                                            <td>
+                                                {!isEmpty ? (
+                                                    <input
+                                                        type="number"
+                                                        value={row ? (row.discount || 0) : ''}
+                                                        onChange={(e) => origIdx >= 0 && setItemField(origIdx, 'discount', e.target.value)}
+                                                        onFocus={() => { setFocusedLeftRow(visRowIdx); setFocusedField({ row: origIdx, field: 'discount' }) }}
+                                                        onBlur={() => { if (!actionClickRef.current) setFocusedLeftRow(null) }}
+                                                    />
+                                                ) : null}
+                                            </td>
+                                            <td>{!isEmpty && row ? `₹${(row.amount || 0).toFixed(2)}` : ''}</td>
                                             <td className="row-action-cell">
-                                                {(focusedLeftRow === rowIdx || checkedRows[rowIdx]) ? (
+                                                {!isEmpty && focusedLeftRow === visRowIdx ? (
                                                     <div className="action-box">
                                                         <button
                                                             type="button"
                                                             className={`row-check btn-mark`}
-                                                            onMouseDown={(e) => { e.preventDefault(); setChecked(rowIdx, true) }}
-                                                            aria-label={`Mark row ${rowIdx}`}
+                                                            onMouseDown={(e) => { e.preventDefault(); actionClickRef.current = true; commitRow(origIdx); setFocusedField({ row: null, field: null }); setFocusedLeftRow(null); setTimeout(() => { actionClickRef.current = false }, 0) }}
+                                                            aria-label={`Mark row ${visRowIdx}`}
                                                         >✓</button>
                                                         <button
                                                             type="button"
-                                                            className={`row-check btn-unmark ${checkedRows[rowIdx] ? 'active' : ''}`}
-                                                            onMouseDown={(e) => { e.preventDefault(); setChecked(rowIdx, false) }}
-                                                            aria-label={`Unmark row ${rowIdx}`}
+                                                            className={`row-check btn-unmark`}
+                                                            onMouseDown={(e) => { e.preventDefault(); actionClickRef.current = true; discardAt(origIdx); setFocusedField({ row: null, field: null }); setFocusedLeftRow(null); setTimeout(() => { actionClickRef.current = false }, 0) }}
+                                                            aria-label={`Unmark row ${visRowIdx}`}
                                                         >❌</button>
                                                     </div>
-                                                ) : (
-                                                    <span style={{ display: 'inline-block', width: 20, height: 20 }} />
-                                                )}
+                                                ) : null}
                                             </td>
                                         </tr>
-                                    )
-                                })
-                            )}
-                        </tbody>
-                    </table>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
+                    {/* Fixed Add Row - stays at bottom with high z-index */}
+                    <div className="fixed-add-row">
+                        <table className="enquiry-table add-row-table">
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        <select
+                                            value={addRow.type}
+                                            onChange={(e) => setAddField("type", e.target.value)}
+                                        >
+                                            <option>Enquiry</option>
+                                            <option>Order</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <input
+                                            placeholder="Branch"
+                                            value={addRow.branch}
+                                            onChange={(e) => setAddField("branch", e.target.value)}
+                                        />
+                                    </td>
+                                    {/* Customer Suggestion Field */}
+                                    {/* <td style={{ position: "relative" }}>
+                                        <input
+                                            placeholder="Customer"
+                                            value={addRow.customer}
+                                            onChange={(e) => onAddRowInputChange("customer", e.target.value)}
+                                            onFocus={() => {
+                                                setSuggestions(getSuggestionPool("customer").slice(0, 8));
+                                                setShowSuggestions({
+                                                    visible: true,
+                                                    row: "add",
+                                                    field: "customer",
+                                                });
+                                            }}
+                                            onBlur={() =>
+                                                setTimeout(
+                                                    () =>
+                                                        setShowSuggestions({ visible: false, row: null, field: null }),
+                                                    200
+                                                )
+                                            }
+                                        />
+                                        {showSuggestions.visible &&
+                                            showSuggestions.row === "add" &&
+                                            showSuggestions.field === "customer" &&
+                                            suggestions?.length && (
+                                                <div className="suggestions-list" style={{ position: "absolute", zIndex: 40 }}>
+                                                    {suggestions.map((s, i) => (
+                                                        <div
+                                                            key={i}
+                                                            className="suggestion-item"
+                                                            onMouseDown={() => chooseSuggestion("add", s, "customer")}
+                                                        >
+                                                            {s}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                    </td>
+                                    <td style={{ position: "relative" }}>
+                                        <input
+                                            placeholder="Item Name"
+                                            value={addRow.itemName}
+                                            onChange={(e) => onAddRowInputChange("itemName", e.target.value)}
+                                            onFocus={() => {
+                                                setSuggestions(getSuggestionPool("item").slice(0, 8));
+                                                setShowSuggestions({
+                                                    visible: true,
+                                                    row: "add",
+                                                    field: "item",
+                                                });
+                                            }}
+                                            onBlur={() =>
+                                                setTimeout(
+                                                    () =>
+                                                        setShowSuggestions({ visible: false, row: null, field: null }),
+                                                    200
+                                                )
+                                            }
+                                        />
+                                        {showSuggestions.visible &&
+                                            showSuggestions.row === "add" &&
+                                            showSuggestions.field === "item" &&
+                                            suggestions?.length && (
+                                                <div className="suggestions-list" style={{ position: "absolute", zIndex: 40 }}>
+                                                    {suggestions.map((s, i) => (
+                                                        <div
+                                                            key={i}
+                                                            className="suggestion-item"
+                                                            onMouseDown={() => chooseSuggestion("add", s, "item")}
+                                                        >
+                                                            {s}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                    </td> */}
+
+                                    <td style={{ position: "relative" }}>
+                                        <input
+                                            placeholder="Customer"
+                                            value={addRow.customer}
+                                            onChange={(e) => onAddRowInputChange("customer", e.target.value)}
+                                            onFocus={() => {
+                                                const pool = getCustomerPool();
+                                                setSuggestions(pool.slice(0, 8));
+                                                setShowSuggestions({ visible: true, row: "add", field: "customer" });
+                                            }}
+                                            onBlur={() =>
+                                                setTimeout(() =>
+                                                    setShowSuggestions({ visible: false, row: null, field: null }),
+                                                    200
+                                                )
+                                            }
+                                        />
+                                        {showSuggestions.visible &&
+                                            showSuggestions.row === "add" &&
+                                            showSuggestions.field === "customer" &&
+                                            suggestions.length > 0 && (
+                                                <div className="suggestions-list" style={{ position: "absolute", zIndex: 40 }}>
+                                                    {suggestions.map((s, i) => (
+                                                        <div
+                                                            key={i}
+                                                            className="suggestion-item"
+                                                            onMouseDown={() => chooseSuggestion("add", s, "customer")}
+                                                        >
+                                                            {s}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                    </td>
+
+                                    <td style={{ position: "relative" }}>
+                                        <input
+                                            placeholder="Item Name"
+                                            value={addRow.itemName}
+                                            onChange={(e) => onAddRowInputChange("itemName", e.target.value)}
+                                            onFocus={() => {
+                                                const pool = getItemPool();
+                                                setSuggestions(pool.slice(0, 8));
+                                                setShowSuggestions({ visible: true, row: "add", field: "itemName" });
+                                            }}
+                                            onBlur={() =>
+                                                setTimeout(() =>
+                                                    setShowSuggestions({ visible: false, row: null, field: null }),
+                                                    200
+                                                )
+                                            }
+                                        />
+                                        {showSuggestions.visible &&
+                                            showSuggestions.row === "add" &&
+                                            showSuggestions.field === "itemName" &&
+                                            suggestions.length > 0 && (
+                                                <div className="suggestions-list" style={{ position: "absolute", zIndex: 40 }}>
+                                                    {suggestions.map((s, i) => (
+                                                        <div
+                                                            key={i}
+                                                            className="suggestion-item"
+                                                            onMouseDown={() => chooseSuggestion("add", s, "itemName")}
+                                                        >
+                                                            {s}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                    </td>
+
+                                    <td>
+                                        <input
+                                            placeholder="Brand"
+                                            value={addRow.brand}
+                                            onChange={(e) => setAddField("brand", e.target.value)}
+                                        />
+                                    </td>
+                                    <td>
+                                        <input
+                                            placeholder="Qty"
+                                            type="number"
+                                            value={addRow.qty || ""}
+                                            onChange={(e) => setAddField("qty", e.target.value)}
+                                        />
+                                    </td>
+                                    <td>
+                                        <input
+                                            placeholder="Rate"
+                                            type="number"
+                                            value={addRow.rate || ""}
+                                            onChange={(e) => setAddField("rate", e.target.value)}
+                                        />
+                                    </td>
+                                    <td>
+                                        <input
+                                            placeholder="Disc"
+                                            type="number"
+                                            value={addRow.discount || ""}
+                                            onChange={(e) => setAddField("discount", e.target.value)}
+                                        />
+                                    </td>
+                                    <td>
+                                        ₹
+                                        {(
+                                            +(
+                                                (Number(addRow.qty) || 0) * (Number(addRow.rate) || 0)
+                                            ).toFixed(2)
+                                        ).toFixed(2)}
+                                    </td>
+                                    <td className="row-action-cell">
+                                        <button className="primary add-btn" onClick={addNewRow}>
+                                            Add
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
                 <div className="right-panel card">
                     <div className="right-header">
                         <div style={{ position: 'relative' }}>
-                            <input className="right-search" placeholder="Customer name" value={search.customer} onChange={e => onSearchCustomerInputChange(e.target.value)} onFocus={() => { setSuggestions(getSuggestionPool('customer').slice(0, 8)); setShowSuggestions({ visible: true, row: 'search', field: 'customer', id: `search-customer` }) }} onBlur={() => setTimeout(() => setShowSuggestions({ visible: false, row: null, field: null, id: null }), 150)} />
+                            <input className="right-search" placeholder="Customer name" value={search.customer} onChange={e => onSearchCustomerInputChange(e.target.value)} onFocus={() => { setSuggestions(getSuggestionPool('customer').slice(0, 8)); setShowSuggestions({ visible: true, row: 'search', field: 'customer', id: `search-customer` }) }} onBlur={() => setTimeout(() => setShowSuggestions({ visible: false, row: null, field: null, id: null }), 200)} />
                             {showSuggestions.visible && showSuggestions.row === 'search' && showSuggestions.field === 'customer' && suggestions && suggestions.length ? (
                                 <div className="suggestions-list" style={{ position: 'absolute', zIndex: 40 }}>
                                     {suggestions.map((s, i) => (
@@ -692,7 +1025,7 @@ const Enquiry = () => {
                             ) : null}
                         </div>
                         <div style={{ position: 'relative' }}>
-                            <input className="right-search" placeholder="Item name" value={search.item} onChange={e => onSearchItemInputChange(e.target.value)} onFocus={() => { setSuggestions(getSuggestionPool('item').slice(0, 8)); setShowSuggestions({ visible: true, row: 'search', field: 'item', id: `search-item` }) }} onBlur={() => setTimeout(() => setShowSuggestions({ visible: false, row: null, field: null, id: null }), 150)} />
+                            <input className="right-search" placeholder="Item name" value={search.item} onChange={e => onSearchItemInputChange(e.target.value)} onFocus={() => { setSuggestions(getSuggestionPool('item').slice(0, 8)); setShowSuggestions({ visible: true, row: 'search', field: 'item', id: `search-item` }) }} onBlur={() => setTimeout(() => setShowSuggestions({ visible: false, row: null, field: null, id: null }), 200)} />
                             {showSuggestions.visible && showSuggestions.row === 'search' && showSuggestions.field === 'item' && suggestions && suggestions.length ? (
                                 <div className="suggestions-list" style={{ position: 'absolute', zIndex: 40 }}>
                                     {suggestions.map((s, i) => (
@@ -794,7 +1127,7 @@ const Enquiry = () => {
                                                 <th>Location</th>
                                                 <th>Stock</th>
                                             </tr>
-                                        </thead>                                
+                                        </thead>
                                         <tbody>
                                             {Array.from({ length: 6 }).map((_, i) => {
                                                 const rows = filteredStock || locationStockData
@@ -815,8 +1148,6 @@ const Enquiry = () => {
                         </div>
                     </div>
                 </div>
-
-
 
             </div>
             <div className="sales-container">

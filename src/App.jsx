@@ -76,7 +76,7 @@ function App() {
           className={`form-toggle-buttons small ${formType === "enquiry" ? "active" : ""}`}
           onClick={() => setFormType("enquiry")}
         >
-          Enquiry
+          Enquiry/Order
         </button>
         <button
           className={`form-toggle-buttons small ${formType === "Trade" ? "active" : ""}`}
