@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react'
 import './Enquiry.css'
 
+// Constants
+const NUMERIC_FIELDS = new Set(['qty', 'rate', 'del', 'mum', 'com', 'hyd', 'ahm', 'readyDel', 'readyMum', 'mrp', 'stock', 'discount'])
 
 const stockSummaryData = [
     {
@@ -90,6 +92,16 @@ const salesData = [
     { date: "2025-10-14", customerName: "AK Traders", item: "6205ZZ Bearing", brand: "JAF", qty: 8, price: 2750, total: 22000 },
 ];
 
+// Helper functions
+const calculateAmount = (qty, rate) => +((parseFloat(qty) || 0) * (parseFloat(rate) || 0)).toFixed(2)
+
+const parseNumericValue = (val) => {
+    const num = val === '' ? 0 : parseFloat(val)
+    return Number.isNaN(num) ? 0 : num
+}
+
+const ensureArray = (arr) => Array.isArray(arr) ? arr : []
+
 const Enquiry = () => {
     const [meta, setMeta] = useState({ enqNo: '', date: new Date().toISOString().slice(0, 10), customer: '', contact: '' })
     const [search, setSearch] = useState({ customer: '', item: '', qty: '' })
@@ -141,40 +153,43 @@ const Enquiry = () => {
 
     const setItemField = (idx, field, val) => {
         setDraftItems(prev => {
-            const copy = Array.isArray(prev) ? prev.map(it => (it ? { ...it } : it)) : []
+            const copy = ensureArray(prev).map(it => (it ? { ...it } : it))
             while (copy.length <= idx) copy.push(undefined)
-            const base = copy[idx] ? { ...copy[idx] } : (items[idx] ? { ...items[idx] } : { ...dummyRow, srNo: idx + 1 })
-            const numericFields = new Set(['qty', 'rate', 'del', 'mum', 'com', 'hyd', 'ahm', 'readyDel', 'readyMum', 'mrp', 'stock', 'discount'])
-            if (numericFields.has(field)) {
-                const num = val === '' ? 0 : parseFloat(val)
-                base[field] = Number.isNaN(num) ? 0 : num
-            } else {
-                base[field] = val
-            }
-            base.amount = +((parseFloat(base.qty) || 0) * (parseFloat(base.rate) || 0)).toFixed(2)
-            copy[idx] = base
+            
+            const base = copy[idx] || items[idx] || { ...dummyRow, srNo: idx + 1 }
+            const newItem = { ...base }
+            
+            newItem[field] = NUMERIC_FIELDS.has(field) ? parseNumericValue(val) : val
+            newItem.amount = calculateAmount(newItem.qty, newItem.rate)
+            
+            copy[idx] = newItem
             return copy
         })
     }
 
     const commitRow = (idx) => {
         setItems(prev => {
-            const next = Array.isArray(prev) ? prev.map(it => ({ ...it })) : []
+            const next = ensureArray(prev).map(it => ({ ...it }))
             while (next.length <= idx) next.push({ ...dummyRow, srNo: next.length + 1 })
-            const src = draftItems[idx] ? { ...draftItems[idx] } : (next[idx] ? { ...next[idx] } : { ...dummyRow, srNo: idx + 1 })
-            const numericFields = new Set(['qty', 'rate', 'del', 'mum', 'com', 'hyd', 'ahm', 'readyDel', 'readyMum', 'mrp', 'stock', 'discount'])
-            numericFields.forEach(f => {
-                if (src[f] !== undefined) src[f] = src[f] === '' ? 0 : Number(src[f]) || 0
+            
+            const src = draftItems[idx] || next[idx] || { ...dummyRow, srNo: idx + 1 }
+            const newItem = { ...src }
+            
+            // Ensure all numeric fields are numbers
+            NUMERIC_FIELDS.forEach(f => {
+                if (newItem[f] !== undefined) {
+                    newItem[f] = newItem[f] === '' ? 0 : Number(newItem[f]) || 0
+                }
             })
-            const qty = Number(src.qty || 0)
-            const rate = Number(src.rate || 0)
-            src.amount = +((qty || 0) * (rate || 0)).toFixed(2)
-            src.srNo = src.srNo || (idx + 1)
-            next[idx] = src
+            
+            newItem.amount = calculateAmount(newItem.qty, newItem.rate)
+            newItem.srNo = newItem.srNo || (idx + 1)
+            next[idx] = newItem
             return next
         })
+        
         setDraftItems(prev => {
-            const copy = Array.isArray(prev) ? prev.slice() : []
+            const copy = ensureArray(prev).slice()
             if (copy.length > idx) copy[idx] = undefined
             return copy
         })
@@ -182,106 +197,95 @@ const Enquiry = () => {
 
     const discardRow = (idx) => {
         setDraftItems(prev => {
-            const copy = Array.isArray(prev) ? prev.slice() : []
+            const copy = ensureArray(prev).slice()
             if (copy.length > idx) copy[idx] = undefined
             return copy
         })
     }
 
-    // discard only currently focused field for the row if available; otherwise discard the whole row draft
     const discardAt = (idx) => {
-        const ff = focusedField
-        if (!ff || ff.row !== idx || !ff.field) {
+        const { row, field } = focusedField
+        
+        if (!field || row !== idx) {
             return discardRow(idx)
         }
-        const field = ff.field
+        
         setDraftItems(prev => {
-            const copy = Array.isArray(prev) ? prev.map(it => (it ? { ...it } : it)) : []
+            const copy = ensureArray(prev).map(it => (it ? { ...it } : it))
             if (!copy[idx]) return copy
-            const original = items[idx] ? { ...items[idx] } : { ...dummyRow, srNo: (items[idx]?.srNo) || (idx + 1) }
+            
+            const original = items[idx] || { ...dummyRow, srNo: items[idx]?.srNo || (idx + 1) }
             copy[idx][field] = original[field]
+            
             if (field === 'qty' || field === 'rate') {
-                const qty = Number(copy[idx].qty || 0)
-                const rate = Number(copy[idx].rate || 0)
-                copy[idx].amount = +((qty || 0) * (rate || 0)).toFixed(2)
+                copy[idx].amount = calculateAmount(copy[idx].qty, copy[idx].rate)
             }
             return copy
         })
     }
 
-    // item name suggestion helpers
     const getSuggestionPool = (type = 'item') => {
         const pool = new Set()
+        
         if (type === 'item') {
-            items.forEach(it => { if (it.itemName) pool.add(it.itemName) })
-            stockSummaryData.forEach(it => { if (it.item) pool.add(it.item) })
-            priceAvailabilityData.forEach(it => { if (it.item) pool.add(it.item) })
-            locationStockData.forEach(it => { if (it.itemName) pool.add(it.itemName) })
+            [
+                ...items.map(it => it.itemName),
+                ...stockSummaryData.map(it => it.item),
+                ...priceAvailabilityData.map(it => it.item),
+                ...locationStockData.map(it => it.itemName)
+            ].filter(Boolean).forEach(item => pool.add(item))
         } else if (type === 'customer') {
             items.forEach(it => { if (it.customer) pool.add(it.customer) })
-            if (meta && meta.customer) pool.add(meta.customer)
+            if (meta?.customer) pool.add(meta.customer)
+            
             try {
-                const raw = localStorage.getItem('customers')
-                if (raw) {
-                    const parsed = JSON.parse(raw)
-                    if (Array.isArray(parsed)) parsed.forEach(p => {
-                        const name = (p && (p['Customer Name'] || p.name || p.customerName || p.fullName || p.customer || ''))
-                        if (name) pool.add(name)
-                    })
-                }
+                const customers = JSON.parse(localStorage.getItem('customers') || '[]')
+                customers.forEach(c => {
+                    const name = c?.['Customer Name'] || c?.name || c?.customerName || c?.fullName || c?.customer
+                    if (name) pool.add(name)
+                })
             } catch (err) { }
         }
         return Array.from(pool)
     }
 
-   // sales suggestions: pool of item names and brands from salesData
     const getSalesSuggestionPool = (type = 'q') => {
         const pool = new Set()
+        
         if (type === 'q') {
-            salesData.forEach(s => { if (s.item) pool.add(s.item); if (s.brand) pool.add(s.brand) })
+            salesData.forEach(s => {
+                if (s.item) pool.add(s.item)
+                if (s.brand) pool.add(s.brand)
+            })
         } else if (type === 'customer') {
             salesData.forEach(s => { if (s.customerName) pool.add(s.customerName) })
-            // include customers from customer pool
+            
             try {
-                const raw = localStorage.getItem('customers')
-                if (raw) {
-                    const parsed = JSON.parse(raw)
-                    if (Array.isArray(parsed)) parsed.forEach(p => {
-                        const name = (p && (p['Customer Name'] || p.name || p.customerName || p.fullName || p.customer || ''))
-                        if (name) pool.add(name)
-                    })
-                }
+                const customers = JSON.parse(localStorage.getItem('customers') || '[]')
+                customers.forEach(c => {
+                    const name = c?.['Customer Name'] || c?.name || c?.customerName || c?.fullName || c?.customer
+                    if (name) pool.add(name)
+                })
             } catch (err) { }
         }
         return Array.from(pool)
+    }
+
+    const showFilteredSuggestions = (pool, query, row, field) => {
+        const q = (query || '').toString().trim().toLowerCase()
+        const filtered = q ? pool.filter(p => p.toLowerCase().includes(q)).slice(0, 8) : pool.slice(0, 8)
+        setSuggestions(filtered)
+        setShowSuggestions({ visible: true, row, field, id: `${row}-${field}` })
     }
 
     const onSalesQueryChange = (val) => {
         setSalesFilter(s => ({ ...s, q: val }))
-        const pool = getSalesSuggestionPool('q')
-        const q = (val || '').toString().trim().toLowerCase()
-        if (!q) {
-            setSuggestions(pool.slice(0, 8))
-            setShowSuggestions({ visible: true, row: 'sales', field: 'q', id: `sales-q` })
-            return
-        }
-        const filtered = pool.filter(p => p.toLowerCase().includes(q)).slice(0, 8)
-        setSuggestions(filtered)
-        setShowSuggestions({ visible: true, row: 'sales', field: 'q', id: `sales-q` })
+        showFilteredSuggestions(getSalesSuggestionPool('q'), val, 'sales', 'q')
     }
 
     const onSalesCustomerChange = (val) => {
         setSalesFilter(s => ({ ...s, customer: val }))
-        const pool = getSalesSuggestionPool('customer')
-        const q = (val || '').toString().trim().toLowerCase()
-        if (!q) {
-            setSuggestions(pool.slice(0, 8))
-            setShowSuggestions({ visible: true, row: 'sales', field: 'customer', id: `sales-customer` })
-            return
-        }
-        const filtered = pool.filter(p => p.toLowerCase().includes(q)).slice(0, 8)
-        setSuggestions(filtered)
-        setShowSuggestions({ visible: true, row: 'sales', field: 'customer', id: `sales-customer` })
+        showFilteredSuggestions(getSalesSuggestionPool('customer'), val, 'sales', 'customer')
     }
     
 
@@ -326,30 +330,12 @@ const Enquiry = () => {
 
     const onSearchCustomerInputChange = (val) => {
         setSearch(s => ({ ...s, customer: val }))
-        const pool = getSuggestionPool('customer')
-        const q = (val || '').toString().trim().toLowerCase()
-        if (!q) {
-            setSuggestions(pool.slice(0, 8))
-            setShowSuggestions({ visible: true, row: 'search', field: 'customer', id: `search-customer` })
-            return
-        }
-        const filtered = pool.filter(p => p.toLowerCase().includes(q)).slice(0, 8)
-        setSuggestions(filtered)
-        setShowSuggestions({ visible: true, row: 'search', field: 'customer', id: `search-customer` })
+        showFilteredSuggestions(getSuggestionPool('customer'), val, 'search', 'customer')
     }
 
     const onSearchItemInputChange = (val) => {
         setSearch(s => ({ ...s, item: val }))
-        const pool = getSuggestionPool('item')
-        const q = (val || '').toString().trim().toLowerCase()
-        if (!q) {
-            setSuggestions(pool.slice(0, 8))
-            setShowSuggestions({ visible: true, row: 'search', field: 'item', id: `search-item` })
-            return
-        }
-        const filtered = pool.filter(p => p.toLowerCase().includes(q)).slice(0, 8)
-        setSuggestions(filtered)
-        setShowSuggestions({ visible: true, row: 'search', field: 'item', id: `search-item` })
+        showFilteredSuggestions(getSuggestionPool('item'), val, 'search', 'item')
     }
 
     const chooseSuggestion = (row, val, field = 'item') => {

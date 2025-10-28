@@ -39,11 +39,8 @@
   border-radius: 10px;
   background: linear-gradient(180deg, #ffffff, var(--surface));
 }
-.left-panel {
-  background: linear-gradient(180deg, #ffffff, var(--surface));
-  position: relative;
-}
 
+.left-panel,
 .right-panel {
   background: linear-gradient(180deg, #ffffff, var(--surface));
   position: relative;
@@ -274,17 +271,9 @@
   border-radius: 10px;
   box-shadow: 0 1px 4px rgba(15, 23, 42, 0.04);
 }
-.right-search {
-  padding: 8px 10px;
-  border: 1px solid var(--border);
-  background: #fff;
-  width: 180px;
-  box-sizing: border-box;
-  border-radius: 8px;
-  transition: box-shadow 160ms ease, border-color 160ms ease;
-}
+
+.right-search,
 .left-search {
-  padding: 6px 8px;
   border: 1px solid var(--border);
   background: #fff;
   width: 180px;
@@ -293,7 +282,16 @@
   transition: box-shadow 160ms ease, border-color 160ms ease;
 }
 
-.right-search:focus, .left-search:focus {
+.right-search {
+  padding: 8px 10px;
+}
+
+.left-search {
+  padding: 6px 8px;
+}
+
+.right-search:focus, 
+.left-search:focus {
   outline: none;
   border-color: #bcd1ff;
   box-shadow: 0 0 0 3px rgba(15, 98, 254, 0.12);
@@ -346,57 +344,40 @@
   margin-top: 20px;
 }
 
-/* Price & Availability badge heading */
+/* Badge heading - shared styles */
+.nested-bottom .nested-col:first-child::before,
+.nested-top::before,
+.nested-bottom .nested-col:last-child::before {
+  position: absolute;
+  top: -10px;
+  left: 12px;
+  color: #0b3d1f;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  box-shadow: var(--shadow-sm);
+  z-index: 10;
+}
+
+/* Price & Availability badge */
 .nested-bottom .nested-col:first-child::before {
   content: "🪙 Price & Availability";
-  position: absolute;
-  top: -10px;
-  left: 12px;
-  /* light badge color */
   background: linear-gradient(135deg, #a6e8c0, #89f4af);
-  color: #0b3d1f;
-  padding: 3px 10px;
-  border-radius: 12px;
-  font-size: 11px;
-  font-weight: 600;
-  box-shadow: var(--shadow-sm);
-  z-index: 10;
 }
 
-/* Stock Summary badge heading */
+/* Stock Summary badge */
 .nested-top::before {
   content: "📊 Stock Summary";
-  position: absolute;
-  top: -10px;
-  left: 12px;
-  /* light badge color */
   background: linear-gradient(135deg, #64be88, #59ad76);
-  color: #0b3d1f;
-  padding: 3px 10px;
-  border-radius: 12px;
-  font-size: 11px;
-  font-weight: 600;
-  box-shadow: var(--shadow-sm);
-  z-index: 10;
 }
 
-/* Location Stock badge heading */
+/* Location Stock badge */
 .nested-bottom .nested-col:last-child::before {
   content: "📍 Location Stock";
-  position: absolute;
-  top: -10px;
-  left: 12px;
-  /* light badge color */
   background: linear-gradient(135deg, #64be88, #59ad76);
-  color: #0b3d1f;
-  padding: 3px 10px;
-
-  border-radius: 12px;
-  font-size: 11px;
-  font-weight: 600;
-  box-shadow: var(--shadow-sm);
-  z-index: 10;
 }
+
 .table-scroll {
   overflow: auto;
   background: transparent;
@@ -548,18 +529,22 @@
   height:16px;
   font-size:12px;
 }
+
+.action-box .btn-mark,
+.action-box .btn-unmark {
+  color: #ffffff;
+  border: none;
+  border-radius: 4px;
+}
+
 .action-box .btn-mark{
-  background: #16a34a; /* green */
-  color: #ffffff;
-  border: none;
-  border-radius: 4px;
+  background: #16a34a;
 }
+
 .action-box .btn-unmark{
-  background: #dc2626; /* red */
-  color: #ffffff;
-  border: none;
-  border-radius: 4px;
+  background: #dc2626;
 }
+
 .action-box .btn-unmark.active{
   background: #b91c1c;
   color: #ffffff;
@@ -677,10 +662,6 @@ button:hover { box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06); }
   .sales-table th,
   .sales-table td {
     padding: 8px 6px;
-    font-size: 12px;
-  }
-  .sales-table th,
-  .sales-table td {
     text-align: left;
   }
 }
@@ -693,7 +674,9 @@ button:hover { box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06); }
   margin:8px 0 12px 0;
   padding-top: 8px;
 }
-.sales-controls input[type="text"], .sales-controls select{
+
+.sales-controls input[type="text"], 
+.sales-controls select{
   padding:8px 10px;
   border:1px solid var(--border);
   background:#fff;
@@ -704,13 +687,13 @@ button:hover { box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06); }
   border-radius: 8px;
   transition: box-shadow 160ms ease, border-color 160ms ease;
 }
-.sales-controls input[type="text"]:focus, .sales-controls select:focus{
+
+.sales-controls input[type="text"]:focus, 
+.sales-controls select:focus{
   outline: none;
   border-color: #bcd1ff;
   box-shadow: 0 0 0 3px rgba(15, 98, 254, 0.12);
 }
-
-
 
 @media (max-width: 900px) {
   .enquiry-grid {
