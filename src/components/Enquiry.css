@@ -107,8 +107,26 @@
 }
 .enquiry-table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   background: #fff;
+  display: block;
+}
+.enquiry-table thead {
+  display: table;
+  width: 100%;
+  table-layout: fixed;
+}
+.enquiry-table tbody {
+  display: block;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+.enquiry-table thead tr,
+.enquiry-table tbody tr {
+  display: table;
+  width: 100%;
+  table-layout: fixed;
 }
 .enquiry-table th,
 .enquiry-table td {
@@ -122,8 +140,7 @@
   background: linear-gradient(90deg, #5aa2ff, var(--primary));
   color: #ffffff;
   font-weight: 700;
-  position: sticky;
-  top: 0;
+  position: relative;
   z-index: 2;
 }
 /* Hide the action column header and borders and collapse its width */
@@ -262,6 +279,9 @@
 }
 
 .right-header {
+  position: sticky;
+  top: 0;
+  /* z-index: 1000; */
   display: flex;
   gap: 8px;
   align-items: center;
@@ -379,23 +399,22 @@
 }
 
 .table-scroll {
-  overflow: auto;
   background: transparent;
   padding: 2px; 
   box-sizing: border-box;
   border-radius: 8px;
   position: relative;
+  overflow: visible;
 }
 
-.nested-bottom .table-scroll {
-  height: calc(var(--table-header-h) + (var(--row-h) * 3));
-  max-height: none;
+.nested-bottom .table-scroll tbody {
+  max-height: calc(var(--row-h) * 3);
+  height: calc(var(--row-h) * 3);
  }
 
-.left-panel .table-scroll {
-  height: calc(var(--table-header-h) + (var(--row-h) * 12.9));
-  max-height: none;
-  overflow: auto;
+.left-panel .table-scroll tbody {
+  max-height: calc(var(--row-h) * 12.9);
+  height: calc(var(--row-h) * 12.9);
 }
 
 .enquiry-table tbody tr {

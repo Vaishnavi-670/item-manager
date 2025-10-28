@@ -953,6 +953,7 @@ const Enquiry = () => {
                         <div className="nested-bottom">
                             <div className="nested-col">
                                 <div className="table-scroll">
+                                    
                                     <table className="enquiry-table">
                                         <thead>
                                             <tr>
@@ -987,7 +988,9 @@ const Enquiry = () => {
                                             })}
                                         </tbody>
                                     </table>
+                                    
                                 </div>
+                                
                             </div>
                             <div className="nested-col">
                                 <div className="table-scroll">
