@@ -93,13 +93,11 @@ const salesData = [
 const Enquiry = () => {
     const [meta, setMeta] = useState({ enqNo: '', date: new Date().toISOString().slice(0, 10), customer: '', contact: '' })
     const [search, setSearch] = useState({ customer: '', item: '', qty: '' })
-    const [filteredItems, setFilteredItems] = useState(undefined)
     const [filteredTop, setFilteredTop] = useState(undefined)
     const [filteredPrice, setFilteredPrice] = useState(undefined)
     const [filteredStock, setFilteredStock] = useState(undefined)
     const [suggestions, setSuggestions] = useState([])
     const [showSuggestions, setShowSuggestions] = useState({ visible: false, row: null, field: null })
-    const [searchApplied, setSearchApplied] = useState(false)
     const searchAppliedRef = useRef(false)
     const ignoreNextClickRef = useRef(false)
     const actionClickRef = useRef(false)
@@ -141,26 +139,6 @@ const Enquiry = () => {
         } catch (err) { }
     }, [])
 
-    const updateItem = (idx, field, val) => {
-        // write to draft only; commit to items happens on ✓
-        setDraftItems(prev => {
-            const copy = Array.isArray(prev) ? prev.map(it => (it ? { ...it } : it)) : []
-            while (copy.length <= idx) copy.push(undefined)
-            const base = copy[idx] ? { ...copy[idx] } : (items[idx] ? { ...items[idx] } : { ...dummyRow, srNo: idx + 1 })
-            const numericFields = new Set(['qty', 'rate', 'del', 'mum', 'com', 'hyd', 'ahm', 'readyDel', 'readyMum', 'mrp', 'stock', 'discount'])
-            if (numericFields.has(field)) {
-                const num = val === '' ? 0 : parseFloat(val)
-                base[field] = Number.isNaN(num) ? 0 : num
-            } else {
-                base[field] = val
-            }
-            base.amount = +((parseFloat(base.qty) || 0) * (parseFloat(base.rate) || 0)).toFixed(2)
-            copy[idx] = base
-            return copy
-        })
-    }
-
-    // ensure a draft item exists at index and set a field (creates draft if missing)
     const setItemField = (idx, field, val) => {
         setDraftItems(prev => {
             const copy = Array.isArray(prev) ? prev.map(it => (it ? { ...it } : it)) : []
@@ -255,7 +233,7 @@ const Enquiry = () => {
         }
         return Array.from(pool)
     }
-    
+
    // sales suggestions: pool of item names and brands from salesData
     const getSalesSuggestionPool = (type = 'q') => {
         const pool = new Set()
@@ -305,6 +283,7 @@ const Enquiry = () => {
         setSuggestions(filtered)
         setShowSuggestions({ visible: true, row: 'sales', field: 'customer', id: `sales-customer` })
     }
+    
 
     const chooseSalesSuggestion = (field, val) => {
         if (field === 'q') setSalesFilter(s => ({ ...s, q: val }))
@@ -378,34 +357,19 @@ const Enquiry = () => {
             if (row === 'search') {
                 setSearch(s => ({ ...s, item: val }))
             } else {
-                // if row doesn't exist yet, create it
-                if (!items[row]) setItemField(row, 'itemName', val)
-                else updateItem(row, 'itemName', val)
+                setItemField(row, 'itemName', val)
             }
         } else if (field === 'customer') {
             if (row === 'search') {
                 setSearch(s => ({ ...s, customer: val }))
             } else {
-                if (!items[row]) setItemField(row, 'customer', val)
-                else updateItem(row, 'customer', val)
+                setItemField(row, 'customer', val)
             }
         }
         setShowSuggestions({ visible: false, row: null, field: null })
     }
 
-    const performSearch = () => {
-        const itm = (search.item || '').trim().toLowerCase()
-        const filtered = items.filter(it => {
-            if (itm && !((it.itemName || '').toLowerCase().includes(itm))) return false
-            return true
-        })
-        return filtered
-    }
-
     const handleSearch = () => {
-        const left = performSearch()
-        setFilteredItems(left)
-
         const itm = (search.item || '').trim().toLowerCase()
 
         const topFiltered = stockSummaryData.filter(r => {
@@ -505,7 +469,6 @@ const Enquiry = () => {
         }
 
         setSearch({ customer: '', item: '', qty: '' })
-        setSearchApplied(true)
         searchAppliedRef.current = true
         ignoreNextClickRef.current = true
     }
@@ -516,7 +479,6 @@ const Enquiry = () => {
             setFilteredTop(undefined)
             setFilteredPrice(undefined)
             setFilteredStock(undefined)
-            setSearchApplied(false)
             searchAppliedRef.current = false
         }
 
@@ -529,7 +491,6 @@ const Enquiry = () => {
             setFilteredTop(undefined)
             setFilteredPrice(undefined)
             setFilteredStock(undefined)
-            setSearchApplied(false)
             searchAppliedRef.current = false
         }
 
@@ -815,83 +776,7 @@ const Enquiry = () => {
                                             onChange={(e) => setAddField("branch", e.target.value)}
                                         />
                                     </td>
-                                    {/* Customer Suggestion Field */}
-                                    {/* <td style={{ position: "relative" }}>
-                                        <input
-                                            placeholder="Customer"
-                                            value={addRow.customer}
-                                            onChange={(e) => onAddRowInputChange("customer", e.target.value)}
-                                            onFocus={() => {
-                                                setSuggestions(getSuggestionPool("customer").slice(0, 8));
-                                                setShowSuggestions({
-                                                    visible: true,
-                                                    row: "add",
-                                                    field: "customer",
-                                                });
-                                            }}
-                                            onBlur={() =>
-                                                setTimeout(
-                                                    () =>
-                                                        setShowSuggestions({ visible: false, row: null, field: null }),
-                                                    200
-                                                )
-                                            }
-                                        />
-                                        {showSuggestions.visible &&
-                                            showSuggestions.row === "add" &&
-                                            showSuggestions.field === "customer" &&
-                                            suggestions?.length && (
-                                                <div className="suggestions-list" style={{ position: "absolute", zIndex: 40 }}>
-                                                    {suggestions.map((s, i) => (
-                                                        <div
-                                                            key={i}
-                                                            className="suggestion-item"
-                                                            onMouseDown={() => chooseSuggestion("add", s, "customer")}
-                                                        >
-                                                            {s}
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            )}
-                                    </td>
-                                    <td style={{ position: "relative" }}>
-                                        <input
-                                            placeholder="Item Name"
-                                            value={addRow.itemName}
-                                            onChange={(e) => onAddRowInputChange("itemName", e.target.value)}
-                                            onFocus={() => {
-                                                setSuggestions(getSuggestionPool("item").slice(0, 8));
-                                                setShowSuggestions({
-                                                    visible: true,
-                                                    row: "add",
-                                                    field: "item",
-                                                });
-                                            }}
-                                            onBlur={() =>
-                                                setTimeout(
-                                                    () =>
-                                                        setShowSuggestions({ visible: false, row: null, field: null }),
-                                                    200
-                                                )
-                                            }
-                                        />
-                                        {showSuggestions.visible &&
-                                            showSuggestions.row === "add" &&
-                                            showSuggestions.field === "item" &&
-                                            suggestions?.length && (
-                                                <div className="suggestions-list" style={{ position: "absolute", zIndex: 40 }}>
-                                                    {suggestions.map((s, i) => (
-                                                        <div
-                                                            key={i}
-                                                            className="suggestion-item"
-                                                            onMouseDown={() => chooseSuggestion("add", s, "item")}
-                                                        >
-                                                            {s}
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            )}
-                                    </td> */}
+                                    
 
                                     <td style={{ position: "relative" }}>
                                         <input
@@ -1151,7 +1036,7 @@ const Enquiry = () => {
 
             </div>
             <div className="sales-container">
-                <h2>Sales Table</h2>
+                <h2>💰Sales Table</h2>
                 <div className="sales-controls">
                     <div style={{ position: 'relative' }}>
                         <input

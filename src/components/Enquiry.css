@@ -8,6 +8,7 @@
   --border: #e6e9ee;
   --row-h: 34px;
   --table-header-h: 36px;
+  --shadow-sm: 0 2px 6px rgba(15, 23, 42, 0.12);
 }
 
 .enquiry-root {
@@ -16,9 +17,6 @@
   margin: 0;
   padding: 8px 12px;
   box-sizing: border-box;
-}
-
-.enquiry-root {
   background: #f3f4f6;
 }
 
@@ -37,14 +35,23 @@
 .card {
   padding: 14px;
   box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: linear-gradient(180deg, #ffffff, var(--surface));
 }
 .left-panel {
   background: linear-gradient(180deg, #ffffff, var(--surface));
   position: relative;
 }
 
-.fixed-add-row {
+.right-panel {
+  background: linear-gradient(180deg, #ffffff, var(--surface));
   position: relative;
+}
+
+.fixed-add-row {
+  position: sticky;
+  bottom: 0;
   background: #fff;
   z-index: 100;
   border-top: 2px solid var(--primary);
@@ -115,9 +122,12 @@
   text-align: left;
 }
 .enquiry-table thead th {
-  background: var(--primary);
+  background: linear-gradient(90deg, #5aa2ff, var(--primary));
   color: #ffffff;
   font-weight: 700;
+  position: sticky;
+  top: 0;
+  z-index: 2;
 }
 /* Hide the action column header and borders and collapse its width */
 .enquiry-table th.actions-col {
@@ -224,6 +234,10 @@
 :root {
   --row-h: 30px;
 }
+
+  .enquiry-table select {
+    width: 100%;
+  }
 }
 
 .enquiry-table td > select {
@@ -242,18 +256,8 @@
   background-size: 12px 8px;
 }
 
-@media (max-width: 900px) {
-  .enquiry-table select {
-    width: 100%;
-  }
-}
-
-.nested-outer,
-.nested-inner {
-  padding: 0;
-}
-
 .nested-outer {
+  padding: 0;
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -265,6 +269,10 @@
   gap: 8px;
   align-items: center;
   margin-bottom: 6px;
+  background: #ffffff;
+  padding: 8px 10px;
+  border-radius: 10px;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.04);
 }
 .right-search {
   padding: 8px 10px;
@@ -272,6 +280,8 @@
   background: #fff;
   width: 180px;
   box-sizing: border-box;
+  border-radius: 8px;
+  transition: box-shadow 160ms ease, border-color 160ms ease;
 }
 .left-search {
   padding: 6px 8px;
@@ -279,58 +289,137 @@
   background: #fff;
   width: 180px;
   box-sizing: border-box;
+  border-radius: 8px;
+  transition: box-shadow 160ms ease, border-color 160ms ease;
+}
+
+.right-search:focus, .left-search:focus {
+  outline: none;
+  border-color: #bcd1ff;
+  box-shadow: 0 0 0 3px rgba(15, 98, 254, 0.12);
 }
 .nested-top {
   width: 100%;
   margin-bottom: 0;
-  background: var(--bg);
+  /* light green background for all right-side tables (top) */
+  background: linear-gradient(180deg, #f2fff6, #e7f9ef);
   padding: 6px;
   border: 1px solid var(--border);
+  border-radius: 10px;
   box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
   position: relative;
   z-index: 2; 
   box-sizing: border-box;
-  overflow: hidden;
+  overflow: visible; /* allow badge to overflow outside card */
   max-width: 100%;
 }
 .nested-bottom {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr); 
+  position: relative;
+  margin-top: 8px;
+  z-index: 1;
   gap: 8px;
   align-items: start;
 }
-.nested-bottom {
-  position: relative;
-  z-index: 1;
-}
 .nested-col {
-  background: var(--bg);
+  /* light green background for all right-side tables (bottom columns) */
+  background: linear-gradient(180deg, #f2fff6, #e7f9ef);
   padding: 6px;
   box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04);
   border: 1px solid var(--border);
   display: flex;
   flex-direction: column;
   min-width: 0;
+  border-radius: 10px;
+  overflow: visible; /* allow badge to overflow outside card */
+  position: relative; /* anchor absolute heading badge */
+}
+
+/* light, pleasant backgrounds per right-side table */
+.nested-bottom .nested-col:first-child {
+  /* Price & Availability: soft blue */
+  background: linear-gradient(180deg, #f3f7ff, #e8f1ff);
+}
+
+.nested-bottom .nested-col:last-child {
+  /* Location Stock: soft green */
+  background: linear-gradient(180deg, #f2fff6, #e7f9ef);
+  margin-top: 20px;
+}
+
+/* Price & Availability badge heading */
+.nested-bottom .nested-col:first-child::before {
+  content: "🪙 Price & Availability";
+  position: absolute;
+  top: -10px;
+  left: 12px;
+  /* light badge color */
+  background: linear-gradient(135deg, #a6e8c0, #89f4af);
+  color: #0b3d1f;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  box-shadow: var(--shadow-sm);
+  z-index: 10;
+}
+
+/* Stock Summary badge heading */
+.nested-top::before {
+  content: "📊 Stock Summary";
+  position: absolute;
+  top: -10px;
+  left: 12px;
+  /* light badge color */
+  background: linear-gradient(135deg, #64be88, #59ad76);
+  color: #0b3d1f;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  box-shadow: var(--shadow-sm);
+  z-index: 10;
+}
+
+/* Location Stock badge heading */
+.nested-bottom .nested-col:last-child::before {
+  content: "📍 Location Stock";
+  position: absolute;
+  top: -10px;
+  left: 12px;
+  /* light badge color */
+  background: linear-gradient(135deg, #64be88, #59ad76);
+  color: #0b3d1f;
+  padding: 3px 10px;
+
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  box-shadow: var(--shadow-sm);
+  z-index: 10;
 }
 .table-scroll {
   overflow: auto;
   background: transparent;
   padding: 2px; 
   box-sizing: border-box;
+  border-radius: 8px;
+  position: relative;
 }
+
 .nested-bottom .table-scroll {
   height: calc(var(--table-header-h) + (var(--row-h) * 3));
   max-height: none;
  }
 
 .left-panel .table-scroll {
-  height: calc(var(--table-header-h) + (var(--row-h) * 7.1));
+  height: calc(var(--table-header-h) + (var(--row-h) * 12.9));
   max-height: none;
   overflow: auto;
 }
 
 .enquiry-table tbody tr {
   height: var(--row-h);
+  
 }
 .suggestions-list{
   position: absolute;
@@ -346,6 +435,7 @@
   margin-top: 6px;
   z-index: 9999;
 }
+
 .suggestion-item{
   padding:6px 8px;
   cursor:pointer;
@@ -492,12 +582,14 @@
 }
 
 button.primary {
-  background: var(--accent);
+  background: linear-gradient(90deg, #0ea5e9, #3b82f6);
   color: #fff;
   padding: 8px 12px;
   border-radius: 6px;
   border: none;
   cursor: pointer;
+  box-shadow: 0 1px 0 rgba(255,255,255,0.2) inset, 0 2px 6px rgba(15, 23, 42, 0.06);
+  transition: transform 120ms ease, filter 120ms ease;
 }
 
 button {
@@ -505,31 +597,47 @@ button {
   border-radius: 6px;
   border: 1px solid #c8c9da;
   cursor: pointer;
+  background: #ffffff;
+  transition: background-color 120ms ease, box-shadow 160ms ease;
 }
+button.primary:hover { filter: brightness(1.05); }
+button.primary:active { transform: translateY(1px); }
+button:hover { box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06); }
 
 .sales-container {
   margin: 20px 0;
   width: 100%;
   box-sizing: border-box;
-  padding: 12px;
+  padding: 16px;
   font-family: "Poppins", sans-serif;
-  background: linear-gradient(180deg, #ffffff, var(--surface));
+  background: linear-gradient(180deg, #f2fff6, #e7f9ef);
   border: 1px solid var(--border);
+  border-radius: 10px;
   box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+  position: relative;
+  overflow: visible;
 }
 
 .sales-container h2 {
-  font-size: 16px;
-  color: var(--accent-dark);
-  margin: 0 0 10px 0;
-  font-weight: 700;
+  font-size: 14px;
+  color: #0b3d1f;
+  margin: 0 0 12px 0;
+  font-weight: 600;
+  display: inline-block;
+  padding: 5px 14px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #64be88, #59ad76);
+  box-shadow: var(--shadow-sm);
+  position: absolute;
+  top: -10px;
+  left: 12px;
+  z-index: 10;
 }
 
 .sales-table {
   width: 100%;
   max-width: 100%;
-  border-collapse: collapse;
-  background: transparent;
+  background: white;
 }
 
 .sales-table th,
@@ -538,13 +646,15 @@ button {
   padding: 6px 8px;
   text-align: left;
   font-size: 12px;
-  color: var(--muted);
 }
 
 .sales-table th {
-  background: var(--primary);
+  background: linear-gradient(90deg, #5aa2ff, var(--primary));
   color: #fff;
   font-weight: 700;
+  position: sticky;
+  top: 0;
+  z-index: 2;
 }
 
 .sales-table tr:hover {
@@ -555,9 +665,9 @@ button {
   font-weight: 700;
   color: var(--accent);
   text-align: right;
+  
 }
 
-/* Make sure the table consumes the full width of its parent container and is responsive */
 .sales-container .sales-table {
   width: 100%;
   display: table;
@@ -581,6 +691,7 @@ button {
   align-items: start;
   justify-content: start;
   margin:8px 0 12px 0;
+  padding-top: 8px;
 }
 .sales-controls input[type="text"], .sales-controls select{
   padding:8px 10px;
@@ -589,7 +700,14 @@ button {
   font-size:13px;
   box-sizing: border-box;
   width: 150px;
-  flex: 0 0 150px; /* fixed width for both controls */
+  flex: 0 0 150px;
+  border-radius: 8px;
+  transition: box-shadow 160ms ease, border-color 160ms ease;
+}
+.sales-controls input[type="text"]:focus, .sales-controls select:focus{
+  outline: none;
+  border-color: #bcd1ff;
+  box-shadow: 0 0 0 3px rgba(15, 98, 254, 0.12);
 }
 
 
@@ -607,4 +725,22 @@ button {
 
 .muted {
   color: var(--muted);
+}
+
+/* Optional: themed scrollbars in data panes */
+.table-scroll::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+.table-scroll::-webkit-scrollbar-track {
+  background: linear-gradient(180deg, #f3f4f6, #eef2ff);
+  border-radius: 8px;
+}
+.table-scroll::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #c7d2fe, #93c5fd);
+  border-radius: 8px;
+  border: 2px solid #f3f4f6;
+}
+.table-scroll::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #a5b4fc, #60a5fa);
 }
