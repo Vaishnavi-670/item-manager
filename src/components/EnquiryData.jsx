@@ -1,8 +1,7 @@
-import React from 'react'
-import './EnquiryData.css'
+import React, { useState, useEffect, useRef } from 'react';
+import './EnquiryData.css';
 
 const EnquiryData = () => {
-  // Static dummy data for display - Bearing Data
   const dummyItems = [
     { date: '2025-10-25', salesPerson: 'Rajesh Kumar', qtPiEnq: 'QT-2025', branch: 'Mumbai', customer: 'Industrial Motors Ltd', itemName: '6205 Deep Groove Ball Bearing', brand: 'SKF', qty: 50, rate: 450, discount: 50, amount: 22450 },
     { date: '2025-10-26', salesPerson: 'Priya Sharma', qtPiEnq: 'PI-2026', branch: 'Delhi', customer: 'Precision Engineering', itemName: '6206 ZZ Ball Bearing', brand: 'FAG', qty: 100, rate: 380, discount: 30, amount: 37970 },
@@ -22,72 +21,177 @@ const EnquiryData = () => {
     { date: '2025-10-13', salesPerson: 'Kavya Rao', qtPiEnq: 'ENQ-2013', branch: 'Mumbai', customer: 'Electric Motor Works', itemName: '6203 2RS Ball Bearing', brand: 'SKF', qty: 150, rate: 280, discount: 30, amount: 41970 }
   ]
 
+  const [filteredData, setFilteredData] = useState(dummyItems);
+  const [filters, setFilters] = useState({});
+  const [activeColumn, setActiveColumn] = useState(null);
+  const [searchText, setSearchText] = useState({});
+  const dropdownRef = useRef(null);
+
+  const columns = [
+    { key: 'date', label: 'Date' },
+    { key: 'salesPerson', label: 'Sales Person' },
+    { key: 'qtPiEnq', label: 'QT/PI/Enq' },
+    { key: 'branch', label: 'Branch' },
+    { key: 'customer', label: 'Customer Name' },
+    { key: 'itemName', label: 'Item Name' },
+    { key: 'brand', label: 'Brand' },
+    { key: 'qty', label: 'Qty' },
+    { key: 'rate', label: 'Rate' },
+    { key: 'discount', label: 'Discount' },
+    { key: 'amount', label: 'Amount' },
+  ];
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setActiveColumn(null);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Filter logic
+  useEffect(() => {
+    let data = [...dummyItems];
+    Object.entries(filters).forEach(([key, values]) => {
+      if (values.length > 0) {
+        data = data.filter((item) => values.includes(String(item[key])));
+      }
+    });
+    setFilteredData(data);
+  }, [filters]);
+
+  // Handle checkbox select
+  const handleFilterChange = (column, value) => {
+    setFilters((prev) => {
+      const prevValues = prev[column] || [];
+      const newValues = prevValues.includes(value)
+        ? prevValues.filter((v) => v !== value)
+        : [...prevValues, value];
+      return { ...prev, [column]: newValues };
+    });
+  };
+
+  // Handle Select All
+  const handleSelectAll = (column) => {
+    const allValues = getUniqueValues(column);
+    const currentValues = filters[column] || [];
+    
+    if (currentValues.length === allValues.length) {
+      // If all are selected, deselect all
+      setFilters((prev) => ({ ...prev, [column]: [] }));
+    } else {
+      // Select all
+      setFilters((prev) => ({ ...prev, [column]: allValues }));
+    }
+  };
+
+  // Check if all values are selected for a column
+  const isAllSelected = (column) => {
+    const allValues = getUniqueValues(column);
+    const currentValues = filters[column] || [];
+    return currentValues.length === allValues.length && allValues.length > 0;
+  };
+
+  // Get unique values for each column
+  const getUniqueValues = (key) => {
+    return [...new Set(dummyItems.map((item) => String(item[key])))];
+  };
+
+  // Get filtered values based on search text
+  const getFilteredValues = (key) => {
+    const allValues = getUniqueValues(key);
+    const search = searchText[key] || '';
+    
+    if (!search) return allValues;
+    
+    return allValues.filter(val => 
+      val.toLowerCase().includes(search.toLowerCase())
+    );
+  };
+
+  // Handle search text change
+  const handleSearchChange = (column, value) => {
+    setSearchText(prev => ({
+      ...prev,
+      [column]: value
+    }));
+  };
+
   return (
-    <div>
-      <div className="data-panel-wrapper data-card">
-        <div className="data-panel-header">
-          <h3 className='data-heading'>Enquiry</h3>
-        </div>
-        <div className="data-table-container">
-          <table className="data-records-table">
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Sales Person</th>
-                <th>QT/PI/Enq</th>               
-                <th>Branch</th>
-                <th>Customer Name</th>
-                <th>Item Name</th>
-                <th>Brand</th>
-                <th>Qty</th>
-                <th>Rate</th>
-                <th>Discount</th>
-                <th>Amount</th>
-              </tr>
-            </thead>
-            <tbody>
-              {dummyItems.map((row, index) => (
-                <tr key={index}>
-                  <td>
-                    <input type="date" value={row.date} readOnly />
-                  </td>
-                  <td>
-                    <input value={row.salesPerson} readOnly />
-                  </td>
-                  <td>
-                    <input value={row.qtPiEnq} readOnly />
-                  </td>
-                  <td>
-                    <input value={row.branch} readOnly />
-                  </td>
-                  <td>
-                    <input value={row.customer} readOnly />
-                  </td>
-                  <td>
-                    <input value={row.itemName} readOnly />
-                  </td>
-                  <td>
-                    <input value={row.brand} readOnly />
-                  </td>
-                  <td>
-                    <input type="number" value={row.qty} readOnly />
-                  </td>
-                  <td>
-                    <input type="number" value={row.rate} readOnly />
-                  </td>
-                  <td>
-                    <input type="number" value={row.discount} readOnly />
-                  </td>
-                  <td>₹{row.amount.toFixed(2)}</td>
-                </tr>
+    <div className="data-panel-wrapper data-card">
+      <div className="data-panel-header">
+        <h3 className="data-heading">Enquiry</h3>
+      </div>
+
+      <div className="data-table-container">
+        <table className="data-records-table">
+          <thead>
+            <tr>
+              {columns.map((col) => (
+                <th key={col.key}>
+                  <div className="th-filter-wrapper">
+                    {col.label}
+                    <button
+                      className="filter-btn"
+                      onClick={() => setActiveColumn(activeColumn === col.key ? null : col.key)}
+                    >
+                      ⏷
+                    </button>
+                    {activeColumn === col.key && (
+                      <div className="filter-dropdown" ref={dropdownRef}>
+                        <input
+                          type="text"
+                          placeholder="Search..."
+                          className="filter-search"
+                          value={searchText[col.key] || ''}
+                          onChange={(e) => handleSearchChange(col.key, e.target.value)}
+                        />
+                        <div className="filter-select-all">
+                          <label className="filter-option select-all-option">
+                            <input
+                              type="checkbox"
+                              checked={isAllSelected(col.key)}
+                              onChange={() => handleSelectAll(col.key)}
+                            />
+                            <strong>Select All</strong>
+                          </label>
+                        </div>
+                        <div className="filter-options">
+                          {getFilteredValues(col.key).map((val) => (
+                            <label key={val} className="filter-option">
+                              <input
+                                type="checkbox"
+                                checked={filters[col.key]?.includes(val) || false}
+                                onChange={() => handleFilterChange(col.key, val)}
+                              />
+                              {val}
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </th>
               ))}
-            </tbody>
-          </table>
-        </div>
-        
+            </tr>
+          </thead>
+
+          <tbody>
+            {filteredData.map((row, index) => (
+              <tr key={index}>
+                {columns.map((col) => (
+                  <td key={col.key}>{row[col.key]}</td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default EnquiryData
+export default EnquiryData;
