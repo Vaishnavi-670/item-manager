@@ -12,6 +12,7 @@ import Enquiry from "./components/Enquiry";
 import Trade from "./components/Trade";
 import Consumer from "./components/Consumer";
 import CustomerPIPage from "./components/CustomerPIPage";
+import EnquiryData from "./components/EnquiryData";
 
 function App() {
   const [formType, setFormType] = useState("singleItem");
@@ -79,6 +80,12 @@ function App() {
           Enquiry/Order
         </button>
         <button
+          className={`form-toggle-buttons small ${formType === "enquirydata" ? "active" : ""}`}
+          onClick={() => setFormType("enquirydata")}
+        >
+          Enquiry
+        </button>
+        <button
           className={`form-toggle-buttons small ${formType === "Trade" ? "active" : ""}`}
           onClick={() => setFormType("Trade")}
         >
@@ -108,6 +115,7 @@ function App() {
         {formType === "purchaseItem" && <PurchaseItem />}
         {formType === "proformaInvoice" && <ProformaInvoice />}
         {formType === "enquiry" && <Enquiry />}
+        {formType === "enquirydata" && <EnquiryData />}
         {formType === "Trade" && <Trade />}
         {formType === "Consumer" && <Consumer />}
         {formType === "CustomerPIPage" && <CustomerPIPage />}

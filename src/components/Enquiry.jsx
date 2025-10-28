@@ -888,7 +888,7 @@ const Enquiry = () => {
                         <div style={{ position: 'relative' }}>
                             <input className="right-search" placeholder="Customer name" value={search.customer} onChange={e => onSearchCustomerInputChange(e.target.value)} onFocus={() => { setSuggestions(getSuggestionPool('customer').slice(0, 8)); setShowSuggestions({ visible: true, row: 'search', field: 'customer', id: `search-customer` }) }} onBlur={() => setTimeout(() => setShowSuggestions({ visible: false, row: null, field: null, id: null }), 200)} />
                             {showSuggestions.visible && showSuggestions.row === 'search' && showSuggestions.field === 'customer' && suggestions && suggestions.length ? (
-                                <div className="suggestions-list" style={{ position: 'absolute', zIndex: 40 }}>
+                                <div className="suggestions-list" style={{ position: 'absolute', zIndex: 10000 }}>
                                     {suggestions.map((s, i) => (
                                         <div key={i} className="suggestion-item" onMouseDown={() => chooseSuggestion('search', s, 'customer')}>{s}</div>
                                     ))}
@@ -898,7 +898,7 @@ const Enquiry = () => {
                         <div style={{ position: 'relative' }}>
                             <input className="right-search" placeholder="Item name" value={search.item} onChange={e => onSearchItemInputChange(e.target.value)} onFocus={() => { setSuggestions(getSuggestionPool('item').slice(0, 8)); setShowSuggestions({ visible: true, row: 'search', field: 'item', id: `search-item` }) }} onBlur={() => setTimeout(() => setShowSuggestions({ visible: false, row: null, field: null, id: null }), 200)} />
                             {showSuggestions.visible && showSuggestions.row === 'search' && showSuggestions.field === 'item' && suggestions && suggestions.length ? (
-                                <div className="suggestions-list" style={{ position: 'absolute', zIndex: 40 }}>
+                                <div className="suggestions-list" style={{ position: 'absolute', zIndex: 10000 }}>
                                     {suggestions.map((s, i) => (
                                         <div key={i} className="suggestion-item" onMouseDown={() => chooseSuggestion('search', s, 'item')}>{s}</div>
                                     ))}
@@ -1099,5 +1099,4 @@ const Enquiry = () => {
         </div>
     )
 }
-
 export default Enquiry
