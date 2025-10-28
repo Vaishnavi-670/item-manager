@@ -123,7 +123,7 @@ const EnquiryData = () => {
         const currentValues = filters[column] || [];
         return currentValues.length === allValues.length && allValues.length > 0;
     };
-
+    
     // Get unique values for each column
     const getUniqueValues = (key) => {
         return [...new Set(dummyItems.map((item) => String(item[key])))];
