@@ -4,7 +4,7 @@ import 'react-datepicker/dist/react-datepicker.css';
 import './PurchaseOrder.css';
 
 const PurchaseOrder = () => {
-    const dummyItems = [
+    const [poRecords, setPoRecords] = useState([
         { poDate: '2025-10-25', poExpiryDate: '2025-11-25', salesPerson: 'Rajesh Kumar', customerName: 'Industrial Motors Ltd', gst: 'GST123456', poNo: 'PO-2025', item: '6205 Deep Groove Ball Bearing', qty: 50, pricePerPc: 450, invoicedQty: 30, pendingQty: 20 },
         { poDate: '2025-10-26', poExpiryDate: '2025-11-26', salesPerson: 'Vikram Singh', customerName: 'Precision Engineering', gst: 'GST234567', poNo: 'PO-2026', item: '6206 ZZ Ball Bearing', qty: 100, pricePerPc: 380, invoicedQty: 50, pendingQty: 50 },
         { poDate: '2025-10-27', poExpiryDate: '2025-11-27', salesPerson: 'Arjun Kapoor', customerName: 'Auto Parts Co', gst: 'GST345678', poNo: 'PO-2027', item: '6208 2RS Sealed Bearing', qty: 75, pricePerPc: 520, invoicedQty: 40, pendingQty: 35 },
@@ -28,9 +28,9 @@ const PurchaseOrder = () => {
         { poDate: '2025-10-08', poExpiryDate: '2025-11-08', salesPerson: 'Divya Nair', customerName: 'Marine Equipment Co', gst: 'GST890123', poNo: 'PO-2008', item: 'NU 210 Cylindrical Roller Bearing', qty: 40, pricePerPc: 2450, invoicedQty: 20, pendingQty: 20 },
         { poDate: '2025-10-07', poExpiryDate: '2025-11-07', salesPerson: 'Pooja Reddy', customerName: 'Power Generation Co', gst: 'GST223344', poNo: 'PO-2007', item: '6312 Deep Groove Ball Bearing', qty: 55, pricePerPc: 1350, invoicedQty: 30, pendingQty: 25 },
         { poDate: '2025-10-06', poExpiryDate: '2025-11-06', salesPerson: 'Rohit Sharma', customerName: 'Textile Machinery', gst: 'GST901234', poNo: 'PO-2006', item: '51206 Thrust Ball Bearing', qty: 65, pricePerPc: 950, invoicedQty: 45, pendingQty: 20 }
-    ]
+    ]);
 
-    const [filteredData, setFilteredData] = useState(dummyItems);
+    const [filteredData, setFilteredData] = useState(poRecords);
     const [filters, setFilters] = useState({});
     const [activeColumn, setActiveColumn] = useState(null);
     const [searchText, setSearchText] = useState({});
@@ -85,7 +85,7 @@ const PurchaseOrder = () => {
 
     // Filter logic
     useEffect(() => {
-        let data = [...dummyItems];
+        let data = [...poRecords];
 
         // Apply column filters
         Object.entries(filters).forEach(([key, values]) => {
@@ -118,7 +118,7 @@ const PurchaseOrder = () => {
         }
 
         setFilteredData(data);
-    }, [filters, dateRange, dummyItems]);
+    }, [filters, dateRange, poRecords]);
 
     // Handle checkbox select and Select All
     const handleFilterChange = (column, value) => {
@@ -152,7 +152,7 @@ const PurchaseOrder = () => {
 
     // Get unique values for each column
     const getUniqueValues = (key) => {
-        return [...new Set(dummyItems.map((item) => String(item[key])))];
+        return [...new Set(poRecords.map((item) => String(item[key])))];
     };
 
     // Get filtered values based on search text
@@ -175,7 +175,7 @@ const PurchaseOrder = () => {
 
     // Get unique customers from both Purchase Orders and Enquiries
     const getUniqueCustomers = () => {
-        const fromPO = dummyItems.map(item => item.customerName);
+        const fromPO = poRecords.map(item => item.customerName);
         const fromEnq = getStoredEnquiries()
             .map(e => e.customerName || e.customer)
             .filter(Boolean);
@@ -274,7 +274,7 @@ const PurchaseOrder = () => {
         }
         const enquiries = getStoredEnquiries();
         const fromEnq = mapEnquiriesToRows(enquiries, customer);
-        const fromPO = mapPOItemsToRows(dummyItems, customer);
+        const fromPO = mapPOItemsToRows(poRecords, customer);
         // ensure unique numeric ids for selection logic
         const combined = [...fromEnq, ...fromPO].map((row, i) => ({
             ...row,
@@ -366,7 +366,7 @@ const PurchaseOrder = () => {
         const selectedQuotations = quotationData.filter(item => selectedItems.includes(item.id));
         if (selectedQuotations.length > 0) {
             // Get GST from dummy data for the selected customer
-            const customerGST = dummyItems.find(item => item.customerName === selectedCustomer)?.gst || '';
+            const customerGST = poRecords.find(item => item.customerName === selectedCustomer)?.gst || '';
             setPOFormData(prev => ({
                 ...prev,
                 gst: customerGST
@@ -398,9 +398,42 @@ const PurchaseOrder = () => {
     // Submit PO form
     const handleSubmitPO = () => {
         const selectedQuotations = quotationData.filter(item => selectedItems.includes(item.id));
-        // Add your logic to save the PO here
+        
+        if (selectedQuotations.length === 0) {
+            alert('Please select at least one item');
+            return;
+        }
+
+        if (!poFormData.poNumber || !poFormData.poDate || !poFormData.poExpiryDate) {
+            alert('Please fill in all required fields (PO Number, PO Date, PO Expiry Date)');
+            return;
+        }
+
+        // Get sales person from localStorage or use a default
+        const currentUser = localStorage.getItem('userName') || 'Sales Person';
+
+        // Create new PO records from selected quotation items
+        const newPoRecords = selectedQuotations.map((item) => ({
+            poDate: poFormData.poDate,
+            poExpiryDate: poFormData.poExpiryDate,
+            salesPerson: currentUser,
+            customerName: selectedCustomer,
+            gst: poFormData.gst,
+            poNo: poFormData.poNumber,
+            item: item.itemName,
+            qty: item.qty,
+            pricePerPc: item.rate,
+            invoicedQty: 0,  // Initially 0
+            pendingQty: item.qty  // Initially equals qty
+        }));
+
+        // Add new records to the table
+        setPoRecords(prev => [...newPoRecords, ...prev]);
+
         console.log('PO Data:', poFormData);
         console.log('Selected Items:', selectedQuotations);
+        console.log('New PO Records:', newPoRecords);
+        
         handleClosePOForm();
         setSelectedItems([]);
         setQuotationData([]);
