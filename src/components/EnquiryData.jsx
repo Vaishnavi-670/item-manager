@@ -44,6 +44,15 @@ const EnquiryData = () => {
         { key: 'amount', label: 'Amount' },
     ];
 
+    // Persist enquiry items to localStorage for cross-page usage (e.g., PurchaseOrder)
+    useEffect(() => {
+        try {
+            localStorage.setItem('enquiry_data', JSON.stringify(dummyItems));
+        } catch (_) {
+            // ignore storage errors (private mode / quota)
+        }
+    }, []);
+
     // Close dropdown when clicking outside
     useEffect(() => {
         const handleClickOutside = (e) => {
