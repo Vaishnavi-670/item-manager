@@ -255,7 +255,6 @@ const Enquiry = () => {
         if (type === 'q') {
             salesData.forEach(s => {
                 if (s.item) pool.add(s.item)
-                if (s.brand) pool.add(s.brand)
             })
         } else if (type === 'customer') {
             salesData.forEach(s => { if (s.customerName) pool.add(s.customerName) })
@@ -1030,7 +1029,7 @@ const Enquiry = () => {
                     <div style={{ position: 'relative' }}>
                         <input
                             type="text"
-                            placeholder="Search sales (item / brand)"
+                            placeholder="Search item"
                             value={salesFilter.q}
                             onChange={e => onSalesQueryChange(e.target.value)}
                             onFocus={() => { setSuggestions(getSalesSuggestionPool('q').slice(0, 8)); setShowSuggestions({ visible: true, row: 'sales', field: 'q', id: 'sales-q' }) }}
@@ -1079,7 +1078,7 @@ const Enquiry = () => {
                             .filter(sale => {
                                 const matchCustomer = salesFilter.customer ? sale.customerName === salesFilter.customer : true
                                 const q = (salesFilter.q || '').trim().toLowerCase()
-                                const matchQ = !q || (sale.item || '').toString().toLowerCase().includes(q) || (sale.brand || '').toString().toLowerCase().includes(q)
+                                const matchQ = !q || (sale.item || '').toString().toLowerCase().includes(q)
                                 return matchCustomer && matchQ
                             })
                             .map((sale, index) => (

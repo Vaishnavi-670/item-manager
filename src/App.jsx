@@ -13,6 +13,7 @@ import Trade from "./components/Trade";
 import Consumer from "./components/Consumer";
 import CustomerPIPage from "./components/CustomerPIPage";
 import EnquiryData from "./components/EnquiryData";
+import PurchaseOrder from "./components/PurchaseOrder";
 
 function App() {
   const [formType, setFormType] = useState("singleItem");
@@ -103,6 +104,12 @@ function App() {
         >
           Customer PI Page
         </button>
+        <button
+          className={`form-toggle-buttons small ${formType === "PurchaseOrder" ? "active" : ""}`}
+          onClick={() => setFormType("PurchaseOrder")}
+        >
+          Purchase Order
+        </button>
       </div>
 
       <div className="form-container">
@@ -119,6 +126,7 @@ function App() {
         {formType === "Trade" && <Trade />}
         {formType === "Consumer" && <Consumer />}
         {formType === "CustomerPIPage" && <CustomerPIPage />}
+        {formType === "PurchaseOrder" && <PurchaseOrder />}
       </div>
       </div>
   );

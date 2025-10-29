@@ -1,26 +1,26 @@
 import React, { useState, useEffect, useRef } from 'react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import './EnquiryData.css';
+import './PurchaseOrder.css';
 
-const EnquiryData = () => {
+const PurchaseOrder = () => {
     const dummyItems = [
-        { date: '2025-10-25', salesPerson: 'Rajesh Kumar', qtPiEnq: 'QT-2025', branch: 'Mumbai', customer: 'Industrial Motors Ltd', itemName: '6205 Deep Groove Ball Bearing', brand: 'SKF', qty: 50, rate: 450, discount: 50, amount: 22450 },
-        { date: '2025-10-26', salesPerson: 'Priya Sharma', qtPiEnq: 'PI-2026', branch: 'Delhi', customer: 'Precision Engineering', itemName: '6206 ZZ Ball Bearing', brand: 'FAG', qty: 100, rate: 380, discount: 30, amount: 37970 },
-        { date: '2025-10-27', salesPerson: 'Amit Patel', qtPiEnq: 'ENQ-2027', branch: 'Bangalore', customer: 'Auto Parts Co', itemName: '6208 2RS Sealed Bearing', brand: 'NTN', qty: 75, rate: 520, discount: 40, amount: 38960 },
-        { date: '2025-10-28', salesPerson: 'Sneha Reddy', qtPiEnq: 'QT-2028', branch: 'Chennai', customer: 'Heavy Machinery Works', itemName: '22205 Spherical Roller Bearing', brand: 'Timken', qty: 30, rate: 1850, discount: 150, amount: 55350 },
-        { date: '2025-10-23', salesPerson: 'Vikram Singh', qtPiEnq: 'QT-2023', branch: 'Pune', customer: 'Pump Solutions', itemName: '6305 Deep Groove Ball Bearing', brand: 'NSK', qty: 60, rate: 680, discount: 80, amount: 40720 },
-        { date: '2025-10-24', salesPerson: 'Ananya Iyer', qtPiEnq: 'PI-2024', branch: 'Hyderabad', customer: 'Steel Mill Industries', itemName: '32208 Tapered Roller Bearing', brand: 'SKF', qty: 40, rate: 1250, discount: 100, amount: 49900 },
-        { date: '2025-10-22', salesPerson: 'Karthik Menon', qtPiEnq: 'ENQ-2022', branch: 'Mumbai', customer: 'Conveyor Systems Ltd', itemName: '6204 RS Ball Bearing', brand: 'FAG', qty: 120, rate: 320, discount: 20, amount: 38380 },
-        { date: '2025-10-21', salesPerson: 'Divya Nair', qtPiEnq: 'QT-2021', branch: 'Kolkata', customer: 'Marine Equipment Co', itemName: 'NU 208 Cylindrical Roller Bearing', brand: 'NTN', qty: 25, rate: 2100, discount: 200, amount: 52300 },
-        { date: '2025-10-20', salesPerson: 'Rohit Sharma', qtPiEnq: 'PI-2020', branch: 'Delhi', customer: 'Textile Machinery', itemName: '51205 Thrust Ball Bearing', brand: 'Timken', qty: 80, rate: 890, discount: 90, amount: 71110 },
-        { date: '2025-10-19', salesPerson: 'Meera Desai', qtPiEnq: 'ENQ-2019', branch: 'Ahmedabad', customer: 'Food Processing Plant', itemName: '6207 2RS Ball Bearing', brand: 'NSK', qty: 90, rate: 470, discount: 50, amount: 42250 },
-        { date: '2025-10-18', salesPerson: 'Arjun Kapoor', qtPiEnq: 'QT-2018', branch: 'Jaipur', customer: 'Mining Equipment Ltd', itemName: '22210 E Spherical Roller Bearing', brand: 'SKF', qty: 20, rate: 3500, discount: 300, amount: 69700 },
-        { date: '2025-10-17', salesPerson: 'Pooja Reddy', qtPiEnq: 'PI-2017', branch: 'Bangalore', customer: 'Power Generation Co', itemName: '6310 Deep Groove Ball Bearing', brand: 'FAG', qty: 45, rate: 1100, discount: 100, amount: 49400 },
-        { date: '2025-10-16', salesPerson: 'Sanjay Gupta', qtPiEnq: 'ENQ-2016', branch: 'Chennai', customer: 'Agricultural Machinery', itemName: '30205 Tapered Roller Bearing', brand: 'NTN', qty: 65, rate: 750, discount: 60, amount: 48690 },
-        { date: '2025-10-15', salesPerson: 'Neha Agarwal', qtPiEnq: 'QT-2015', branch: 'Pune', customer: 'Paper Mill Industries', itemName: 'UCF 205 Pillow Block Bearing', brand: 'Timken', qty: 35, rate: 1650, discount: 150, amount: 57600 },
-        { date: '2025-10-14', salesPerson: 'Ravi Kumar', qtPiEnq: 'PI-2014', branch: 'Hyderabad', customer: 'Cement Plant', itemName: '6209 ZZ Ball Bearing', brand: 'NSK', qty: 110, rate: 590, discount: 50, amount: 64850 },
-        { date: '2025-10-13', salesPerson: 'Kavya Rao', qtPiEnq: 'ENQ-2013', branch: 'Mumbai', customer: 'Electric Motor Works', itemName: '6203 2RS Ball Bearing', brand: 'SKF', qty: 150, rate: 280, discount: 30, amount: 41970 }
+        { poDate: '2025-10-25', poExpiryDate: '2025-11-25', salesPerson: 'Rajesh Kumar', customerName: 'Industrial Motors Ltd', gst: 'GST123456', poNo: 'PO-2025', item: '6205 Deep Groove Ball Bearing', qty: 50, pricePerPc: 450, invoicedQty: 30, pendingQty: 20 },
+        { poDate: '2025-10-26', poExpiryDate: '2025-11-26', salesPerson: 'Priya Sharma', customerName: 'Precision Engineering', gst: 'GST234567', poNo: 'PO-2026', item: '6206 ZZ Ball Bearing', qty: 100, pricePerPc: 380, invoicedQty: 50, pendingQty: 50 },
+        { poDate: '2025-10-27', poExpiryDate: '2025-11-27', salesPerson: 'Amit Patel', customerName: 'Auto Parts Co', gst: 'GST345678', poNo: 'PO-2027', item: '6208 2RS Sealed Bearing', qty: 75, pricePerPc: 520, invoicedQty: 40, pendingQty: 35 },
+        { poDate: '2025-10-28', poExpiryDate: '2025-11-28', salesPerson: 'Sneha Reddy', customerName: 'Heavy Machinery Works', gst: 'GST456789', poNo: 'PO-2028', item: '22205 Spherical Roller Bearing', qty: 30, pricePerPc: 1850, invoicedQty: 15, pendingQty: 15 },
+        { poDate: '2025-10-23', poExpiryDate: '2025-11-23', salesPerson: 'Vikram Singh', customerName: 'Pump Solutions', gst: 'GST567890', poNo: 'PO-2023', item: '6305 Deep Groove Ball Bearing', qty: 60, pricePerPc: 680, invoicedQty: 60, pendingQty: 0 },
+        { poDate: '2025-10-24', poExpiryDate: '2025-11-24', salesPerson: 'Ananya Iyer', customerName: 'Steel Mill Industries', gst: 'GST678901', poNo: 'PO-2024', item: '32208 Tapered Roller Bearing', qty: 40, pricePerPc: 1250, invoicedQty: 20, pendingQty: 20 },
+        { poDate: '2025-10-22', poExpiryDate: '2025-11-22', salesPerson: 'Karthik Menon', customerName: 'Conveyor Systems Ltd', gst: 'GST789012', poNo: 'PO-2022', item: '6204 RS Ball Bearing', qty: 120, pricePerPc: 320, invoicedQty: 80, pendingQty: 40 },
+        { poDate: '2025-10-21', poExpiryDate: '2025-11-21', salesPerson: 'Divya Nair', customerName: 'Marine Equipment Co', gst: 'GST890123', poNo: 'PO-2021', item: 'NU 208 Cylindrical Roller Bearing', qty: 25, pricePerPc: 2100, invoicedQty: 10, pendingQty: 15 },
+        { poDate: '2025-10-20', poExpiryDate: '2025-11-20', salesPerson: 'Rohit Sharma', customerName: 'Textile Machinery', gst: 'GST901234', poNo: 'PO-2020', item: '51205 Thrust Ball Bearing', qty: 80, pricePerPc: 890, invoicedQty: 50, pendingQty: 30 },
+        { poDate: '2025-10-19', poExpiryDate: '2025-11-19', salesPerson: 'Meera Desai', customerName: 'Food Processing Plant', gst: 'GST012345', poNo: 'PO-2019', item: '6207 2RS Ball Bearing', qty: 90, pricePerPc: 470, invoicedQty: 70, pendingQty: 20 },
+        { poDate: '2025-10-18', poExpiryDate: '2025-11-18', salesPerson: 'Arjun Kapoor', customerName: 'Mining Equipment Ltd', gst: 'GST112233', poNo: 'PO-2018', item: '22210 E Spherical Roller Bearing', qty: 20, pricePerPc: 3500, invoicedQty: 5, pendingQty: 15 },
+        { poDate: '2025-10-17', poExpiryDate: '2025-11-17', salesPerson: 'Pooja Reddy', customerName: 'Power Generation Co', gst: 'GST223344', poNo: 'PO-2017', item: '6310 Deep Groove Ball Bearing', qty: 45, pricePerPc: 1100, invoicedQty: 45, pendingQty: 0 },
+        { poDate: '2025-10-16', poExpiryDate: '2025-11-16', salesPerson: 'Sanjay Gupta', customerName: 'Agricultural Machinery', gst: 'GST334455', poNo: 'PO-2016', item: '30205 Tapered Roller Bearing', qty: 65, pricePerPc: 750, invoicedQty: 30, pendingQty: 35 },
+        { poDate: '2025-10-15', poExpiryDate: '2025-11-15', salesPerson: 'Neha Agarwal', customerName: 'Paper Mill Industries', gst: 'GST445566', poNo: 'PO-2015', item: 'UCF 205 Pillow Block Bearing', qty: 35, pricePerPc: 1650, invoicedQty: 20, pendingQty: 15 },
+        { poDate: '2025-10-14', poExpiryDate: '2025-11-14', salesPerson: 'Ravi Kumar', customerName: 'Cement Plant', gst: 'GST556677', poNo: 'PO-2014', item: '6209 ZZ Ball Bearing', qty: 110, pricePerPc: 590, invoicedQty: 100, pendingQty: 10 },
+        { poDate: '2025-10-13', poExpiryDate: '2025-11-13', salesPerson: 'Kavya Rao', customerName: 'Electric Motor Works', gst: 'GST667788', poNo: 'PO-2013', item: '6203 2RS Ball Bearing', qty: 150, pricePerPc: 280, invoicedQty: 110, pendingQty: 40 }
     ]
 
     const [filteredData, setFilteredData] = useState(dummyItems);
@@ -31,17 +31,17 @@ const EnquiryData = () => {
     const dropdownRef = useRef(null);
 
     const columns = [
-        { key: 'date', label: 'Date' },
+        { key: 'poDate', label: 'PO Date' },
+        { key: 'poExpiryDate', label: 'PO Expiry Date' },
         { key: 'salesPerson', label: 'Sales Person' },
-        { key: 'qtPiEnq', label: 'QT/PI/Enq' },
-        { key: 'branch', label: 'Branch' },
-        { key: 'customer', label: 'Customer Name' },
-        { key: 'itemName', label: 'Item Name' },
-        { key: 'brand', label: 'Brand' },
+        { key: 'customerName', label: 'Customer Name' },
+        { key: 'gst', label: 'GST' },
+        { key: 'poNo', label: 'PO No' },
+        { key: 'item', label: 'Item' },
         { key: 'qty', label: 'Qty' },
-        { key: 'rate', label: 'Rate' },
-        { key: 'discount', label: 'Discount' },
-        { key: 'amount', label: 'Amount' },
+        { key: 'pricePerPc', label: 'Price per Pc' },
+        { key: 'invoicedQty', label: 'Invoiced Qty' },
+        { key: 'pendingQty', label: 'Pending Qty' },
     ];
 
     // Close dropdown when clicking outside
@@ -69,7 +69,7 @@ const EnquiryData = () => {
         // Apply date range filter
         if (dateRange.from || dateRange.to) {
             data = data.filter((item) => {
-                const itemDate = new Date(item.date);
+                const itemDate = new Date(item.poDate);
                 itemDate.setHours(0, 0, 0, 0); // Reset time to midnight for accurate date comparison
 
                 const fromDate = dateRange.from ? new Date(dateRange.from) : null;
@@ -90,7 +90,7 @@ const EnquiryData = () => {
         }
 
         setFilteredData(data);
-    }, [filters, dateRange]);
+    }, [filters, dateRange, dummyItems]);
 
     // Handle checkbox select
     const handleFilterChange = (column, value) => {
@@ -147,10 +147,10 @@ const EnquiryData = () => {
     };
 
     return (
-        <div className="data-panel-wrapper data-card">
-            <div className="data-panel-header">
-                <h3 className="data-heading">Enquiry</h3>
-                <div className="date-range-filter">
+        <div className="po-panel-wrapper po-card">
+            <div className="po-panel-header">
+                <h3 className="po-heading">Purchase Order</h3>
+                <div className="po-date-range-filter">
                     <label>
                         From:
                         <DatePicker
@@ -161,7 +161,7 @@ const EnquiryData = () => {
                             endDate={dateRange.to}
                             placeholderText="Select start date"
                             dateFormat="yyyy-MM-dd"
-                            className="custom-datepicker"
+                            className="po-custom-datepicker"
                         />
                     </label>
                     <label>
@@ -175,12 +175,12 @@ const EnquiryData = () => {
                             minDate={dateRange.from}
                             placeholderText="Select end date"
                             dateFormat="yyyy-MM-dd"
-                            className="custom-datepicker"
+                            className="po-custom-datepicker"
                         />
                     </label>
                     {(dateRange.from || dateRange.to) && (
                         <button
-                            className="clear-date-btn"
+                            className="po-clear-date-btn"
                             onClick={() => setDateRange({ from: null, to: null })}
                         >
                             Clear
@@ -189,31 +189,31 @@ const EnquiryData = () => {
                 </div>
             </div>
 
-            <div className="data-table-container">
-                <table className="data-records-table">
+            <div className="po-table-container">
+                <table className="po-records-table">
                     <thead>
                         <tr>
                             {columns.map((col) => (
                                 <th key={col.key}>
-                                    <div className="th-filter-wrapper">
+                                    <div className="po-th-filter-wrapper">
                                         {col.label}
                                         <button
-                                            className="filter-btn"
+                                            className="po-filter-btn"
                                             onClick={() => setActiveColumn(activeColumn === col.key ? null : col.key)}
                                         >
                                             ⏷
                                         </button>
                                         {activeColumn === col.key && (
-                                            <div className="filter-dropdown" ref={dropdownRef}>
+                                            <div className="po-filter-dropdown" ref={dropdownRef}>
                                                 <input
                                                     type="text"
                                                     placeholder="Search..."
-                                                    className="filter-search"
+                                                    className="po-filter-search"
                                                     value={searchText[col.key] || ''}
                                                     onChange={(e) => handleSearchChange(col.key, e.target.value)}
                                                 />
-                                                <div className="filter-select-all">
-                                                    <label className="filter-option select-all-option">
+                                                <div className="po-filter-select-all">
+                                                    <label className="po-filter-option po-select-all-option">
                                                         <input
                                                             type="checkbox"
                                                             checked={isAllSelected(col.key)}
@@ -222,9 +222,9 @@ const EnquiryData = () => {
                                                         <strong>Select All</strong>
                                                     </label>
                                                 </div>
-                                                <div className="filter-options">
+                                                <div className="po-filter-options">
                                                     {getFilteredValues(col.key).map((val) => (
-                                                        <label key={val} className="filter-option">
+                                                        <label key={val} className="po-filter-option">
                                                             <input
                                                                 type="checkbox"
                                                                 checked={filters[col.key]?.includes(val) || false}
@@ -257,4 +257,4 @@ const EnquiryData = () => {
     );
 };
 
-export default EnquiryData;
+export default PurchaseOrder;
