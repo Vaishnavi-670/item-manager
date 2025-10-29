@@ -42,6 +42,13 @@ const PurchaseOrder = () => {
     const [showPurchaseOptions, setShowPurchaseOptions] = useState(false);
     const [showQuotationTable, setShowQuotationTable] = useState(false);
     const [selectedItems, setSelectedItems] = useState([]);
+    const [showPOFormPopup, setShowPOFormPopup] = useState(false);
+    const [poFormData, setPOFormData] = useState({
+        poDate: '',
+        poExpiryDate: '',
+        poNumber: '',
+        gst: ''
+    });
     const dropdownRef = useRef(null);
     const customerDropdownRef = useRef(null);
 
@@ -283,6 +290,18 @@ const PurchaseOrder = () => {
         setCustomerSearchText('');
     };
 
+    // Handle opening the popup (reset all fields)
+    const handleOpenPopup = () => {
+        setShowPopup(true);
+        setShowCustomerDropdown(false);
+        setSelectedCustomer('');
+        setCustomerSearchText('');
+        setShowPurchaseOptions(false);
+        setShowQuotationTable(false);
+        setQuotationData([]);
+        setSelectedItems([]);
+    };
+
     // Handle popup close
     const handleClosePopup = () => {
         setShowPopup(false);
@@ -291,6 +310,7 @@ const PurchaseOrder = () => {
         setCustomerSearchText('');
         setShowPurchaseOptions(false);
         setShowQuotationTable(false);
+        setQuotationData([]);
         setSelectedItems([]);
     };
 
@@ -344,8 +364,46 @@ const PurchaseOrder = () => {
     // Create PO from selected items
     const handleCreatePOFromQuotation = () => {
         const selectedQuotations = quotationData.filter(item => selectedItems.includes(item.id));
-        // Add your logic to create PO here
-        handleCloseQuotationTable();
+        if (selectedQuotations.length > 0) {
+            // Get GST from dummy data for the selected customer
+            const customerGST = dummyItems.find(item => item.customerName === selectedCustomer)?.gst || '';
+            setPOFormData(prev => ({
+                ...prev,
+                gst: customerGST
+            }));
+            setShowPOFormPopup(true);
+            setShowQuotationTable(false);
+        }
+    };
+
+    // Handle PO form input changes
+    const handlePOFormChange = (field, value) => {
+        setPOFormData(prev => ({
+            ...prev,
+            [field]: value
+        }));
+    };
+
+    // Close PO form popup
+    const handleClosePOForm = () => {
+        setShowPOFormPopup(false);
+        setPOFormData({
+            poDate: '',
+            poExpiryDate: '',
+            poNumber: '',
+            gst: ''
+        });
+    };
+
+    // Submit PO form
+    const handleSubmitPO = () => {
+        const selectedQuotations = quotationData.filter(item => selectedItems.includes(item.id));
+        // Add your logic to save the PO here
+        console.log('PO Data:', poFormData);
+        console.log('Selected Items:', selectedQuotations);
+        handleClosePOForm();
+        setSelectedItems([]);
+        setQuotationData([]);
     };
 
     return (
@@ -459,7 +517,7 @@ const PurchaseOrder = () => {
             <div className='PO-buttons'>
                 <button className='PO-edit-button'>Edit</button>
                 <button className='PO-delete-button'>Delete</button>
-                <button className='PO-add-button' onClick={() => setShowPopup(true)}>Add New P.O.</button>
+                <button className='PO-add-button' onClick={handleOpenPopup}>Add New P.O.</button>
             </div>
 
             {/* Add New PO Popup */}
@@ -519,8 +577,6 @@ const PurchaseOrder = () => {
                                         Proceed
                                     </button>
                                 </div>
-
-                                {/* Purchase Options */}
                                 {showPurchaseOptions && (
                                     <div className='po-purchase-options'>
                                         <h4 className='po-options-title'>Choose Purchase Type:</h4>
@@ -566,33 +622,31 @@ const PurchaseOrder = () => {
                                         <th>Date</th>
                                         <th>QT/PI/Enq</th>
                                         <th>Item Name</th>
+                                        <th>Brand</th>
                                         <th>Qty</th>
                                         <th>Rate</th>
                                         <th>Discount (%)</th>
                                         <th>Amount</th>
                                         <th>
-                                            <input
-                                                type="checkbox"
-                                                checked={selectedItems.length === quotationData.length && quotationData.length > 0}
-                                                onChange={handleSelectAllItems}
-                                            />
+                                            Select
                                         </th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {quotationData.length === 0 && (
                                         <tr>
-                                            <td colSpan={8} style={{ textAlign: 'center', padding: '16px', color: '#666' }}>
+                                            <td colSpan={9} style={{ textAlign: 'center', padding: '16px', color: '#666' }}>
                                                 No items found for the selected customer.
                                             </td>
                                         </tr>
                                     )}
                                     {quotationData.map((item) => (
                                         <tr key={item.id} className={selectedItems.includes(item.id) ? 'selected-row' : ''}>
-                                            
+
                                             <td>{item.date}</td>
                                             <td>{item.qtType}</td>
                                             <td>{item.itemName}</td>
+                                            <td>{item.brand}</td>
                                             <td>{item.qty}</td>
                                             <td>₹{item.rate}</td>
                                             <td>{item.discount}%</td>
@@ -617,6 +671,103 @@ const PurchaseOrder = () => {
                                 onClick={handleCreatePOFromQuotation}
                             >
                                 Proceed
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* PO Form Popup */}
+            {showPOFormPopup && (
+                <div className="po-popup-overlay" onClick={handleClosePOForm}>
+                    <div className="po-form-popup-container" onClick={(e) => e.stopPropagation()}>
+                        <div className="po-popup-header">
+                            <h3>Add Purchase Order</h3>
+                            <button className="po-popup-close" onClick={handleClosePOForm}>×</button>
+                        </div>
+                        <div className="po-popup-body">
+                            {/* Customer and GST Info */}
+                            <div className="po-customer-gst-info">
+                                <div className="po-customer-name">
+                                    {/* <span className="po-customer-label">Customer:</span> */}
+                                    <span className="po-customer-value">{selectedCustomer}</span>
+                                </div>
+                                <div className="po-gst-display">
+                                    <span className="po-gst-label">GST:</span>
+                                    <span className="po-gst-value">{poFormData.gst || 'N/A'}</span>
+                                </div>
+                            </div>
+
+                            {/* PO Form Fields */}
+                            <div className="po-form-fields">
+                                <div className="po-form-row">
+                                    <div className="po-form-group">
+                                        <label>PO Number</label>
+                                        <input
+                                            type="text"
+                                            value={poFormData.poNumber}
+                                            onChange={(e) => handlePOFormChange('poNumber', e.target.value)}
+                                            placeholder="Enter PO Number"
+                                            className="po-form-input"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="po-form-row">
+                                    <div className="po-form-group">
+                                        <label>PO Date</label>
+                                        <input
+                                            type="date"
+                                            value={poFormData.poDate}
+                                            onChange={(e) => handlePOFormChange('poDate', e.target.value)}
+                                            className="po-form-input"
+                                        />
+                                    </div>
+                                    <div className="po-form-group">
+                                        <label>PO Expiry Date</label>
+                                        <input
+                                            type="date"
+                                            value={poFormData.poExpiryDate}
+                                            onChange={(e) => handlePOFormChange('poExpiryDate', e.target.value)}
+                                            className="po-form-input"
+                                        />
+                                    </div>
+                                </div>
+
+                            </div>
+
+                            {/* Selected Items Table */}
+                            <div className="po-form-table-section">
+                                <h4 className="po-form-table-title">Selected Items</h4>
+                                <table className="po-form-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Item Name</th>
+                                            <th>Brand</th>
+                                            <th>Qty</th>
+                                            <th>Price per Pc</th>
+                                            <th>Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {quotationData
+                                            .filter(item => selectedItems.includes(item.id))
+                                            .map((item) => (
+                                                <tr key={item.id}>
+                                                    <td>{item.itemName}</td>
+                                                    <td>{item.brand}</td>
+                                                    <td>{item.qty}</td>
+                                                    <td>₹{item.rate}</td>
+                                                    <td>₹{item.amount.toLocaleString()}</td>
+                                                </tr>
+                                            ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div className="po-quotation-footer">
+                            <button className="po-cancel-btn" onClick={handleClosePOForm}>Cancel</button>
+                            <button className="po-create-po-btn" onClick={handleSubmitPO}>
+                                Submit
                             </button>
                         </div>
                     </div>

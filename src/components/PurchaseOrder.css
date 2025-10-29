@@ -84,29 +84,6 @@
     transition: all 0.3s ease;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
     letter-spacing: 0.5px;
-    position: relative;
-    overflow: hidden;
-}
-
-.PO-edit-button::before,
-.PO-delete-button::before,
-.PO-add-button::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(255, 255, 255, 0.1);
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    border-radius: 14px;
-}
-
-.PO-edit-button:hover::before,
-.PO-delete-button:hover::before,
-.PO-add-button:hover::before {
-    opacity: 1;
 }
 
 .PO-edit-button {
@@ -211,27 +188,29 @@
 }
 
 .po-popup-header {
-    padding: 10px 14px;
+    padding: 5px 10px;
     border-bottom: 1px solid rgba(0, 0, 0, 0.1);
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
-    background: linear-gradient(135deg, #1e40af, #1e3a8a);
+    position: relative;
 }
 
 .po-popup-header h3 {
     margin: 0;
     font-size: 20px;
     font-weight: 600;
-    color: #ffffff;
+    color: #1e3a8a;
     letter-spacing: 0.5px;
 }
 
 .po-popup-close {
+    position: absolute;
+    right: 10px;
     background: transparent;
     border: none;
     font-size: 32px;
-    color: #ffffff;
+    color: rgb(2, 2, 72);
     cursor: pointer;
     width: 36px;
     height: 36px;
@@ -240,7 +219,6 @@
     justify-content: center;
     border-radius: 50%;
     transition: all 0.3s ease;
-    line-height: 1;
 }
 
 .po-popup-close:hover {
@@ -249,13 +227,21 @@
 }
 
 .po-popup-body {
-    padding: 30px 24px;
+    padding: 10px 10px ;
 }
 
-/* Customer Selection Dropdown */
-.po-customer-selection-wrapper {
+/* Customer and GST Info Section */
+.po-customer-gst-info {
+    margin-bottom: 20px;
+    padding: 0;
     display: flex;
     flex-direction: column;
+    gap: 5px;
+}
+
+.po-customer-name {
+    display: flex;
+    align-items: center;
     gap: 10px;
 }
 
@@ -263,6 +249,36 @@
     font-size: 15px;
     font-weight: 600;
     color: #374151;
+}
+
+.po-customer-value {
+    font-size: 20px;
+    font-weight: 600;
+    color: #1e3a8a;
+}
+
+.po-gst-display {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.po-gst-label {
+    font-size: 14px;
+    font-weight: 500;
+    color: #374151;
+}
+
+.po-gst-value {
+    font-size: 14px;
+    color: #6b7280;
+}
+
+/* Customer Selection Dropdown */
+.po-customer-selection-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
 
 .po-customer-input-row {
@@ -458,30 +474,12 @@
     cursor: pointer;
     transition: all 0.3s ease;
     text-align: center;
-    position: relative;
-    overflow: hidden;
-}
-
-.po-option-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(135deg, rgba(30, 64, 175, 0.05), rgba(30, 58, 138, 0.05));
-    opacity: 0;
-    transition: opacity 0.3s ease;
 }
 
 .po-option-card:hover {
     transform: translateY(-5px);
     border-color: #1e40af;
     box-shadow: 0 10px 30px rgba(30, 64, 175, 0.3);
-}
-
-.po-option-card:hover::before {
-    opacity: 1;
 }
 
 .po-option-card:active {
@@ -567,7 +565,6 @@
     cursor: pointer;
     width: 40px;
     height: 40px;
-
     display: flex;
     align-items: center;
     justify-content: center;
@@ -592,13 +589,6 @@
     border-collapse: separate;
     border-spacing: 0;
     background: #ffffff;
-        text-align: center;
-
-}
-
-.po-quotation-table thead tr {
-        text-align: center;
-
 }
 
 .po-quotation-table th {
@@ -612,16 +602,11 @@
     position: sticky;
     top: 0;
     z-index: 10;
-        background: linear-gradient(135deg, #1e40af, #1e3a8a);
-
+    background: linear-gradient(135deg, #1e40af, #1e3a8a);
 }
 
-.po-quotation-table th:first-child {
-    text-align: center;
-    width: 50px;
-}
-
-/* Center specific header titles (QT/PI/Enq and Item Name) */
+/* Center specific header titles (QT/PI/Enq, Item Name, and Brand) */
+.po-quotation-table th:nth-child(2),
 .po-quotation-table th:nth-child(3),
 .po-quotation-table th:nth-child(4) {
     text-align: center;
@@ -631,8 +616,6 @@
     transition: all 0.2s ease;
     border-bottom: 1px solid #e5e7eb;
 }
-
-
 
 .po-quotation-table tbody tr.selected-row {
     background: linear-gradient(135deg, rgba(30, 64, 175, 0.1), rgba(30, 58, 138, 0.1));
@@ -648,32 +631,33 @@
 }
 
 /* Quotation table column widths */
-/* 1: Select checkbox */
+/* 1: Date */
 .po-quotation-table th:nth-child(1),
 .po-quotation-table td:nth-child(1) {
-    width: 80px;
-}
-
-/* 2: Date */
-.po-quotation-table th:nth-child(2),
-.po-quotation-table td:nth-child(2) {
     width: 120px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
-/* 3: QT/PI/Enq */
-.po-quotation-table th:nth-child(3),
-.po-quotation-table td:nth-child(3) {
+/* 2: QT/PI/Enq */
+.po-quotation-table th:nth-child(2),
+.po-quotation-table td:nth-child(2) {
     width: 150px;
     white-space: nowrap;
 }
 
-/* 4: Item Name */
+/* 3: Item Name */
+.po-quotation-table th:nth-child(3),
+.po-quotation-table td:nth-child(3) {
+    width: 200px;
+}
+
+/* 4: Brand */
 .po-quotation-table th:nth-child(4),
 .po-quotation-table td:nth-child(4) {
-    width: 50px;
+    width: 120px;
+    text-align: center;
 }
 
 /* 5: Qty (compact numeric) */
@@ -708,6 +692,13 @@
     white-space: nowrap;
 }
 
+/* 9: Select checkbox */
+.po-quotation-table th:nth-child(9),
+.po-quotation-table td:nth-child(9) {
+    width: 80px;
+    text-align: center;
+}
+
 .po-quotation-table input[type="checkbox"] {
     width: 18px;
     height: 18px;
@@ -724,42 +715,59 @@
     gap: 15px;
 }
 
-.po-cancel-btn {
-    padding: 5px 10px;
-    background: linear-gradient(135deg, #6b7280, #4b5563);
-    color: #ffffff;
-    border: none;
-    border-radius: 10px;
-    font-size: 15px;
+.po-cancel-btn,
+.po-create-po-btn {
+    padding: 10px 20px;
+    border: 2px solid transparent;
+    border-radius: 16px;
+    font-size: 14px;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
     letter-spacing: 0.5px;
+}
+
+.po-cancel-btn {
+    background: linear-gradient(135deg, #b91c1c, #991b1b);
+    color: #ffffff;
+    border-color: rgba(255, 255, 255, 0.15);
 }
 
 .po-cancel-btn:hover {
-    background: linear-gradient(135deg, #4b5563, #374151);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(107, 114, 128, 0.4);
+    background: linear-gradient(135deg, #991b1b, #7f1d1d);
+    transform: translateY(-3px);
+    box-shadow: 0 6px 16px rgba(185, 28, 28, 0.6);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.po-cancel-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 3px 8px rgba(185, 28, 28, 0.5);
 }
 
 .po-create-po-btn {
-    padding: 5px 10px;
-    background: linear-gradient(135deg, #054d39, #064e3b);
+    background: linear-gradient(135deg, #065f46, #064e3b);
     color: #ffffff;
-    border: none;
-    border-radius: 10px;
-    font-size: 15px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    letter-spacing: 0.5px;
+    border-color: rgba(255, 255, 255, 0.15);
 }
 
-.po-create-po-btn:hover {
-    background: linear-gradient(135deg, #066248, #086523);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(107, 114, 128, 0.4);
+.po-create-po-btn:hover:not(:disabled) {
+    background: linear-gradient(135deg, #064e3b, #022c22);
+    transform: translateY(-3px);
+    box-shadow: 0 6px 16px rgba(6, 95, 70, 0.6);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.po-create-po-btn:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: 0 3px 8px rgba(6, 95, 70, 0.5);
+}
+
+.po-create-po-btn:disabled {
+    background: linear-gradient(135deg, #9ca3af, #6b7280);
+    cursor: not-allowed;
+    opacity: 0.6;
+    border-color: rgba(255, 255, 255, 0.1);
 }
 
 .po-quotation-body::-webkit-scrollbar {
@@ -778,6 +786,204 @@
 
 .po-quotation-body::-webkit-scrollbar-thumb:hover {
     background: linear-gradient(135deg, #1e3a8a, #1e293b);
+}
+
+/* PO Form Popup */
+.po-form-popup-container {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(245, 245, 255, 0.98));
+    width: 70%;
+    max-width: 700px;
+    max-height: 90vh;
+    padding: 15px;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    animation: po-slideUp 0.3s ease;
+}
+
+.po-form-fields {
+    margin: 0 0 20px 0;
+    padding: 0;
+}
+
+.po-form-row {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 12px;
+    align-items: flex-end;
+}
+
+.po-form-row:last-child {
+    margin-bottom: 0;
+}
+
+.po-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+/* Specific widths for each field type */
+/* PO Date - compact */
+.po-form-group:nth-child(1):has(input[type="date"]) {
+    flex: 0 0 180px;
+    min-width: 180px;
+    max-width: 180px;
+}
+
+/* PO Expiry Date - compact */
+.po-form-group:nth-child(2):has(input[type="date"]) {
+    flex: 0 0 180px;
+    min-width: 180px;
+    max-width: 180px;
+}
+
+/* PO Number - medium */
+.po-form-group:has(input[placeholder*="PO Number"]) {
+    flex: 0 0 240px;
+    min-width: 240px;
+    max-width: 240px;
+}
+
+/* GST - medium */
+.po-form-group:has(input[placeholder*="GST"]) {
+    flex: 0 0 240px;
+    min-width: 240px;
+    max-width: 240px;
+}
+
+.po-form-group label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 0;
+    letter-spacing: 0.3px;
+}
+
+.po-form-input {
+    padding: 9px 12px;
+    border: 2px solid rgba(30, 64, 175, 0.3);
+    border-radius: 8px;
+    font-size: 14px;
+    outline: none;
+    transition: all 0.3s ease;
+    background: #ffffff;
+    color: #1e293b;
+    font-weight: 500;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Specific styling for date inputs */
+.po-form-input[type="date"] {
+    padding: 8px 10px;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.po-form-input:focus {
+    border-color: #1e40af;
+    box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.1);
+}
+
+.po-form-input::placeholder {
+    color: #9ca3af;
+    font-weight: 400;
+}
+
+.po-form-input[readonly] {
+    background: linear-gradient(135deg, #f9fafb, #f3f4f6);
+    cursor: not-allowed;
+    color: #6b7280;
+    border-color: #e5e7eb;
+}
+
+/* GST Display (inline label and value) */
+.po-gst-display {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0;
+}
+
+.po-gst-label {
+    font-size: 14px;
+    font-weight: 700;
+    color: #374151;
+}
+
+.po-gst-value {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.po-form-table-section {
+    margin-top: 20px;
+}
+
+.po-form-table-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1e40af;
+    margin: 0 0 15px 0;
+}
+
+.po-form-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #ffffff;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border: 1px solid #d1d5db;
+}
+
+.po-form-table thead {
+    background: linear-gradient(135deg, #1e40af, #1e3a8a) !important;
+}
+
+.po-form-table thead tr {
+    background: linear-gradient(135deg, #1e40af, #1e3a8a) !important;
+}
+
+.po-form-table th {
+    padding: 5px 7px;
+    text-align: center;
+    color: #ffffff !important;
+    font-weight: 600;
+    font-size: 14px;
+    letter-spacing: 0.5px;
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.po-form-table tbody tr {
+    border-bottom: 1px solid #e5e7eb;
+    transition: background-color 0.2s;
+}
+
+.po-form-table tbody tr:hover {
+    background-color: #f9fafb;
+}
+
+.po-form-table td {
+    padding: 12px 16px;
+    font-size: 14px;
+    color: #374151;
+    border: 1px solid #e5e7eb;
+}
+
+.po-form-table tfoot tr {
+    background: #f9fafb;
+    border-top: 2px solid #1e40af;
+}
+
+.po-form-table tfoot td {
+    padding: 14px 16px;
+    font-size: 15px;
+    color: #1e40af;
 }
 
 /* Custom DatePicker Styling */
