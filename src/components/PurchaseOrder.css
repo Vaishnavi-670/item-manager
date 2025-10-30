@@ -399,6 +399,53 @@
     transition: background-color 0.2s;
 }
 
+/* Small Add Row button with plus icon */
+.po-add-row-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border-radius: 6px;
+    background: #10b981; /* emerald */
+    color: #ffffff;
+    border: none;
+    cursor: pointer;
+    font-size: 18px;
+    line-height: 1;
+    box-shadow: 0 4px 10px rgba(16,185,129,0.12);
+    transition: transform 0.12s ease, background 0.12s ease;
+}
+.po-add-row-btn:hover { background: #059669; transform: translateY(-1px); }
+.po-add-row-btn:active { transform: translateY(0); }
+
+/* Per-row remove button (floats outside the table row, visually in front) */
+.po-form-table-section { position: relative; overflow: visible; padding-right: 16px; }
+.po-action-cell { text-align: center; width: 48px; }
+/* manual-po-row no longer needs special positioning */
+.po-remove-row-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.9);
+    color: #ef4444;
+    border: 1px solid rgba(239,68,68,0.1239);
+    font-size: 25px;
+    line-height: 1;
+    z-index: 20;
+    cursor: pointer;
+    box-shadow: 0 6px 14px rgba(0,0,0,0.06);
+}
+.po-remove-row-btn:hover {
+    background: rgba(239,68,68,0.12); /* light red hover */
+    transform: translateY(-2px);
+}
+
 .po-records-table tbody tr:nth-child(even) {
     background-color: #f9fafb;
 }
@@ -568,9 +615,9 @@
 
 .po-popup-container {
     background: linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(245, 245, 255, 0.98));
-    width: 90%;
+    width: 100%;
     max-width: 450px;
-    padding: 15px; 
+    padding: 18px; 
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
     backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.3);
@@ -623,10 +670,7 @@
     transition: all 0.3s ease;
 }
 
-.po-popup-close:hover {
-    background: rgba(255, 255, 255, 0.2);
-    transform: rotate(90deg);
-}
+/* popup close button removed from JSX; keep no hover rules */
 
 .po-popup-body {
     padding: 10px 10px ;
@@ -976,10 +1020,7 @@
     line-height: 1;
 }
 
-.po-quotation-close:hover {
-    background: rgba(255, 255, 255, 0.2);
-    transform: rotate(90deg);
-}
+/* quotation close button removed from JSX; hover rule removed */
 
 .po-quotation-body {
     flex: 1;
@@ -1194,8 +1235,8 @@
 /* PO Form Popup */
 .po-form-popup-container {
     background: linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(245, 245, 255, 0.98));
-    width: 70%;
-    max-width: 700px;
+    width: 76%; /* slightly wider so the inner table has more room */
+    max-width: 800px;
     max-height: 90vh;
     padding: 15px;
     overflow-y: auto;
@@ -1257,7 +1298,7 @@
 }
 
 .po-form-group label {
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 600;
     color: #374151;
     margin-bottom: 0;
@@ -1265,10 +1306,11 @@
 }
 
 .po-form-input {
-    padding: 9px 12px;
-    border: 2px solid rgba(30, 64, 175, 0.3);
+    /* reduced padding for a more compact input */
+    padding: 4px 6px;
+    border: 1px solid rgba(30, 64, 175, 0.3);
     border-radius: 8px;
-    font-size: 14px;
+    font-size: 12px;
     outline: none;
     transition: all 0.3s ease;
     background: #ffffff;
@@ -1280,7 +1322,8 @@
 
 /* Specific styling for date inputs */
 .po-form-input[type="date"] {
-    padding: 8px 10px;
+    /* slightly reduced date input padding to match compact inputs */
+    padding: 6px 8px;
     font-size: 13px;
     cursor: pointer;
 }
@@ -1323,14 +1366,16 @@
 }
 
 .po-form-table-section {
-    margin-top: 20px;
+    /* width: 100%; */
+    /* reduced spacing above the table */
+    margin-top: 8px;
 }
 
 .po-form-table-title {
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 600;
     color: #1e40af;
-    margin: 0 0 15px 0;
+    margin: 0 0 8px 0;
 }
 
 .po-form-table {
@@ -1338,7 +1383,8 @@
     border-collapse: collapse;
     background: #ffffff;
     border-radius: 8px;
-    overflow: hidden;
+    /* allow positioned children (floating buttons) to be visible */
+    overflow: visible;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     border: 1px solid #d1d5db;
 }
@@ -1372,10 +1418,24 @@
 }
 
 .po-form-table td {
-    padding: 12px 16px;
+    /* reduced cell padding for more compact rows */
+    padding: 8px 10px;
     font-size: 14px;
     color: #374151;
     border: 1px solid #e5e7eb;
+}
+
+/* Make inputs inside the PO form table appear borderless */
+.po-form-table .po-form-input {
+    border: none;
+    background: transparent;
+    padding: 4px 6px; /* keep compact padding */
+    box-shadow: none;
+}
+.po-form-table .po-form-input:focus {
+    outline: none;
+    border-color: transparent;
+    box-shadow: none;
 }
 
 .po-form-table tfoot tr {

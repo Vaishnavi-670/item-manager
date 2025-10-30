@@ -39,7 +39,12 @@ const PurchaseOrder = () => {
     const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
     const [selectedCustomer, setSelectedCustomer] = useState('');
     const [customerSearchText, setCustomerSearchText] = useState('');
+    const [showPONumberDropdown, setShowPONumberDropdown] = useState(false);
+    const [poNumberSearchText, setPONumberSearchText] = useState('');
+    const [selectedPONumber, setSelectedPONumber] = useState('');
     const [showPurchaseOptions, setShowPurchaseOptions] = useState(false);
+    const [editMode, setEditMode] = useState(false);
+    const [showPOSelection, setShowPOSelection] = useState(false);
     const [showQuotationTable, setShowQuotationTable] = useState(false);
     const [selectedItems, setSelectedItems] = useState([]);
     const [showPOFormPopup, setShowPOFormPopup] = useState(false);
@@ -49,8 +54,10 @@ const PurchaseOrder = () => {
         poNumber: '',
         gst: ''
     });
+    const [poFormItems, setPoFormItems] = useState([]); // rows for manual PO items (without quotation)
     const dropdownRef = useRef(null);
     const customerDropdownRef = useRef(null);
+    const poNumberDropdownRef = useRef(null);
 
     // Quotation data for the table (built dynamically from Enquiry + this page)
     const [quotationData, setQuotationData] = useState([]);
@@ -77,6 +84,9 @@ const PurchaseOrder = () => {
             }
             if (customerDropdownRef.current && !customerDropdownRef.current.contains(e.target)) {
                 setShowCustomerDropdown(false);
+            }
+            if (poNumberDropdownRef.current && !poNumberDropdownRef.current.contains(e.target)) {
+                setShowPONumberDropdown(false);
             }
         };
         document.addEventListener('mousedown', handleClickOutside);
@@ -288,6 +298,9 @@ const PurchaseOrder = () => {
         setSelectedCustomer(customer);
         setShowCustomerDropdown(false);
         setCustomerSearchText('');
+        // reset PO selection when customer changes
+        setSelectedPONumber('');
+        setPONumberSearchText('');
     };
 
     // Handle opening the popup (reset all fields)
@@ -302,6 +315,13 @@ const PurchaseOrder = () => {
         setSelectedItems([]);
     };
 
+    // Open popup in edit mode
+    const handleEditClick = () => {
+        setEditMode(true);
+        // reuse existing popup open behaviour
+        handleOpenPopup();
+    };
+
     // Handle popup close
     const handleClosePopup = () => {
         setShowPopup(false);
@@ -312,13 +332,24 @@ const PurchaseOrder = () => {
         setShowQuotationTable(false);
         setQuotationData([]);
         setSelectedItems([]);
+        setEditMode(false);
+        setShowPOSelection(false);
+        setSelectedPONumber('');
+        setPONumberSearchText('');
     };
 
     // Handle proceed button click
     const handleProceed = () => {
         if (selectedCustomer) {
-            setShowPurchaseOptions(true);
             setShowCustomerDropdown(false);
+            if (editMode) {
+                // In edit mode proceed only when a PO number is selected
+                if (selectedPONumber) {
+                    handleSelectExistingPO(selectedPONumber);
+                }
+            } else {
+                setShowPurchaseOptions(true);
+            }
         }
     };
 
@@ -331,8 +362,60 @@ const PurchaseOrder = () => {
             setShowPurchaseOptions(false);
             setShowPopup(false);
         } else if (option === 'without-quotation') {
-            // Add your "New Purchase Order Without Quotation" logic here
+            // For a new PO without a quotation: prefill customer GST (if available),
+            // open the PO form popup and hide other overlays. Other form fields
+            // (PO Number, Dates, Items) will be filled manually by the user.
+            const customerGST = poRecords.find(item => item.customerName === selectedCustomer)?.gst || '';
+            setPOFormData(prev => ({
+                ...prev,
+                gst: customerGST,
+                poNumber: '',
+                poDate: '',
+                poExpiryDate: ''
+            }));
+            // Initialize with one empty row for manual item entry
+            setPoFormItems([{ id: Date.now(), itemName: '', brand: '', qty: '', rate: '', amount: 0 }]);
+            // Clear any quotation selection/state — we're creating a fresh PO
+            setSelectedItems([]);
+            setQuotationData([]);
+            setShowPOFormPopup(true);
+            setShowPurchaseOptions(false);
+            setShowPopup(false);
         }
+    };
+
+    // Handle choosing an existing PO number to edit
+    const handleSelectExistingPO = (poNo) => {
+        if (!poNo) return;
+        // find all records with this poNo for the selected customer
+        const records = poRecords.filter(r => r.poNo === poNo && r.customerName === selectedCustomer);
+        if (records.length === 0) {
+            alert('No records found for selected PO');
+            return;
+        }
+        // Prefill form data from first record
+        const first = records[0];
+        setPOFormData(prev => ({
+            ...prev,
+            poNumber: first.poNo || '',
+            poDate: first.poDate || '',
+            poExpiryDate: first.poExpiryDate || '',
+            gst: first.gst || ''
+        }));
+        // Map records to form items
+        const items = records.map(rec => ({
+            id: Date.now() + Math.random(),
+            itemName: rec.item || '',
+            brand: rec.brand || '',
+            qty: rec.qty || 0,
+            rate: rec.pricePerPc || 0,
+            amount: (Number(rec.qty) || 0) * (Number(rec.pricePerPc) || 0)
+        }));
+        setPoFormItems(items);
+        // Open PO form for editing
+        setShowPOFormPopup(true);
+        setShowPOSelection(false);
+        setShowPopup(false);
     };
 
     // Handle checkbox selection in quotation table
@@ -384,6 +467,32 @@ const PurchaseOrder = () => {
         }));
     };
 
+    // Get PO numbers for a selected customer
+    const getPONumbersForCustomer = (customer) => {
+        if (!customer) return [];
+        return [...new Set(poRecords.filter(r => r.customerName === customer).map(r => r.poNo).filter(Boolean))];
+    };
+
+    // Manual PO item rows handlers (for without-quotation flow)
+    const handleAddPOItemRow = () => {
+        setPoFormItems(prev => ([...prev, { id: Date.now() + Math.random(), itemName: '', brand: '', qty: '', rate: '', amount: 0 }]));
+    };
+
+    const handleRemovePOItemRow = (id) => {
+        setPoFormItems(prev => prev.filter(row => row.id !== id));
+    };
+
+    const handlePOItemChange = (id, field, value) => {
+        setPoFormItems(prev => prev.map(row => {
+            if (row.id !== id) return row;
+            const updated = { ...row, [field]: value };
+            const qty = Number(updated.qty) || 0;
+            const rate = Number(updated.rate) || 0;
+            updated.amount = qty * rate;
+            return updated;
+        }));
+    };
+
     // Close PO form popup
     const handleClosePOForm = () => {
         setShowPOFormPopup(false);
@@ -393,13 +502,26 @@ const PurchaseOrder = () => {
             poNumber: '',
             gst: ''
         });
+        setPoFormItems([]);
     };
 
     // Submit PO form
     const handleSubmitPO = () => {
         const selectedQuotations = quotationData.filter(item => selectedItems.includes(item.id));
-        
-        if (selectedQuotations.length === 0) {
+
+        // If there are no selected quotations, fallback to manual poFormItems (without-quotation flow)
+        let itemsToCreate = [];
+        if (selectedQuotations.length > 0) {
+            itemsToCreate = selectedQuotations.map(q => ({ itemName: q.itemName, brand: q.brand, qty: q.qty, rate: q.rate }));
+        } else if (poFormItems.length > 0) {
+            // Validate at least one manual row has an item name
+            const validManual = poFormItems.filter(r => r.itemName && (Number(r.qty) > 0));
+            if (validManual.length === 0) {
+                alert('Please add at least one item with quantity');
+                return;
+            }
+            itemsToCreate = validManual.map(r => ({ itemName: r.itemName, brand: r.brand || '-', qty: Number(r.qty) || 0, rate: Number(r.rate) || 0 }));
+        } else {
             alert('Please select at least one item');
             return;
         }
@@ -413,7 +535,7 @@ const PurchaseOrder = () => {
         const currentUser = localStorage.getItem('userName') || 'Sales Person';
 
         // Create new PO records from selected quotation items
-        const newPoRecords = selectedQuotations.map((item) => ({
+        const newPoRecords = itemsToCreate.map((item) => ({
             poDate: poFormData.poDate,
             poExpiryDate: poFormData.poExpiryDate,
             salesPerson: currentUser,
@@ -433,7 +555,7 @@ const PurchaseOrder = () => {
         console.log('PO Data:', poFormData);
         console.log('Selected Items:', selectedQuotations);
         console.log('New PO Records:', newPoRecords);
-        
+
         handleClosePOForm();
         setSelectedItems([]);
         setQuotationData([]);
@@ -548,7 +670,7 @@ const PurchaseOrder = () => {
             </div>
 
             <div className='PO-buttons'>
-                <button className='PO-edit-button'>Edit</button>
+                <button className='PO-edit-button' onClick={handleEditClick}>Edit</button>
                 <button className='PO-delete-button'>Delete</button>
                 <button className='PO-add-button' onClick={handleOpenPopup}>Add New P.O.</button>
             </div>
@@ -559,7 +681,6 @@ const PurchaseOrder = () => {
                     <div className="po-popup-container" onClick={(e) => e.stopPropagation()}>
                         <div className="po-popup-header">
                             <h3>Add New Purchase Order</h3>
-                            <button className="po-popup-close" onClick={handleClosePopup}>×</button>
                         </div>
                         <div className="po-popup-body">
                             <div className='po-customer-selection-wrapper'>
@@ -602,9 +723,59 @@ const PurchaseOrder = () => {
                                             </div>
                                         )}
                                     </div>
+                                </div>
+                                {editMode && (
+                                    <>
+                                        <label className='po-customer-label' style={{ marginTop: 12 }}>Select Purchase Order:</label>
+                                        <div className='po-customer-input-row'>
+                                            <div className='po-customer-input-container' ref={poNumberDropdownRef}>
+                                                <input
+                                                    type="text"
+                                                    placeholder="Select PO number..."
+                                                    className="po-customer-input"
+                                                    value={selectedPONumber}
+                                                    onClick={() => { if (selectedCustomer) setShowPONumberDropdown(true); }}
+                                                    onChange={(e) => {
+                                                        setSelectedPONumber(e.target.value);
+                                                        setPONumberSearchText(e.target.value);
+                                                        setShowPONumberDropdown(true);
+                                                    }}
+                                                    disabled={!selectedCustomer}
+                                                />
+                                                {showPONumberDropdown && (
+                                                    <div className="po-customer-dropdown">
+                                                        <input
+                                                            type="text"
+                                                            placeholder="Search PO..."
+                                                            className="po-customer-search"
+                                                            value={poNumberSearchText}
+                                                            onChange={(e) => setPONumberSearchText(e.target.value)}
+                                                            autoFocus
+                                                        />
+                                                        <div className="po-customer-options">
+                                                            {getPONumbersForCustomer(selectedCustomer)
+                                                                .filter(po => po.toLowerCase().includes((poNumberSearchText || '').toLowerCase()))
+                                                                .map((po, index) => (
+                                                                    <div
+                                                                        key={index}
+                                                                        className="po-customer-option"
+                                                                        onClick={() => { setSelectedPONumber(po); setShowPONumberDropdown(false); }}
+                                                                    >
+                                                                        {po}
+                                                                    </div>
+                                                                ))}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </>
+                                )}
+                                {/* Proceed button: enabled for normal flow after customer, or for edit flow after PO selected */}
+                                <div style={{ marginTop: 12 }}>
                                     <button
                                         className='po-proceed-button'
-                                        disabled={!selectedCustomer}
+                                        disabled={editMode ? !selectedPONumber : !selectedCustomer}
                                         onClick={handleProceed}
                                     >
                                         Proceed
@@ -633,6 +804,7 @@ const PurchaseOrder = () => {
                                         </div>
                                     </div>
                                 )}
+                                {/* PO selection handled inline via PO number input in edit mode */}
                             </div>
                         </div>
                     </div>
@@ -645,7 +817,6 @@ const PurchaseOrder = () => {
                     <div className="po-quotation-container" onClick={(e) => e.stopPropagation()}>
                         <div className="po-quotation-header">
                             <h3>Quotations for {selectedCustomer}</h3>
-                            <button className="po-quotation-close" onClick={handleCloseQuotationTable}>×</button>
                         </div>
                         <div className="po-quotation-body">
                             <table className="po-quotation-table">
@@ -716,7 +887,6 @@ const PurchaseOrder = () => {
                     <div className="po-form-popup-container" onClick={(e) => e.stopPropagation()}>
                         <div className="po-popup-header">
                             <h3>Add Purchase Order</h3>
-                            <button className="po-popup-close" onClick={handleClosePOForm}>×</button>
                         </div>
                         <div className="po-popup-body">
                             {/* Customer and GST Info */}
@@ -778,23 +948,102 @@ const PurchaseOrder = () => {
                                             <th>Brand</th>
                                             <th>Qty</th>
                                             <th>Price per Pc</th>
-                                            <th>Total</th>
+                                                <th>Total</th>
+                                                <th></th>
+                                            {/* <th></th> */}
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {quotationData
-                                            .filter(item => selectedItems.includes(item.id))
-                                            .map((item) => (
-                                                <tr key={item.id}>
-                                                    <td>{item.itemName}</td>
-                                                    <td>{item.brand}</td>
-                                                    <td>{item.qty}</td>
-                                                    <td>₹{item.rate}</td>
-                                                    <td>₹{item.amount.toLocaleString()}</td>
+                                        {poFormItems && poFormItems.length > 0 ? (
+                                            poFormItems.map((row) => (
+                                                <tr key={row.id} className="manual-po-row">
+                                                    <td>
+                                                        <input
+                                                            type="text"
+                                                            value={row.itemName}
+                                                            onChange={(e) => handlePOItemChange(row.id, 'itemName', e.target.value)}
+                                                            placeholder="Item name"
+                                                            className="po-form-input"
+                                                        />
+                                                    </td>
+                                                    <td>
+                                                        <input
+                                                            type="text"
+                                                            value={row.brand}
+                                                            onChange={(e) => handlePOItemChange(row.id, 'brand', e.target.value)}
+                                                            placeholder="Brand"
+                                                            className="po-form-input"
+                                                        />
+                                                    </td>
+                                                    <td>
+                                                        <input
+                                                            type="number"
+                                                            value={row.qty}
+                                                            onChange={(e) => handlePOItemChange(row.id, 'qty', e.target.value)}
+                                                            placeholder="Qty"
+                                                            className="po-form-input"
+                                                            min="0"
+                                                        />
+                                                    </td>
+                                                    <td>
+                                                        <input
+                                                            type="number"
+                                                            value={row.rate}
+                                                            onChange={(e) => handlePOItemChange(row.id, 'rate', e.target.value)}
+                                                            placeholder="Rate"
+                                                            className="po-form-input"
+                                                            min="0"
+                                                        />
+                                                    </td>
+                                                    <td>
+                                                        <span>₹{(row.amount || 0).toLocaleString()}</span>
+                                                    </td>
+                                                    <td className="po-action-cell">
+                                                        <button
+                                                            className="po-remove-row-btn"
+                                                            onClick={() => handleRemovePOItemRow(row.id)}
+                                                            title="Remove row"
+                                                            aria-label="Remove row"
+                                                        >
+                                                            ×
+                                                        </button>
+                                                    </td>
                                                 </tr>
-                                            ))}
+
+
+                                            ))
+                                        ) : (
+                                            quotationData
+                                                .filter(item => selectedItems.includes(item.id))
+                                                .map((item) => (
+                                                    <tr key={item.id}>
+                                                            <td>{item.itemName}</td>
+                                                            <td>{item.brand}</td>
+                                                            <td>{item.qty}</td>
+                                                            <td>₹{item.rate}</td>
+                                                            <td>₹{item.amount.toLocaleString()}</td>
+                                                            <td />
+                                                        </tr>
+                                                ))
+                                        )}
                                     </tbody>
+                                   
                                 </table>
+
+                                                                 
+                                {/* Add Row button for manual entry */}
+                                {poFormItems && poFormItems.length > 0 && (
+                                    <div style={{ marginTop: '8px' }}>
+                                        <button
+                                            className="po-add-row-btn"
+                                            onClick={handleAddPOItemRow}
+                                            title="Add Row"
+                                            aria-label="Add Row"
+                                        >
+                                            +
+                                        </button>
+                                    </div>
+                                )}
                             </div>
                         </div>
                         <div className="po-quotation-footer">
