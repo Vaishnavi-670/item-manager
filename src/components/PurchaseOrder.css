@@ -420,10 +420,8 @@
 .po-add-row-btn:hover { background: #059669; transform: translateY(-1px); }
 .po-add-row-btn:active { transform: translateY(0); }
 
-/* Per-row remove button (floats outside the table row, visually in front) */
 .po-form-table-section { position: relative; overflow: visible; padding-right: 16px; }
 .po-action-cell { text-align: center; width: 48px; }
-/* manual-po-row no longer needs special positioning */
 .po-remove-row-btn {
     display: inline-flex;
     align-items: center;

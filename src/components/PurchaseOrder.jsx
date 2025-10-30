@@ -336,6 +336,15 @@ const PurchaseOrder = () => {
         setShowPOSelection(false);
         setSelectedPONumber('');
         setPONumberSearchText('');
+        setShowPONumberDropdown(false);
+        setShowPOFormPopup(false);
+        setPOFormData({
+            poDate: '',
+            poExpiryDate: '',
+            poNumber: '',
+            gst: ''
+        });
+        setPoFormItems([]);
     };
 
     // Handle proceed button click
@@ -503,6 +512,12 @@ const PurchaseOrder = () => {
             gst: ''
         });
         setPoFormItems([]);
+        setSelectedPONumber('');
+        setPONumberSearchText('');
+        setShowPONumberDropdown(false);
+        setEditMode(false);
+        setSelectedCustomer('');
+        setCustomerSearchText('');
     };
 
     // Submit PO form
@@ -551,10 +566,6 @@ const PurchaseOrder = () => {
 
         // Add new records to the table
         setPoRecords(prev => [...newPoRecords, ...prev]);
-
-        console.log('PO Data:', poFormData);
-        console.log('Selected Items:', selectedQuotations);
-        console.log('New PO Records:', newPoRecords);
 
         handleClosePOForm();
         setSelectedItems([]);
@@ -671,7 +682,6 @@ const PurchaseOrder = () => {
 
             <div className='PO-buttons'>
                 <button className='PO-edit-button' onClick={handleEditClick}>Edit</button>
-                <button className='PO-delete-button'>Delete</button>
                 <button className='PO-add-button' onClick={handleOpenPopup}>Add New P.O.</button>
             </div>
 
@@ -1054,11 +1064,6 @@ const PurchaseOrder = () => {
                         </div>
                     </div>
                 </div>
-
-
-
-
-
             )}
         </div>
     );
