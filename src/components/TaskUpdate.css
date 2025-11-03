@@ -1,0 +1,384 @@
+/* Task Update Container */
+.tu-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+    /* background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); */
+}
+
+/* Main Panel */
+.tu-panel {
+    background: white;
+    /* border-radius: 16px; */
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    padding: 25px;
+    width: 100%;
+    padding-top: 0;
+    max-width: 700px;
+}
+
+/* Title */
+.tu-title {
+    font-size: 32px;
+    font-weight: 800;
+    color: #1e293b;
+    margin: 0;
+    text-align: center;
+    /* background: linear-gradient(135deg, #667eea, #764ba2); */
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* Form */
+.tu-form {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+}
+
+/* Form Group */
+.tu-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.tu-form-group.tu-full-width {
+    grid-column: 1 / -1;
+}
+
+.tu-form-group.tu-user-field {
+    grid-column: 1 / -1;
+    background: linear-gradient(135deg, #f0f4ff, #e0e7ff);
+    padding: 10px;
+    border-radius: 12px;
+    /* border: 2px solid #667eea; */
+}
+
+/* Label */
+.tu-label {
+    font-size: 14px;
+    font-weight: 700;
+    color: #475569;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.tu-required {
+    color: #ef4444;
+    font-weight: 800;
+}
+
+/* Input Styles */
+.tu-input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 15px;
+    outline: none;
+    transition: all 0.3s;
+    background: white;
+    box-sizing: border-box;
+    font-family: inherit;
+}
+
+.tu-input:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+}
+
+.tu-input::placeholder {
+    color: #94a3b8;
+}
+
+.tu-input:read-only,
+.tu-input:disabled {
+    background: #f8fafc;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+/* Textarea */
+.tu-textarea {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 15px;
+    outline: none;
+    resize: vertical;
+    min-height: 120px;
+    font-family: inherit;
+    transition: all 0.3s;
+    box-sizing: border-box;
+}
+
+.tu-textarea:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+}
+
+.tu-textarea::placeholder {
+    color: #94a3b8;
+}
+
+/* Dropdown Wrapper */
+.tu-dropdown-wrapper {
+    position: relative;
+}
+
+.tu-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    margin-top: 4px;
+    background: white;
+    border: 2px solid #667eea;
+    border-radius: 8px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    max-height: 250px;
+    overflow-y: auto;
+    z-index: 1000;
+}
+
+.tu-dropdown-item {
+    padding: 12px 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 14px;
+    color: #334155;
+}
+
+.tu-dropdown-item:hover {
+    background: linear-gradient(135deg, #f0f4ff, #e0e7ff);
+    color: #667eea;
+    font-weight: 600;
+}
+
+.tu-dropdown-item:not(:last-child) {
+    border-bottom: 1px solid #f1f5f9;
+}
+
+/* Scrollbar for dropdown */
+.tu-dropdown::-webkit-scrollbar {
+    width: 8px;
+}
+
+.tu-dropdown::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 4px;
+}
+
+.tu-dropdown::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+
+.tu-dropdown::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* Button Container */
+.tu-button-container {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: center;
+    margin-top: 16px;
+}
+
+/* Submit Button */
+.tu-submit-btn {
+    padding: 16px 48px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 18px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+}
+
+.tu-submit-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 32px rgba(102, 126, 234, 0.5);
+}
+
+.tu-submit-btn:active {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+/* DatePicker Styling */
+.react-datepicker-wrapper {
+    width: 100%;
+}
+
+.react-datepicker__input-container {
+    width: 100%;
+}
+
+/* Status Display */
+.tu-status-display {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* Editable Status Enhancements */
+.tu-status-editable {
+    gap: 12px;
+}
+
+.tu-status-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.tu-status-number {
+    width: 80px;
+    text-align: center;
+}
+
+/* Slider Styling */
+.tu-status-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 8px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #ef4444, #f97316, #3b82f6, #10b981);
+    outline: none;
+    opacity: 0.9;
+    transition: opacity 0.2s ease;
+}
+
+.tu-status-slider:hover {
+    opacity: 1;
+}
+
+.tu-status-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: white;
+    border: 3px solid #667eea;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    cursor: pointer;
+}
+
+.tu-status-slider::-moz-range-thumb {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: white;
+    border: 3px solid #667eea;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    cursor: pointer;
+}
+
+.tu-status-text {
+    font-size: 24px;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.tu-status-bar {
+    width: 100%;
+    height: 24px;
+    background: #e2e8f0;
+    border-radius: 12px;
+    overflow: hidden;
+    position: relative;
+}
+
+.tu-status-fill {
+    height: 100%;
+    border-radius: 12px;
+    transition: all 0.5s ease;
+    position: relative;
+    /* Use background-color only so it can change dynamically from JSX */
+    background-color: #3b82f6; /* default (blue) */
+}
+
+.tu-status-fill::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, 
+        rgba(255, 255, 255, 0.1) 0%, 
+        rgba(255, 255, 255, 0.3) 50%, 
+        rgba(255, 255, 255, 0.1) 100%
+    );
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    0% {
+        transform: translateX(-100%);
+    }
+    100% {
+        transform: translateX(100%);
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .tu-container {
+        padding: 10px;
+    }
+
+    .tu-panel {
+        padding: 24px;
+    }
+
+    .tu-title {
+        font-size: 24px;
+        margin-bottom: 24px;
+    }
+
+    .tu-form {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+
+    .tu-form-group.tu-user-field {
+        padding: 16px;
+    }
+
+    .tu-submit-btn {
+        width: 100%;
+        padding: 14px 24px;
+        font-size: 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .tu-panel {
+        padding: 20px;
+    }
+
+    .tu-title {
+        font-size: 20px;
+    }
+
+    .tu-input,
+    .tu-textarea {
+        font-size: 14px;
+        padding: 10px 14px;
+    }
+}

@@ -14,6 +14,8 @@ import Consumer from "./components/Consumer";
 import CustomerPIPage from "./components/CustomerPIPage";
 import EnquiryData from "./components/EnquiryData";
 import PurchaseOrder from "./components/PurchaseOrder";
+import TaskTracker from "./components/TaskTracker";
+import TaskUpdate from "./components/TaskUpdate";
 
 function App() {
   const [formType, setFormType] = useState("singleItem");
@@ -110,6 +112,18 @@ function App() {
         >
           Purchase Order
         </button>
+        <button
+          className={`form-toggle-buttons small ${formType === "TaskTracker" ? "active" : ""}`}
+          onClick={() => setFormType("TaskTracker")}
+        >
+          Task Tracker
+        </button>
+        <button
+          className={`form-toggle-buttons small ${formType === "TaskUpdate" ? "active" : ""}`}
+          onClick={() => setFormType("TaskUpdate")}
+        >
+          Task update
+        </button>
       </div>
 
       <div className="form-container">
@@ -127,6 +141,8 @@ function App() {
         {formType === "Consumer" && <Consumer />}
         {formType === "CustomerPIPage" && <CustomerPIPage />}
         {formType === "PurchaseOrder" && <PurchaseOrder />}
+        {formType === "TaskTracker" && <TaskTracker />}
+        {formType === "TaskUpdate" && <TaskUpdate />}
       </div>
       </div>
   );
