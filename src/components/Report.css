@@ -473,7 +473,7 @@
 }
 
 .perf-table thead {
-    background: linear-gradient(135deg, #1e3a8a, #1e40af);
+    background: linear-gradient(135deg, #1e3a8a, #1e40af) !important;
     position: sticky;
     top: 0;
     z-index: 10;
@@ -481,7 +481,7 @@
 }
 
 .perf-table thead tr {
-    background: linear-gradient(135deg, #1e3a8a, #1e40af);
+    background: linear-gradient(135deg, #1e3a8a, #1e40af) !important;
 }
 
 .perf-table th {
@@ -489,11 +489,12 @@
     text-align: left;
     font-size: 12px;
     font-weight: 700;
-    color: white;
+    color: white !important;
     text-transform: uppercase;
     letter-spacing: 0.5px;
     white-space: nowrap;
     border-bottom: 3px solid #1e40af;
+    background: linear-gradient(135deg, #1e3a8a, #1e40af) !important;
 }
 
 .perf-table th:first-child {
