@@ -16,6 +16,7 @@ import EnquiryData from "./components/EnquiryData";
 import PurchaseOrder from "./components/PurchaseOrder";
 import TaskTracker from "./components/TaskTracker";
 import TaskUpdate from "./components/TaskUpdate";
+import Report from "./components/Report";
 
 function App() {
   const [formType, setFormType] = useState("singleItem");
@@ -124,6 +125,12 @@ function App() {
         >
           Task update
         </button>
+        <button
+          className={`form-toggle-buttons small ${formType === "Report" ? "active" : ""}`}
+          onClick={() => setFormType("Report")}
+        >
+          Report
+        </button>
       </div>
 
       <div className="form-container">
@@ -143,6 +150,7 @@ function App() {
         {formType === "PurchaseOrder" && <PurchaseOrder />}
         {formType === "TaskTracker" && <TaskTracker />}
         {formType === "TaskUpdate" && <TaskUpdate />}
+        {formType === "Report" && <Report />}
       </div>
       </div>
   );

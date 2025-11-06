@@ -2,11 +2,15 @@ import React, { useState, useEffect, useRef } from 'react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import './TaskTracker.css';
-
 const TaskTracker = () => {
-    // Start with empty tasks array - initially blank page
-    const [tasks, setTasks] = useState([]);
-
+    const [tasks, setTasks] = useState(() => {
+        try {
+            const raw = localStorage.getItem('taskTrackerTasks');
+            return raw ? JSON.parse(raw) : [];
+        } catch (e) {
+            return [];
+        }
+    });
     // Load tasks from localStorage on mount and listen for external updates
     useEffect(() => {
         const loadTasks = () => {
@@ -21,9 +25,7 @@ const TaskTracker = () => {
                 console.error('Failed to parse tasks from localStorage', e);
             }
         };
-        loadTasks();
-
-        // Listen for updates from other parts of the app
+        // Listen for updates from other parts of the app (do NOT call loadTasks here; initial state already set)
         window.addEventListener('storage', loadTasks);
         window.addEventListener('taskTrackerTasksUpdated', loadTasks);
         window.addEventListener('focus', loadTasks);
@@ -43,6 +45,23 @@ const TaskTracker = () => {
     // Save tasks to localStorage whenever tasks change
     useEffect(() => {
         localStorage.setItem('taskTrackerTasks', JSON.stringify(tasks));
+    }, [tasks]);
+
+    // Ensure tasks are persisted when user navigates away / reloads
+    useEffect(() => {
+        const handleBeforeUnload = () => {
+            try {
+                localStorage.setItem('taskTrackerTasks', JSON.stringify(tasks || []));
+            } catch (e) {
+                // ignore
+            }
+        };
+        window.addEventListener('beforeunload', handleBeforeUnload);
+        return () => {
+            // Persist once more on unmount
+            handleBeforeUnload();
+            window.removeEventListener('beforeunload', handleBeforeUnload);
+        };
     }, [tasks]);
 
     // User list for dropdown
@@ -87,8 +106,7 @@ const TaskTracker = () => {
     const [filteredTasks, setFilteredTasks] = useState(tasks);
     const [showUserDropdown, setShowUserDropdown] = useState(null);
     const [showTaskDropdown, setShowTaskDropdown] = useState(null);
-    const [userSearchText, setUserSearchText] = useState({});
-    const [taskSearchText, setTaskSearchText] = useState({});
+
     const [headerUserFilter, setHeaderUserFilter] = useState([]);
     const [headerTaskFilter, setHeaderTaskFilter] = useState([]);
     const [showHeaderUserDropdown, setShowHeaderUserDropdown] = useState(false);
@@ -99,6 +117,7 @@ const TaskTracker = () => {
 
     // Assign Task states
     const [showAssignPopup, setShowAssignPopup] = useState(false);
+    const [showEditSelectorPopup, setShowEditSelectorPopup] = useState(false);
     const [newTask, setNewTask] = useState({
         dateFrom: '',
         dateTo: '',
@@ -110,6 +129,14 @@ const TaskTracker = () => {
     const [showAssignTaskDropdown, setShowAssignTaskDropdown] = useState(false);
     const assignUserDropdownRef = useRef(null);
     const assignTaskDropdownRef = useRef(null);
+    // More / remove / edit controls
+    const [showMoreOptions, setShowMoreOptions] = useState(false);
+    const [removeMode, setRemoveMode] = useState(false);
+    const [editMode, setEditMode] = useState(false);
+    const [selectedForRemoval, setSelectedForRemoval] = useState([]);
+    const [editingTaskId, setEditingTaskId] = useState(null);
+    // track which task updates are expanded (show full list). store ids in an array
+    const [expandedUpdates, setExpandedUpdates] = useState([]);
 
     // Close dropdown when clicking outside
     useEffect(() => {
@@ -178,25 +205,68 @@ const TaskTracker = () => {
         setFilteredTasks(filtered);
     }, [dateRange, tasks, headerUserFilter, headerTaskFilter]);
 
-    // Handle field changes
+    // Handle field changes and persist immediately
     const handleFieldChange = (id, field, value) => {
-        setTasks(prev => prev.map(task => 
-            task.id === id ? { ...task, [field]: value } : task
-        ));
+        setTasks(prev => {
+            const updated = prev.map(task => task.id === id ? { ...task, [field]: value } : task);
+            try {
+                localStorage.setItem('taskTrackerTasks', JSON.stringify(updated));
+                // notify other listeners/tabs
+                window.dispatchEvent(new Event('taskTrackerTasksUpdated'));
+            } catch (e) {
+                console.error('Failed to persist tasks to localStorage', e);
+            }
+            return updated;
+        });
     };
 
     // Filter users based on search
     const getFilteredUsers = (searchText) => {
         if (!searchText) return userList;
-        return userList.filter(user => 
+        return userList.filter(user =>
             user.toLowerCase().includes(searchText.toLowerCase())
         );
+    };
+
+    // Convert updatesFromUser field into an array of { text, ts }
+    const getUpdatesArray = (updatesField) => {
+        if (!updatesField) return [];
+        if (Array.isArray(updatesField)) return updatesField;
+        // If string, try to parse as JSON
+        try {
+            const parsed = JSON.parse(updatesField);
+            if (Array.isArray(parsed)) return parsed;
+        } catch (e) {
+            // not JSON, fallthrough
+        }
+        // Fallback: treat the entire string as one update
+        return [{ text: String(updatesField), ts: null }];
+    };
+
+    // Format updates for display in a textarea (join multiple updates into readable text)
+    const formatUpdatesForDisplay = (updatesField) => {
+        const arr = getUpdatesArray(updatesField);
+        if (!arr || arr.length === 0) return '';
+        return arr
+            .map(u => {
+                const text = u && typeof u.text === 'string' ? u.text : String(u || '');
+                if (u && u.ts) {
+                    try {
+                        const d = new Date(u.ts);
+                        return `${text} \n\n(${d.toLocaleString()})`;
+                    } catch (e) {
+                        return text;
+                    }
+                }
+                return text;
+            })
+            .join('\n\n---\n\n');
     };
 
     // Filter task names based on search
     const getFilteredTaskNames = (searchText) => {
         if (!searchText) return taskNameList;
-        return taskNameList.filter(taskName => 
+        return taskNameList.filter(taskName =>
             taskName.toLowerCase().includes(searchText.toLowerCase())
         );
     };
@@ -218,6 +288,85 @@ const TaskTracker = () => {
                 return [...prev, user];
             }
         });
+    };
+
+    // More / remove / edit handlers
+    const toggleMoreOptions = () => setShowMoreOptions(v => !v);
+
+    const handleEnterRemoveMode = () => {
+        setRemoveMode(true);
+        setShowMoreOptions(false);
+        setEditMode(false);
+        setSelectedForRemoval([]);
+    };
+
+    const handleCancelRemove = () => {
+        setRemoveMode(false);
+        setSelectedForRemoval([]);
+    };
+
+    const handleToggleSelectRow = (id) => {
+        setSelectedForRemoval(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+    };
+
+    const handleSelectAllVisible = (visibleIds) => {
+        const allSelected = visibleIds.every(id => selectedForRemoval.includes(id));
+        if (allSelected) {
+            // unselect all visible
+            setSelectedForRemoval(prev => prev.filter(id => !visibleIds.includes(id)));
+        } else {
+            setSelectedForRemoval(prev => Array.from(new Set([...prev, ...visibleIds])));
+        }
+    };
+
+    const handleConfirmRemove = () => {
+        if (selectedForRemoval.length === 0) {
+            alert('Please select at least one row to remove');
+            return;
+        }
+        if (!window.confirm(`Remove ${selectedForRemoval.length} selected task(s)?`)) return;
+        setTasks(prev => {
+            const updated = prev.filter(t => !selectedForRemoval.includes(t.id));
+            try {
+                localStorage.setItem('taskTrackerTasks', JSON.stringify(updated));
+                window.dispatchEvent(new Event('taskTrackerTasksUpdated'));
+            } catch (e) {
+                console.error('Failed to persist tasks to localStorage', e);
+            }
+            return updated;
+        });
+        setSelectedForRemoval([]);
+        setRemoveMode(false);
+    };
+
+    const handleEnterEditMode = () => {
+        setEditMode(true);
+        setShowMoreOptions(false);
+        setRemoveMode(false);
+        setShowEditSelectorPopup(true);
+    };
+
+    const handleCancelEditSelector = () => {
+        setShowEditSelectorPopup(false);
+        setEditMode(false);
+    };
+
+    const startEdit = (task) => {
+        // populate assign popup for editing
+        setEditingTaskId(task.id);
+        setNewTask({
+            dateFrom: task.dateFrom || '',
+            dateTo: task.dateTo || '',
+            user: task.user || '',
+            taskName: task.taskName || '',
+            taskUpdates: task.taskUpdates || ''
+        });
+        setShowAssignPopup(true);
+        setEditMode(false);
+    };
+
+    const toggleExpandUpdates = (id) => {
+        setExpandedUpdates(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
     };
 
     // Handle header task filter
@@ -255,21 +404,53 @@ const TaskTracker = () => {
             alert('Please select both user and task name');
             return;
         }
+        // If editing an existing task, update it instead of creating a new one
+        if (editingTaskId) {
+            setTasks(prev => {
+                const updated = prev.map(task => task.id === editingTaskId ? {
+                    ...task,
+                    dateFrom: newTask.dateFrom,
+                    dateTo: newTask.dateTo,
+                    user: newTask.user,
+                    taskName: newTask.taskName,
+                    taskUpdates: newTask.taskUpdates
+                } : task);
+                try {
+                    localStorage.setItem('taskTrackerTasks', JSON.stringify(updated));
+                    window.dispatchEvent(new Event('taskTrackerTasksUpdated'));
+                } catch (e) {
+                    console.error('Failed to persist tasks to localStorage', e);
+                }
+                return updated;
+            });
+            setEditingTaskId(null);
+            setEditMode(false);
+        } else {
+            const nextId = tasks && tasks.length > 0 ? Math.max(...tasks.map(t => t.id)) + 1 : 1;
+            const newTaskObj = {
+                id: nextId,
+                dateFrom: newTask.dateFrom,
+                dateTo: newTask.dateTo,
+                user: newTask.user,
+                taskName: newTask.taskName,
+                taskUpdates: newTask.taskUpdates,
+                updatesFromUser: '', // Initially blank
+                status: 0 // Initially 0
+            };
 
-        const newTaskObj = {
-            id: tasks.length > 0 ? Math.max(...tasks.map(t => t.id)) + 1 : 1,
-            dateFrom: newTask.dateFrom,
-            dateTo: newTask.dateTo,
-            user: newTask.user,
-            taskName: newTask.taskName,
-            taskUpdates: newTask.taskUpdates,
-            updatesFromUser: '', // Initially blank
-            status: 0 // Initially 0
-        };
+            // Build new tasks array and persist immediately to avoid race conditions on refresh/navigation
+            const newTasks = [...(tasks || []), newTaskObj];
+            setTasks(newTasks);
+            try {
+                localStorage.setItem('taskTrackerTasks', JSON.stringify(newTasks));
+                window.dispatchEvent(new Event('taskTrackerTasksUpdated'));
+            } catch (e) {
+                console.error('Failed to persist tasks to localStorage', e);
+            }
+        }
 
-        setTasks(prev => [...prev, newTaskObj]);
         setShowAssignPopup(false);
-        
+
         // Reset form (keep dates empty until user selects)
         setNewTask({
             dateFrom: '',
@@ -295,7 +476,7 @@ const TaskTracker = () => {
     // Get filtered users for assign dropdown
     const getAssignFilteredUsers = () => {
         if (!newTask.user) return userList;
-        return userList.filter(user => 
+        return userList.filter(user =>
             user.toLowerCase().includes(newTask.user.toLowerCase())
         );
     };
@@ -303,59 +484,50 @@ const TaskTracker = () => {
     // Get filtered task names for assign dropdown
     const getAssignFilteredTaskNames = () => {
         if (!newTask.taskName) return taskNameList;
-        return taskNameList.filter(taskName => 
+        return taskNameList.filter(taskName =>
             taskName.toLowerCase().includes(newTask.taskName.toLowerCase())
         );
     };
 
+    const colCount = removeMode ? 8 : 7;
+
     return (
-        <div className="tt-panel-wrapper">
+        <div className="tt-panel-wrapper" data-edit-active={editMode}>
             <div className="tt-panel-header">
                 <h3 className="tt-heading">Task Tracker</h3>
                 <div className="tt-header-controls">
-                    <button 
+                    <button
                         className="tt-assign-task-btn"
-                        onClick={() => setShowAssignPopup(true)}
+                        onClick={() => { setShowAssignPopup(true); setEditingTaskId(null); setEditMode(false); }}
                     >
                         + Assign Task
                     </button>
-                    {/* <div className="tt-date-range-filter">
-                        <label>
-                            From:
-                            <DatePicker
-                                selected={dateRange.from}
-                                onChange={(date) => setDateRange(prev => ({ ...prev, from: date }))}
-                                selectsStart
-                                startDate={dateRange.from}
-                                endDate={dateRange.to}
-                                placeholderText="Select start date"
-                                dateFormat="yyyy-MM-dd"
-                                className="tt-custom-datepicker"
-                            />
-                        </label>
-                        <label>
-                            To:
-                            <DatePicker
-                                selected={dateRange.to}
-                                onChange={(date) => setDateRange(prev => ({ ...prev, to: date }))}
-                                selectsEnd
-                                startDate={dateRange.from}
-                                endDate={dateRange.to}
-                                minDate={dateRange.from}
-                                placeholderText="Select end date"
-                                dateFormat="yyyy-MM-dd"
-                                className="tt-custom-datepicker"
-                            />
-                        </label>
-                        {(dateRange.from || dateRange.to) && (
+                    {!removeMode && (
+                        <div className="tt-more-wrapper">
                             <button
-                                className="tt-clear-date-btn"
-                                onClick={() => setDateRange({ from: null, to: null })}
+                                className="tt-more-btn tt-assign-task-btn"
+                                onClick={toggleMoreOptions}
                             >
-                                Clear
+                                ⋯ More
                             </button>
-                        )}
-                    </div> */}
+                            {showMoreOptions && (
+                                <div className="tt-more-dropdown">
+                                    <button className="tt-more-action" onClick={handleEnterEditMode}>Edit</button>
+                                    <button className="tt-more-action" onClick={handleEnterRemoveMode}>Remove</button>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {removeMode && (
+                        <div className="tt-remove-controls">
+                            <button className="tt-btn-cancel" onClick={handleCancelRemove}>Cancel</button>
+                            <button className="tt-btn-assign" onClick={handleConfirmRemove} disabled={selectedForRemoval.length === 0}>
+                                Delete Selected ({selectedForRemoval.length})
+                            </button>
+                        </div>
+                    )}
+
                 </div>
             </div>
 
@@ -363,7 +535,17 @@ const TaskTracker = () => {
                 <table className="tt-table">
                     <thead>
                         <tr>
-                            <th>Date</th>
+                            {removeMode && (
+                                <th className="tt-select-col">
+                                    <input
+                                        type="checkbox"
+                                        checked={filteredTasks.length > 0 && filteredTasks.every(t => selectedForRemoval.includes(t.id))}
+                                        onChange={() => handleSelectAllVisible(filteredTasks.map(t => t.id))}
+                                    />
+                                </th>
+                            )}
+                            <th>Assign Date</th>
+                            <th>Expiry Date</th>
                             <th>
                                 <div className="tt-th-filter-wrapper">
                                     User
@@ -438,18 +620,18 @@ const TaskTracker = () => {
                                     )}
                                 </div>
                             </th>
-                            <th>Task Updates (Description)</th>
-                            <th>Updates from User</th>
+                            <th>Task Description</th>
+                            <th className="tt-updates-col">Updates from User</th>
                             <th>Status (%)</th>
                         </tr>
                     </thead>
                     <tbody>
                         {filteredTasks.length === 0 ? (
                             <tr>
-                                <td colSpan="6" className="tt-empty-state">
+                                <td colSpan={colCount} className="tt-empty-state">
                                     <div className="tt-empty-content">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" fill="currentColor" viewBox="0 0 16 16">
-                                            <path d="M8 1a2.5 2.5 0 0 1 2.5 2.5V4h-5v-.5A2.5 2.5 0 0 1 8 1zm3.5 3v-.5a3.5 3.5 0 1 0-7 0V4H1v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V4h-3.5zM2 5h12v9a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V5z"/>
+                                            <path d="M8 1a2.5 2.5 0 0 1 2.5 2.5V4h-5v-.5A2.5 2.5 0 0 1 8 1zm3.5 3v-.5a3.5 3.5 0 1 0-7 0V4H1v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V4h-3.5zM2 5h12v9a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V5z" />
                                         </svg>
                                         <h4>No Tasks Assigned Yet</h4>
                                         <p>Click "Assign Task" button to create your first task</p>
@@ -458,11 +640,19 @@ const TaskTracker = () => {
                             </tr>
                         ) : (
                             filteredTasks.map((task) => (
-                            <tr key={task.id}>
-                                <td>
-                                    <div className="tt-date-range-cell">
+                                <tr key={task.id} onClick={() => { if (editMode) startEdit(task); }} className={editMode ? 'tt-row-clickable' : ''}>
+                                    {removeMode && (
+                                        <td>
+                                            <input
+                                                type="checkbox"
+                                                checked={selectedForRemoval.includes(task.id)}
+                                                onChange={(e) => { e.stopPropagation(); handleToggleSelectRow(task.id); }}
+                                            />
+                                        </td>
+                                    )}
+                                    <td>
                                         <div className="tt-date-input-group">
-                                            <label className="tt-date-label">From:</label>
+                                            {/* from label removed to keep table compact */}
                                             <DatePicker
                                                 selected={task.dateFrom ? new Date(task.dateFrom) : null}
                                                 onChange={(date) => handleFieldChange(task.id, 'dateFrom', date ? date.toISOString().split('T')[0] : '')}
@@ -476,8 +666,10 @@ const TaskTracker = () => {
                                                 disabled
                                             />
                                         </div>
+                                    </td>
+                                    <td>
                                         <div className="tt-date-input-group">
-                                            <label className="tt-date-label">To:</label>
+                                            {/* to label removed to keep table compact */}
                                             <DatePicker
                                                 selected={task.dateTo ? new Date(task.dateTo) : null}
                                                 onChange={(date) => handleFieldChange(task.id, 'dateTo', date ? date.toISOString().split('T')[0] : '')}
@@ -492,129 +684,211 @@ const TaskTracker = () => {
                                                 disabled
                                             />
                                         </div>
-                                    </div>
-                                </td>
-                                <td>
-                                    <div className="tt-dropdown-wrapper" ref={showUserDropdown === task.id ? dropdownRef : null}>
+                                    </td>
+                                    <td>
+                                        <div className="tt-dropdown-wrapper" ref={showUserDropdown === task.id ? dropdownRef : null}>
+                                            <input
+                                                type="text"
+                                                value={task.user}
+                                                onChange={(e) => {
+                                                    handleFieldChange(task.id, 'user', e.target.value);
+                                                }}
+                                                onFocus={() => setShowUserDropdown(task.id)}
+                                                className="tt-input tt-dropdown-input"
+                                                placeholder="Select user"
+                                                readOnly
+                                            />
+                                            {showUserDropdown === task.id && (
+                                                <div className="tt-dropdown">
+                                                    {getFilteredUsers(task.user).map((user, idx) => (
+                                                        <div
+                                                            key={idx}
+                                                            className="tt-dropdown-item"
+                                                            onClick={() => {
+                                                                handleFieldChange(task.id, 'user', user);
+                                                                setShowUserDropdown(null);
+                                                            }}
+                                                        >
+                                                            {user}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div className="tt-dropdown-wrapper" ref={showTaskDropdown === task.id ? dropdownRef : null}>
+                                            <input
+                                                type="text"
+                                                value={task.taskName}
+                                                onChange={(e) => {
+                                                    handleFieldChange(task.id, 'taskName', e.target.value);
+                                                }}
+                                                onFocus={() => setShowTaskDropdown(task.id)}
+                                                className="tt-input tt-dropdown-input"
+                                                placeholder="Select task"
+                                                readOnly
+                                            />
+                                            {showTaskDropdown === task.id && (
+                                                <div className="tt-dropdown">
+                                                    {getFilteredTaskNames(task.taskName).map((taskName, idx) => (
+                                                        <div
+                                                            key={idx}
+                                                            className="tt-dropdown-item"
+                                                            onClick={() => {
+                                                                handleFieldChange(task.id, 'taskName', taskName);
+                                                                setShowTaskDropdown(null);
+                                                            }}
+                                                        >
+                                                            {taskName}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </td>
+                                    <td>
                                         <input
                                             type="text"
-                                            value={task.user}
-                                            onChange={(e) => {
-                                                handleFieldChange(task.id, 'user', e.target.value);
-                                                setUserSearchText(prev => ({ ...prev, [task.id]: e.target.value }));
-                                            }}
-                                            onFocus={() => setShowUserDropdown(task.id)}
-                                            className="tt-input tt-dropdown-input"
-                                            placeholder="Select user"
+                                            value={task.taskUpdates}
+                                            onChange={(e) => handleFieldChange(task.id, 'taskUpdates', e.target.value)}
+                                            className="tt-input"
+                                            placeholder="Task description"
                                             readOnly
                                         />
-                                        {showUserDropdown === task.id && (
-                                            <div className="tt-dropdown">
-                                                {getFilteredUsers(task.user).map((user, idx) => (
-                                                    <div
-                                                        key={idx}
-                                                        className="tt-dropdown-item"
-                                                        onClick={() => {
-                                                            handleFieldChange(task.id, 'user', user);
-                                                            setShowUserDropdown(null);
-                                                        }}
-                                                    >
-                                                        {user}
+                                    </td>
+                                    <td className="tt-updates-td">
+                                        {/* Collapsible updates: show only the first update initially, expand to show full list */}
+                                        {(() => {
+                                            const updates = getUpdatesArray(task.updatesFromUser);
+                                            const isExpanded = expandedUpdates.includes(task.id);
+                                            if (updates.length === 0) {
+                                                return <div className="tt-update-empty">No updates</div>;
+                                            }
+
+                                            return (
+                                                <>
+                                                    <div className={`tt-updates-list ${isExpanded ? 'expanded' : 'collapsed'}`}>
+                                                        {isExpanded ? (
+                                                            // full list (scrollable, same as before)
+                                                            updates.map((u, idx) => (
+                                                                <React.Fragment key={idx}>
+                                                                    {idx > 0 && <hr className="tt-update-divider" />}
+                                                                    <div className="tt-update-item">
+                                                                        <div className="tt-update-text">{u && u.text ? u.text : String(u || '')}</div>
+                                                                        <div className="tt-update-ts">{u && u.ts ? new Date(u.ts).toLocaleString() : ''}</div>
+                                                                    </div>
+                                                                </React.Fragment>
+                                                            ))
+                                                        ) : (
+                                                            // collapsed: show only first update inline (single-line height)
+                                                            (() => {
+                                                                const u = updates[0];
+                                                                return (
+                                                                    <div className="tt-update-item">
+                                                                        <div className="tt-update-text">{u && u.text ? u.text : String(u || '')}</div>
+                                                                        {/* More button positioned between text and timestamp */}
+                                                                        {updates.length > 1 && (
+                                                                            <button
+                                                                                className="tt-show-more-inline"
+                                                                                onClick={(e) => { e.stopPropagation(); toggleExpandUpdates(task.id); }}
+                                                                                aria-expanded={isExpanded}
+                                                                            >
+                                                                                More
+                                                                            </button>
+                                                                        )}
+                                                                        <div className="tt-update-ts">{u && u.ts ? new Date(u.ts).toLocaleString() : ''}</div>
+                                                                    </div>
+                                                                );
+                                                            })()
+                                                        )}
                                                     </div>
-                                                ))}
+
+                                                    {isExpanded && updates.length > 1 && (
+                                                        <div className="tt-show-more-wrap">
+                                                            <button
+                                                                className="tt-show-more-btn"
+                                                                onClick={(e) => { e.stopPropagation(); toggleExpandUpdates(task.id); }}
+                                                                aria-expanded={isExpanded}
+                                                            >
+                                                                Less
+                                                            </button>
+                                                        </div>
+                                                    )}
+                                                </>
+                                            );
+                                        })()}
+                                    </td>
+                                    <td>
+                                        <div className="tt-status-wrapper">
+                                            <div className="tt-status-input-wrapper">
+                                                <input
+                                                    type="text"
+                                                    value={`${task.status}%`}
+                                                    className="tt-input tt-status-input tt-status-with-prefix"
+                                                    readOnly
+                                                />
                                             </div>
-                                        )}
-                                    </div>
-                                </td>
-                                <td>
-                                    <div className="tt-dropdown-wrapper" ref={showTaskDropdown === task.id ? dropdownRef : null}>
-                                        <input
-                                            type="text"
-                                            value={task.taskName}
-                                            onChange={(e) => {
-                                                handleFieldChange(task.id, 'taskName', e.target.value);
-                                                setTaskSearchText(prev => ({ ...prev, [task.id]: e.target.value }));
-                                            }}
-                                            onFocus={() => setShowTaskDropdown(task.id)}
-                                            className="tt-input tt-dropdown-input"
-                                            placeholder="Select task"
-                                            readOnly
-                                        />
-                                        {showTaskDropdown === task.id && (
-                                            <div className="tt-dropdown">
-                                                {getFilteredTaskNames(task.taskName).map((taskName, idx) => (
-                                                    <div
-                                                        key={idx}
-                                                        className="tt-dropdown-item"
-                                                        onClick={() => {
-                                                            handleFieldChange(task.id, 'taskName', taskName);
-                                                            setShowTaskDropdown(null);
-                                                        }}
-                                                    >
-                                                        {taskName}
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        )}
-                                    </div>
-                                </td>
-                                <td>
-                                    <textarea
-                                        value={task.taskUpdates}
-                                        onChange={(e) => handleFieldChange(task.id, 'taskUpdates', e.target.value)}
-                                        className="tt-textarea"
-                                        rows="2"
-                                        placeholder="Task description"
-                                        readOnly
-                                    />
-                                </td>
-                                <td>
-                                    <textarea
-                                        value={task.updatesFromUser}
-                                        onChange={(e) => handleFieldChange(task.id, 'updatesFromUser', e.target.value)}
-                                        className="tt-textarea"
-                                        rows="2"
-                                        placeholder="User updates..."
-                                        readOnly
-                                    />
-                                </td>
-                                <td>
-                                    <div className="tt-status-wrapper">
-                                        <input
-                                            type="number"
-                                            min="0"
-                                            max="100"
-                                            value={task.status}
-                                            onChange={(e) => {
-                                                const value = Math.min(100, Math.max(0, parseInt(e.target.value) || 0));
-                                                handleFieldChange(task.id, 'status', value);
-                                            }}
-                                            className="tt-input tt-status-input"
-                                            readOnly
-                                        />
-                                        <div className="tt-status-bar">
+                                            {/* <div className="tt-status-bar">
                                             <div 
                                                 className="tt-status-fill" 
                                                 style={{ 
-                                                    width: `${task.status}%`,
+                                                    width: ${task.status}%,
                                                     backgroundColor: getStatusColor(task.status)
                                                 }}
                                             ></div>
+                                        </div> */}
                                         </div>
-                                    </div>
-                                </td>
-                            </tr>
-                        )))}
+                                    </td>
+                                </tr>
+                            )))}
                     </tbody>
                 </table>
             </div>
 
-            {/* Assign Task Popup */}
+            {showEditSelectorPopup && (
+                <div className="tt-popup-overlay" onClick={handleCancelEditSelector}>
+                    <div className="tt-popup-content tt-edit-selector-popup" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '900px' }}>
+                        <h3 className="tt-popup-title">Click task to edit</h3>
+
+                        <div className="tt-table-container" style={{ maxHeight: '60vh', overflowY: 'auto' }}>
+                            <table className="tt-table">
+                                <thead>
+                                    <tr>
+                                        <th>Assign Date</th>
+                                        <th>Expiry Date</th>
+                                        <th>User</th>
+                                        <th>Task Name</th>
+                                        <th>Task Description</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {tasks.map((task) => (
+                                        <tr key={task.id} className="tt-row-clickable" onClick={() => { startEdit(task); setShowEditSelectorPopup(false); }}>
+                                            <td>{task.dateFrom}</td>
+                                            <td>{task.dateTo}</td>
+                                            <td>{task.user}</td>
+                                            <td>{task.taskName}</td>
+                                            <td className="tt-updates-td">
+                                                <div className="tt-update-text">{Array.isArray(task.taskUpdates) ? task.taskUpdates.map(u => u.text).join(' / ') : task.taskUpdates}</div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div className="tt-popup-buttons">
+                            <button className="tt-btn-cancel" onClick={handleCancelEditSelector}>Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            )}
             {showAssignPopup && (
                 <div className="tt-popup-overlay" onClick={handleCancelAssign}>
                     <div className="tt-popup-content" onClick={(e) => e.stopPropagation()}>
-                        <h3 className="tt-popup-title">Assign Task</h3>
-                        
+                        <h3 className="tt-popup-title">{editingTaskId ? 'Edit Task' : 'Assign Task'}</h3>
+
                         <div className="tt-form-grid">
                             <div className="tt-form-group">
                                 <label>Date From:</label>
@@ -722,7 +996,7 @@ const TaskTracker = () => {
                                 Cancel
                             </button>
                             <button className="tt-btn-assign" onClick={handleAssignTask}>
-                                Assign Task
+                                {editingTaskId ? 'Save Changes' : 'Assign Task'}
                             </button>
                         </div>
                     </div>

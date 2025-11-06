@@ -191,21 +191,40 @@ const TaskUpdate = () => {
             newStatus = Math.min(100, currentStatus + statusIncrease);
         }
 
-        // Update the task in localStorage
+        // Update the task in localStorage; store updatesFromUser as a JSON array of { text, ts }
         const tasksData = localStorage.getItem('taskTrackerTasks');
         if (tasksData) {
             const tasks = JSON.parse(tasksData);
+            const now = new Date();
+            const ts = now.toISOString();
+
             const updatedTasks = tasks.map(task => {
                 if (task.id === targetTaskId) {
+                    // Normalize existing updates to array
+                    let updatesArr = [];
+                    try {
+                        if (Array.isArray(task.updatesFromUser)) {
+                            updatesArr = task.updatesFromUser;
+                        } else if (typeof task.updatesFromUser === 'string' && task.updatesFromUser.trim() !== '') {
+                            // previous simple string -> keep as single entry
+                            updatesArr = [{ text: task.updatesFromUser, ts: null }];
+                        }
+                    } catch (e) {
+                        updatesArr = [{ text: task.updatesFromUser || '', ts: null }];
+                    }
+
+                    // Append new update
+                    updatesArr.push({ text: taskUpdate.updatesFromUser, ts });
+
                     return {
                         ...task,
-                        updatesFromUser: taskUpdate.updatesFromUser,
+                        updatesFromUser: updatesArr,
                         status: newStatus
                     };
                 }
                 return task;
             });
-            
+
             localStorage.setItem('taskTrackerTasks', JSON.stringify(updatedTasks));
             // Notify TaskTracker within the same SPA/tab
             window.dispatchEvent(new Event('taskTrackerTasksUpdated'));
