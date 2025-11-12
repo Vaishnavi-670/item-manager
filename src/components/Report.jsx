@@ -1,349 +1,380 @@
-import React, { useState, useEffect } from 'react';
-import './Report.css';
+import React, { useMemo, useState, useEffect } from "react";
+import "./Report.css";
 
-const Report = () => {
-    // Dummy data for various metrics
-    const [reportData] = useState({
-        taskStats: {
-            total: 156,
-            completed: 89,
-            inProgress: 42,
-            pending: 25
-        },
-        userPerformance: [
-            { name: 'Rajesh Kumar', completed: 24, pending: 3, completion: 89 },
-            { name: 'Priya Sharma', completed: 19, pending: 5, completion: 79 },
-            { name: 'Amit Patel', completed: 15, pending: 4, completion: 79 },
-            { name: 'Sneha Reddy', completed: 12, pending: 6, completion: 67 },
-            { name: 'Vikram Singh', completed: 10, pending: 3, completion: 77 },
-            { name: 'Anjali Verma', completed: 9, pending: 4, completion: 69 }
-        ],
-        monthlyProgress: [
-            { month: 'Jan', completed: 45, pending: 12 },
-            { month: 'Feb', completed: 52, pending: 10 },
-            { month: 'Mar', completed: 48, pending: 15 },
-            { month: 'Apr', completed: 61, pending: 8 },
-            { month: 'May', completed: 58, pending: 11 },
-            { month: 'Jun', completed: 67, pending: 9 }
-        ],
-        taskCategories: [
-            { name: 'Bug Fixes', count: 32, percentage: 21 },
-            { name: 'Feature Development', count: 48, percentage: 31 },
-            { name: 'Documentation', count: 18, percentage: 12 },
-            { name: 'Testing & QA', count: 28, percentage: 18 },
-            { name: 'Code Review', count: 15, percentage: 10 },
-            { name: 'Client Meeting', count: 15, percentage: 8 }
-        ],
-        priorityDistribution: [
-            { priority: 'High', count: 42, color: '#ef4444' },
-            { priority: 'Medium', count: 68, color: '#f59e0b' },
-            { priority: 'Low', count: 46, color: '#10b981' }
-        ]
+// Lazy-load Plotly (prevents page crash if not available)
+function PlotLoader(props) {
+  const [Plot, setPlot] = useState(null);
+
+  useEffect(() => {
+    let mounted = true;
+    import("react-plotly.js")
+      .then((mod) => {
+        if (mounted) setPlot(() => mod.default || mod);
+      })
+      .catch(() => { });
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  if (!Plot)
+    return (
+      <div style={{ minHeight: 200 }} className="plot-placeholder">
+        Plot library not available
+      </div>
+    );
+
+  return <Plot {...props} />;
+}
+
+const sampleTasks = [
+  { id: 1, title: "UI Design", status: "Completed", priority: "High", dueDate: "2025-11-05", owner: "Ava" },
+  { id: 2, title: "API Integration", status: "In Progress", priority: "Medium", dueDate: "2025-11-10", owner: "Liam" },
+  { id: 3, title: "Testing", status: "Pending", priority: "High", dueDate: "2025-11-12", owner: "Noah" },
+  { id: 4, title: "Deployment", status: "Pending", priority: "Low", dueDate: "2025-11-15", owner: "Olivia" },
+  { id: 5, title: "Docs", status: "In Progress", priority: "Low", dueDate: "2025-11-18", owner: "Emma" },
+  { id: 6, title: "Performance", status: "Completed", priority: "Medium", dueDate: "2025-11-02", owner: "Ethan" },
+];
+
+const groupBy = (arr, key) =>
+  arr.reduce((acc, cur) => {
+    acc[cur[key]] = (acc[cur[key]] || 0) + 1;
+    return acc;
+  }, {});
+
+const Report = ({ tasks = sampleTasks }) => {
+  const [filterStatus, setFilterStatus] = useState("all");
+
+  const filtered = useMemo(
+    () => (filterStatus === "all" ? tasks : tasks.filter((t) => t.status === filterStatus)),
+    [tasks, filterStatus]
+  );
+
+  const statusCounts = useMemo(() => groupBy(tasks, "status"), [tasks]);
+  const priorityCounts = useMemo(() => groupBy(tasks, "priority"), [tasks]);
+
+  const dates = useMemo(() => {
+    const map = {};
+    tasks.forEach((t) => {
+      map[t.dueDate] = (map[t.dueDate] || 0) + 1;
+    });
+    const keys = Object.keys(map).sort();
+    return { keys, vals: keys.map((k) => map[k]) };
+  }, [tasks]);
+
+  // build status-over-time series (counts per dueDate for each status)
+  const statusTimeline = useMemo(() => {
+    const statuses = ["Completed", "In Progress", "Pending"];
+    const datesSet = new Set();
+    tasks.forEach((t) => datesSet.add(t.dueDate));
+    const timeline = Array.from(datesSet).sort();
+
+    // initialize counts per status per date
+    const counts = {};
+    statuses.forEach((s) => (counts[s] = {}));
+    tasks.forEach((t) => {
+      counts[t.status] = counts[t.status] || {};
+      counts[t.status][t.dueDate] = (counts[t.status][t.dueDate] || 0) + 1;
     });
 
-    const [selectedPeriod, setSelectedPeriod] = useState('6months');
+    const series = statuses.map((s) => ({
+      name: s,
+      x: timeline,
+      y: timeline.map((d) => counts[s] && counts[s][d] ? counts[s][d] : 0),
+    }));
 
-    // Calculate completion rate
-    const completionRate = Math.round((reportData.taskStats.completed / reportData.taskStats.total) * 100);
+    return { timeline, series };
+  }, [tasks]);
 
-    // Get max value for bar chart scaling
-    const maxMonthlyValue = Math.max(...reportData.monthlyProgress.map(m => m.completed + m.pending));
+  const getOpenVsCompleted = () => {
+    const completed = statusCounts["Completed"] || 0;
+    const inProgress = statusCounts["In Progress"] || 0;
+    const pending = statusCounts["Pending"] || 0;
+    return `Open: ${inProgress + pending} • Completed: ${completed}`;
+  };
 
-    return (
-        <div className="report-wrapper">
-            <div className="report-header">
-                <h1 className="report-title">Dashboard & Analytics</h1>
-                <div className="report-period-selector">
-                    <button 
-                        className={`period-btn ${selectedPeriod === '1month' ? 'active' : ''}`}
-                        onClick={() => setSelectedPeriod('1month')}
-                    >
-                        1 Month
-                    </button>
-                    <button 
-                        className={`period-btn ${selectedPeriod === '3months' ? 'active' : ''}`}
-                        onClick={() => setSelectedPeriod('3months')}
-                    >
-                        3 Months
-                    </button>
-                    <button 
-                        className={`period-btn ${selectedPeriod === '6months' ? 'active' : ''}`}
-                        onClick={() => setSelectedPeriod('6months')}
-                    >
-                        6 Months
-                    </button>
-                    <button 
-                        className={`period-btn ${selectedPeriod === '1year' ? 'active' : ''}`}
-                        onClick={() => setSelectedPeriod('1year')}
-                    >
-                        1 Year
-                    </button>
-                </div>
-            </div>
+  const getCompletedPercent = () => {
+    const total = tasks.length || 1;
+    const completed = statusCounts["Completed"] || 0;
+    return `${Math.round((completed / total) * 100)}% of all tasks`;
+  };
 
-            {/* Summary Cards */}
-            <div className="summary-cards">
-                <div className="summary-card card-total">
-                    <div className="card-icon">📊</div>
-                    <div className="card-content">
-                        <h3>Total Tasks</h3>
-                        <p className="card-value">{reportData.taskStats.total}</p>
-                        <span className="card-label">All time</span>
-                    </div>
-                </div>
-                <div className="summary-card card-completed">
-                    <div className="card-icon">✅</div>
-                    <div className="card-content">
-                        <h3>Completed</h3>
-                        <p className="card-value">{reportData.taskStats.completed}</p>
-                        <span className="card-label">{completionRate}% completion rate</span>
-                    </div>
-                </div>
-                <div className="summary-card card-progress">
-                    <div className="card-icon">⏳</div>
-                    <div className="card-content">
-                        <h3>In Progress</h3>
-                        <p className="card-value">{reportData.taskStats.inProgress}</p>
-                        <span className="card-label">Active tasks</span>
-                    </div>
-                </div>
-                <div className="summary-card card-pending">
-                    <div className="card-icon">⏱️</div>
-                    <div className="card-content">
-                        <h3>Pending</h3>
-                        <p className="card-value">{reportData.taskStats.pending}</p>
-                        <span className="card-label">Awaiting start</span>
-                    </div>
-                </div>
-            </div>
+  const getTopInProgress = () => {
+    const inProg = tasks.filter((t) => t.status === "In Progress");
+    if (!inProg.length) return "";
+    const byOwner = inProg.reduce((acc, t) => ((acc[t.owner] = (acc[t.owner] || 0) + 1), acc), {});
+    const [owner, count] = Object.entries(byOwner).sort((a, b) => b[1] - a[1])[0];
+    return `Top: ${owner} (${count})`;
+  };
 
-            {/* Charts Grid */}
-            <div className="charts-grid">
-                {/* Monthly Progress Bar Chart */}
-                <div className="chart-container chart-full">
-                    <h3 className="chart-title">Monthly Task Progress</h3>
-                    <div className="bar-chart">
-                        {reportData.monthlyProgress.map((month, idx) => (
-                            <div key={idx} className="bar-group">
-                                <div className="bar-stack">
-                                    <div 
-                                        className="bar-segment bar-completed"
-                                        style={{ height: `${(month.completed / maxMonthlyValue) * 100}%` }}
-                                        title={`Completed: ${month.completed}`}
-                                    >
-                                        <span className="bar-value">{month.completed}</span>
-                                    </div>
-                                    <div 
-                                        className="bar-segment bar-pending"
-                                        style={{ height: `${(month.pending / maxMonthlyValue) * 100}%` }}
-                                        title={`Pending: ${month.pending}`}
-                                    >
-                                        <span className="bar-value">{month.pending}</span>
-                                    </div>
-                                </div>
-                                <span className="bar-label">{month.month}</span>
-                            </div>
-                        ))}
-                    </div>
-                    <div className="chart-legend">
-                        <div className="legend-item">
-                            <span className="legend-color legend-completed"></span>
-                            <span>Completed</span>
-                        </div>
-                        <div className="legend-item">
-                            <span className="legend-color legend-pending"></span>
-                            <span>Pending</span>
-                        </div>
-                    </div>
-                </div>
+  const getEarliestPending = () => {
+    const pending = tasks.filter((t) => t.status === "Pending");
+    return pending.length ? `Earliest due: ${pending.map((p) => p.dueDate).sort()[0]}` : "";
+  };
 
-                {/* Task Categories Pie Chart */}
-                <div className="chart-container">
-                    <h3 className="chart-title">Task Distribution by Category</h3>
-                    <div className="pie-chart">
-                        <svg viewBox="0 0 200 200" className="pie-svg">
-                            {(() => {
-                                let currentAngle = 0;
-                                const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
-                                return reportData.taskCategories.map((category, idx) => {
-                                    const angle = (category.percentage / 100) * 360;
-                                    const startAngle = currentAngle;
-                                    const endAngle = currentAngle + angle;
-                                    currentAngle = endAngle;
-
-                                    // Convert to radians
-                                    const startRad = (startAngle - 90) * Math.PI / 180;
-                                    const endRad = (endAngle - 90) * Math.PI / 180;
-
-                                    // Calculate path
-                                    const x1 = 100 + 80 * Math.cos(startRad);
-                                    const y1 = 100 + 80 * Math.sin(startRad);
-                                    const x2 = 100 + 80 * Math.cos(endRad);
-                                    const y2 = 100 + 80 * Math.sin(endRad);
-
-                                    const largeArc = angle > 180 ? 1 : 0;
-
-                                    return (
-                                        <path
-                                            key={idx}
-                                            d={`M 100 100 L ${x1} ${y1} A 80 80 0 ${largeArc} 1 ${x2} ${y2} Z`}
-                                            fill={colors[idx]}
-                                            className="pie-slice"
-                                        />
-                                    );
-                                });
-                            })()}
-                        </svg>
-                    </div>
-                    <div className="chart-legend category-legend">
-                        {reportData.taskCategories.map((category, idx) => {
-                            const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
-                            return (
-                                <div key={idx} className="legend-item">
-                                    <span className="legend-color" style={{ backgroundColor: colors[idx] }}></span>
-                                    <span>{category.name} ({category.percentage}%)</span>
-                                </div>
-                            );
-                        })}
-                    </div>
-                </div>
-
-                {/* Priority Distribution Donut Chart */}
-                <div className="chart-container">
-                    <h3 className="chart-title">Priority Distribution</h3>
-                    <div className="donut-chart">
-                        <svg viewBox="0 0 200 200" className="donut-svg">
-                            {(() => {
-                                let currentAngle = 0;
-                                const total = reportData.priorityDistribution.reduce((sum, p) => sum + p.count, 0);
-                                return reportData.priorityDistribution.map((priority, idx) => {
-                                    const percentage = (priority.count / total) * 100;
-                                    const angle = (percentage / 100) * 360;
-                                    const startAngle = currentAngle;
-                                    const endAngle = currentAngle + angle;
-                                    currentAngle = endAngle;
-
-                                    const startRad = (startAngle - 90) * Math.PI / 180;
-                                    const endRad = (endAngle - 90) * Math.PI / 180;
-
-                                    const outerRadius = 80;
-                                    const innerRadius = 50;
-
-                                    const x1 = 100 + outerRadius * Math.cos(startRad);
-                                    const y1 = 100 + outerRadius * Math.sin(startRad);
-                                    const x2 = 100 + outerRadius * Math.cos(endRad);
-                                    const y2 = 100 + outerRadius * Math.sin(endRad);
-                                    const x3 = 100 + innerRadius * Math.cos(endRad);
-                                    const y3 = 100 + innerRadius * Math.sin(endRad);
-                                    const x4 = 100 + innerRadius * Math.cos(startRad);
-                                    const y4 = 100 + innerRadius * Math.sin(startRad);
-
-                                    const largeArc = angle > 180 ? 1 : 0;
-
-                                    return (
-                                        <path
-                                            key={idx}
-                                            d={`M ${x1} ${y1} A ${outerRadius} ${outerRadius} 0 ${largeArc} 1 ${x2} ${y2} L ${x3} ${y3} A ${innerRadius} ${innerRadius} 0 ${largeArc} 0 ${x4} ${y4} Z`}
-                                            fill={priority.color}
-                                            className="donut-slice"
-                                        />
-                                    );
-                                });
-                            })()}
-                            <text x="100" y="95" textAnchor="middle" className="donut-center-text" fontSize="24" fontWeight="700" fill="#1e293b">
-                                {reportData.priorityDistribution.reduce((sum, p) => sum + p.count, 0)}
-                            </text>
-                            <text x="100" y="110" textAnchor="middle" className="donut-center-label" fontSize="12" fill="#64748b">
-                                Total Tasks
-                            </text>
-                        </svg>
-                    </div>
-                    <div className="chart-legend">
-                        {reportData.priorityDistribution.map((priority, idx) => (
-                            <div key={idx} className="legend-item">
-                                <span className="legend-color" style={{ backgroundColor: priority.color }}></span>
-                                <span>{priority.priority}: {priority.count}</span>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-
-                {/* User Performance Table/Chart */}
-                <div className="chart-container chart-full">
-                    <h3 className="chart-title">User Performance Overview</h3>
-                    <div className="performance-table">
-                        <table className="perf-table">
-                            <thead>
-                                <tr>
-                                    <th>User</th>
-                                    <th>Completed</th>
-                                    <th>Pending</th>
-                                    <th>Completion Rate</th>
-                                    <th>Progress</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {reportData.userPerformance.map((user, idx) => (
-                                    <tr key={idx}>
-                                        <td className="user-name">{user.name}</td>
-                                        <td className="completed-count">{user.completed}</td>
-                                        <td className="pending-count">{user.pending}</td>
-                                        <td className="completion-rate">{user.completion}%</td>
-                                        <td className="progress-bar-cell">
-                                            <div className="progress-bar-wrapper">
-                                                <div 
-                                                    className="progress-bar-fill"
-                                                    style={{ 
-                                                        width: `${user.completion}%`,
-                                                        backgroundColor: user.completion >= 80 ? '#10b981' : user.completion >= 60 ? '#3b82f6' : '#f59e0b'
-                                                    }}
-                                                ></div>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            {/* Completion Rate Gauge */}
-            <div className="gauge-section">
-                <div className="chart-container gauge-container">
-                    <h3 className="chart-title">Overall Completion Rate</h3>
-                    <div className="gauge-chart">
-                        <svg viewBox="0 0 200 120" className="gauge-svg">
-                            {/* Background arc */}
-                            <path
-                                d="M 20 100 A 80 80 0 0 1 180 100"
-                                fill="none"
-                                stroke="#e5e7eb"
-                                strokeWidth="20"
-                                strokeLinecap="round"
-                            />
-                            {/* Colored arc based on completion */}
-                            <path
-                                d="M 20 100 A 80 80 0 0 1 180 100"
-                                fill="none"
-                                stroke={completionRate >= 80 ? '#10b981' : completionRate >= 60 ? '#3b82f6' : '#f59e0b'}
-                                strokeWidth="20"
-                                strokeLinecap="round"
-                                strokeDasharray={`${(completionRate / 100) * 251.2} 251.2`}
-                                className="gauge-fill"
-                            />
-                            <text x="100" y="85" textAnchor="middle" fontSize="32" fontWeight="700" fill="#1e293b">
-                                {completionRate}%
-                            </text>
-                            <text x="100" y="105" textAnchor="middle" fontSize="12" fill="#64748b">
-                                Completion Rate
-                            </text>
-                        </svg>
-                    </div>
-                </div>
-            </div>
+  return (
+    <div className="report-page">
+      <header className="report-hero">
+        <div>
+          <h1>Team Progress & Reports</h1>
+          <p className="muted">Overview of tasks, priorities and timelines — at a glance.</p>
         </div>
-    );
+        <div className="hero-actions">
+          <button className="btn btn-ghost">
+            <svg className="btn-icon" width="16" height="16" viewBox="0 0 24 24" fill="none">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+              <polyline points="7 10 12 15 17 10" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" fill="none" />
+              <path d="M12 15V3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+            </svg>
+            Export CSV
+          </button>
+          
+          <button className="btn btn-primary">
+            <svg className="btn-icon" width="16" height="16" viewBox="0 0 24 24" fill="none">
+              <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+            </svg>
+            Create Report
+          </button>
+        </div>
+      </header>
+
+      <section className="report-grid">
+        <div className="cards">
+          <MetricCard title="Total Tasks" icon="icon-total" value={tasks.length} sub="Across all projects" detail={getOpenVsCompleted()} />
+          <MetricCard title="Completed" icon="icon-completed" value={statusCounts["Completed"] || 0} sub="Tasks finished" detail={getCompletedPercent()} />
+          <MetricCard title="In Progress" icon="icon-progress" value={statusCounts["In Progress"] || 0} sub="Active tasks" detail={getTopInProgress()} />
+          <MetricCard title="Pending" icon="icon-pending" value={statusCounts["Pending"] || 0} sub="Awaiting action" detail={getEarliestPending()} />
+        </div>
+
+        <div className="charts">
+          <div className="charts-top">
+            <div className="chart card">
+              <h3>Status Distribution</h3>
+              <PlotLoader
+                data={[
+                  {
+                    labels: Object.keys(statusCounts),
+                    values: Object.values(statusCounts),
+                    type: "pie",
+                    hole: 0.45,
+                    marker: { colors: ["#7c3aed", "#06b6d4", "#f59e0b"] },
+                    textinfo: "percent+label",
+                  },
+                ]}
+                layout={{
+                  margin: { t: 20, b: 20, l: 10, r: 10 },
+                  showlegend: false,
+                  paper_bgcolor: "transparent",
+                  plot_bgcolor: "transparent",
+                }}
+                config={{ responsive: true }}
+                style={{ width: "100%", height: "100%" }}
+              />
+            </div>
+
+            <aside className="recent-activity card">
+              <div className="recent-header">
+                <h3>Recent activity</h3>
+                <p className="muted">Stay up to date with what's happening across the team.</p>
+              </div>
+              <div className="recent-list">
+                {tasks
+                  .slice()
+                  .reverse()
+                  .slice(0, 8)
+                  .map((t) => (
+                    <div key={t.id} className="recent-item">
+                      <div className="recent-body">
+                        <div className="recent-avatar">{t.owner.charAt(0)}</div>
+
+                        <div className="recent-line">
+                          <span className="recent-name">{t.owner}</span>
+                          <span className="recent-action">updated status on</span>
+                          <span className="recent-link">{t.title}</span>
+                        </div>
+                        <div className="recent-meta">
+                          {t.dueDate} • {t.priority} priority
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            </aside>
+          </div>
+
+          <div className="charts-bottom charts-bottom--full">
+            <div className="chart card charts-bottom-card">
+              <h3>Tasks by Priority</h3>
+              <PlotLoader
+                data={[
+                  {
+                    x: Object.keys(priorityCounts),
+                    y: Object.values(priorityCounts),
+                    type: "bar",
+                    marker: { color: ["#ef4444", "#f97316", "#10b981"] },
+                  },
+                ]}
+                layout={{
+                  margin: { t: 20, b: 30, l: 40, r: 10 },
+                  xaxis: { title: "Priority" },
+                  yaxis: { title: "Count" },
+                  paper_bgcolor: "transparent",
+                  plot_bgcolor: "transparent",
+                  height: 300,
+                }}
+                config={{ responsive: true }}
+                style={{ width: "100%", height: "320px" }}
+              />
+            </div>
+
+            <div className="chart card charts-bottom-card">
+              <h3>Upcoming Due Dates</h3>
+              <PlotLoader
+                data={[
+                  {
+                    x: dates.keys,
+                    y: dates.vals,
+                    type: "scatter",
+                    mode: "lines+markers",
+                    marker: { color: "#7c3aed" },
+                    line: { color: "#8b5cf6" },
+                  },
+                ]}
+                layout={{
+                  margin: { t: 20, b: 40, l: 40, r: 10 },
+                  xaxis: { title: "Due Date" },
+                  yaxis: { title: "Tasks Due" },
+                  paper_bgcolor: "transparent",
+                  plot_bgcolor: "transparent",
+                  height: 260,
+                }}
+                config={{ responsive: true }}
+                style={{ width: "100%", height: "300px" }}
+              />
+            </div>
+            
+            <div className="chart card charts-bottom-card">
+              <h3>Status over time</h3>
+              <PlotLoader
+                data={statusTimeline.series.map((s, i) => ({
+                  x: s.x,
+                  y: s.y,
+                  type: "scatter",
+                  mode: "lines",
+                  name: s.name,
+                  stackgroup: "one",
+                  fill: "tonexty",
+                  line: { width: 1.5, color: i === 0 ? "#10b981" : i === 1 ? "#f59e0b" : "#ef4444" },
+                }))}
+                layout={{
+                  margin: { t: 20, b: 40, l: 40, r: 10 },
+                  xaxis: { title: "Due Date" },
+                  yaxis: { title: "Count" },
+                  paper_bgcolor: "transparent",
+                  plot_bgcolor: "transparent",
+                  showlegend: true,
+                }}
+                config={{ responsive: true }}
+                style={{ width: "100%", height: "300px" }}
+              />
+            </div>
+          </div>
+        </div>
+
+        <aside className="table-panel card">
+          <div className="table-header">
+            <h3>Task Details</h3>
+            <div className="filters">
+              <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
+                <option value="all">All statuses</option>
+                <option value="Completed">Completed</option>
+                <option value="In Progress">In Progress</option>
+                <option value="Pending">Pending</option>
+              </select>
+            </div>
+          </div>
+
+          <table className="task-table">
+            <thead>
+              <tr>
+                <th>Task</th>
+                <th>Owner</th>
+                <th>Status</th>
+                <th>Priority</th>
+                <th>Due</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((t) => (
+                <tr key={t.id}>
+                  <td className="task-title">{t.title}</td>
+                  <td>{t.owner}</td>
+                  <td>
+                    <span className={`pill status-${t.status.replace(/\s+/g, "-").toLowerCase()}`}>{t.status}</span>
+                  </td>
+                  <td>{t.priority}</td>
+                  <td>{t.dueDate}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </aside>
+      </section>
+    </div>
+  );
 };
+
+const IconSVG = ({ name }) => {
+  switch (name) {
+    case "icon-total":
+      return (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
+          <path d="M3 7h18M7 11h10M5 15h14" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+          <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" strokeWidth="1" fill="none" />
+        </svg>
+      );
+    case "icon-completed":
+      return (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
+          <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1" fill="none" />
+          <path d="M8 12.5l2 2 5-5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      );
+    case "icon-progress":
+      return (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
+          <path d="M12 2v6l3-3 3 3V2" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M4 20a8 8 0 0 1 16 0" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      );
+    case "icon-pending":
+      return (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
+          <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1" fill="none" />
+          <path d="M12 7v6l4 2" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      );
+    default:
+      return null;
+  }
+};
+
+const MetricCard = ({ title, icon, value, sub, detail }) => (
+  <div className="metric-card">
+    <div className="metric-header">
+      <div className={`metric-icon ${icon}`} aria-hidden>
+        <IconSVG name={icon} />
+      </div>
+      <div className="metric-title">{title}</div>
+    </div>
+    <div className="metric-row">
+      <span className="metric-value">{value}</span>
+    </div>
+    <div className="metric-detail-row">
+      <div className="metric-sub">{sub}</div>
+      <div className="metric-detail">{detail}</div>
+    </div>
+  </div>
+);
 
 export default Report;
