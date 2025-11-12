@@ -128,7 +128,7 @@ const Report = ({ tasks = sampleTasks }) => {
             </svg>
             Export CSV
           </button>
-          
+
           <button className="btn btn-primary">
             <svg className="btn-icon" width="16" height="16" viewBox="0 0 24 24" fill="none">
               <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
@@ -252,7 +252,7 @@ const Report = ({ tasks = sampleTasks }) => {
                 style={{ width: "100%", height: "300px" }}
               />
             </div>
-            
+
             <div className="chart card charts-bottom-card">
               <h3>Status over time</h3>
               <PlotLoader
